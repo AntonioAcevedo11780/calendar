@@ -8,6 +8,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,59 +17,38 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
-/**
- * Controlador para majear los eventos
- */
-
 public class EventDialogController implements Initializable {
 
-    // Campos del formulario
+    @FXML private VBox eventFormContainer;
+    @FXML private VBox eventListContainer;
     @FXML private TextField titleField;
     @FXML private TextArea descriptionArea;
+    @FXML private TextField locationField;
+    @FXML private ComboBox<String> calendarComboBox;
     @FXML private DatePicker datePicker;
     @FXML private TextField startTimeField;
     @FXML private TextField endTimeField;
-    @FXML private TextField locationField;
-    @FXML private ComboBox<String> calendarComboBox;
     @FXML private CheckBox allDayCheckBox;
-
-    // Botones de acción
     @FXML private Button saveButton;
     @FXML private Button updateButton;
     @FXML private Button deleteButton;
     @FXML private Button cancelButton;
-
-    // Lista de eventos (para modo READ)
-    @FXML private ListView<String> eventsListView;
-    @FXML private VBox eventListContainer;
-    @FXML private VBox eventFormContainer;
-
-    // Control de modo
     @FXML private Label modeLabel;
+    @FXML private ListView<String> eventsListView;
 
     private EventService eventService;
     private AuthService authService;
-
-    // Estado
-    private Event currentEvent;
     private LocalDate selectedDate;
-    private String mode; // "CREATE", "READ", "UPDATE"
+    private Event currentEvent;
     private Runnable onEventChanged;
+    private String mode;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        System.out.println("\n=== CRUD EVENTOS UTEZ ===");
-        System.out.println("Fecha/Hora: 2025-06-14 04:30:04");
-        System.out.println("Usuario Sistema: AntonioAcevedo11780");
-
         eventService = EventService.getInstance();
         authService = AuthService.getInstance();
-
         setupComponents();
         setupEventHandlers();
-
-        System.out.println("CRUD de eventos inicializado");
-        System.out.println("========================\n");
     }
 
     private void setupComponents() {
@@ -286,10 +266,24 @@ public class EventDialogController implements Initializable {
 
     private Event createEventFromForm() throws Exception {
         Event event = new Event();
-        event.setEventId("EVT" + System.currentTimeMillis());
-        event.setCalendarId("CAL0000001"); // Calendario por defecto
         event.setCreatorId(authService.getCurrentUser().getUserId());
-        updateEventFromForm(event);
+        event.setTitle(titleField.getText().trim());
+        event.setDescription(descriptionArea.getText().trim());
+        event.setLocation(locationField.getText().trim());
+
+        LocalDate date = datePicker.getValue();
+
+        if (allDayCheckBox.isSelected()) {
+            event.setStartDate(date.atStartOfDay());
+            event.setEndDate(date.atTime(23, 59));
+            event.setAllDay('Y');
+        } else {
+            LocalTime startTime = LocalTime.parse(startTimeField.getText().trim());
+            LocalTime endTime = LocalTime.parse(endTimeField.getText().trim());
+            event.setStartDate(date.atTime(startTime));
+            event.setEndDate(date.atTime(endTime));
+            event.setAllDay('N');
+        }
         event.setCreatedDate(LocalDateTime.now());
         return event;
     }
@@ -351,30 +345,51 @@ public class EventDialogController implements Initializable {
         mode = "CREATE";
     }
 
-    // Simulación de operaciones de base de datos
     private boolean saveEventToDatabase(Event event) {
         try {
-            Thread.sleep(100);
-            return true;
+            if (event.getCalendarId() == null || event.getCalendarId().isEmpty()) {
+                String defaultCalendarId = eventService.getDefaultCalendarId(event.getCreatorId());
+                if (defaultCalendarId != null) {
+                    event.setCalendarId(defaultCalendarId);
+                } else {
+                    System.err.println("No se encontró calendario por defecto para el usuario");
+                    showAlert("Error", "No se encontró un calendario válido para crear el evento", Alert.AlertType.ERROR);
+                    return false;
+                }
+            }
+            boolean success = eventService.createEvent(event);
+            if (success) {
+                System.out.println("Evento guardado exitosamente en BD");
+            }
+            return success;
         } catch (Exception e) {
+            System.err.println("Error en saveEventToDatabase: " + e.getMessage());
             return false;
         }
     }
 
     private boolean updateEventInDatabase(Event event) {
         try {
-            Thread.sleep(100);
-            return true;
+            boolean success = eventService.updateEvent(event);
+            if (success) {
+                System.out.println("Evento actualizado exitosamente en BD");
+            }
+            return success;
         } catch (Exception e) {
+            System.err.println("Error en updateEventInDatabase: " + e.getMessage());
             return false;
         }
     }
 
     private boolean deleteEventFromDatabase(String eventId) {
         try {
-            Thread.sleep(100);
-            return true;
+            boolean success = eventService.deleteEvent(eventId);
+            if (success) {
+                System.out.println("Evento eliminado exitosamente de BD");
+            }
+            return success;
         } catch (Exception e) {
+            System.err.println("Error en deleteEventFromDatabase: " + e.getMessage());
             return false;
         }
     }

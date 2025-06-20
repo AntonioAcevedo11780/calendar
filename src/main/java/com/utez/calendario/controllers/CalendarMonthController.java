@@ -14,6 +14,7 @@ import javafx.geometry.HPos;
 import javafx.geometry.VPos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
@@ -24,13 +25,12 @@ import javafx.util.Duration;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.*;
 
-/**
- * Controlador para vista principal: Mensual
- */
 
 public class CalendarMonthController implements Initializable {
 
@@ -52,7 +52,7 @@ public class CalendarMonthController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         System.out.println("\n=== INICIANDO CALENDARIO ITHERA ===");
-        System.out.println("Fecha/Hora: 2025-06-14 04:34:28");
+        System.out.println("Fecha/Hora UTC: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         System.out.println("Usuario Sistema: AntonioAcevedo11780");
 
         eventService = EventService.getInstance();
@@ -94,44 +94,46 @@ public class CalendarMonthController implements Initializable {
         }
     }
 
+    /**
+     * Carga eventos desde la base de datos
+     */
     private void loadEventsFromDatabase() {
         if (authService.getCurrentUser() != null) {
             String userId = authService.getCurrentUser().getUserId();
 
-            System.out.println("\nCargando eventos desde BD...");
+            System.out.println("\n[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                    "Cargando eventos desde BD...");
             System.out.println("Usuario ID: " + userId);
             System.out.println("Mes actual: " + currentYearMonth.getMonth() + " " + currentYearMonth.getYear());
 
             try {
                 List<Event> monthEvents = eventService.getEventsForMonth(userId, currentYearMonth.atDay(1));
                 events.clear();
+
                 for (Event event : monthEvents) {
                     LocalDate eventDate = event.getStartDate().toLocalDate();
                     events.computeIfAbsent(eventDate, k -> new ArrayList<>()).add(event.getTitle());
                 }
+
                 updateCalendarView();
+                System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                        "Eventos cargados correctamente desde BD");
+
             } catch (Exception e) {
-                System.err.println("Error cargando eventos: " + e.getMessage());
+                System.err.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                        "Error cargando eventos: " + e.getMessage());
                 e.printStackTrace();
-                loadSampleEvents();
+                // NO cargar eventos de muestra - solo mostrar error
+                showAlert("Error de Conexión",
+                        "No se pueden cargar los eventos desde la base de datos.\nVerifica tu conexión y configuración.",
+                        Alert.AlertType.WARNING);
             }
         } else {
-            loadSampleEvents();
+            System.out.println(" [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                    "No hay usuario logueado");
+            events.clear();
+            updateCalendarView();
         }
-    }
-
-    private void loadSampleEvents() { //Por si no jala la bd que ponga los eventos igual
-        events.clear();
-        LocalDate today = LocalDate.now();
-        YearMonth currentMonth = YearMonth.from(today);
-        events.put(currentMonth.atDay(14), Arrays.asList("Clase Virtual", "Revisar Proyecto"));
-        events.put(currentMonth.atDay(15), Arrays.asList("Programación Web"));
-        events.put(currentMonth.atDay(16), Arrays.asList("Base de Datos", "Metodologías"));
-        events.put(currentMonth.atDay(18), Arrays.asList("Tarea BD", "Grupo Estudio"));
-        events.put(currentMonth.atDay(19), Arrays.asList("Examen Parcial BD"));
-        events.put(currentMonth.atDay(20), Arrays.asList("Entrega Proyecto Web"));
-        events.put(today, Arrays.asList("Evento actual"));
-        updateCalendarView();
     }
 
     private void setupAnimations() {
@@ -161,7 +163,9 @@ public class CalendarMonthController implements Initializable {
     }
 
     private void updateMonthYearLabel() {
-        String monthName = currentYearMonth.getMonth().getDisplayName(TextStyle.FULL, new Locale("es", "ES"));
+        // Usar Locale.of() en lugar del constructor deprecado
+        Locale spanishLocale = Locale.of("es", "ES");
+        String monthName = currentYearMonth.getMonth().getDisplayName(TextStyle.FULL, spanishLocale);
         String year = String.valueOf(currentYearMonth.getYear());
         if (monthYearLabel != null) {
             monthYearLabel.setText(monthName.toUpperCase() + " " + year);
@@ -175,6 +179,7 @@ public class CalendarMonthController implements Initializable {
         calendarGrid.getColumnConstraints().clear();
         calendarGrid.getRowConstraints().clear();
 
+        // Configurar columnas
         for (int i = 0; i < 7; i++) {
             ColumnConstraints colConstraints = new ColumnConstraints();
             colConstraints.setPercentWidth(100.0 / 7);
@@ -183,6 +188,8 @@ public class CalendarMonthController implements Initializable {
             colConstraints.setFillWidth(true);
             calendarGrid.getColumnConstraints().add(colConstraints);
         }
+
+        // Configurar filas
         for (int i = 0; i < 6; i++) {
             RowConstraints rowConstraints = new RowConstraints();
             rowConstraints.setMinHeight(80);
@@ -198,6 +205,7 @@ public class CalendarMonthController implements Initializable {
 
         String[] dayNames = {"DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"};
 
+        // Poblar grid
         for (int row = 0; row < 6; row++) {
             for (int col = 0; col < 7; col++) {
                 LocalDate cellDate = startDate.plusDays(row * 7 + col);
@@ -217,27 +225,32 @@ public class CalendarMonthController implements Initializable {
         boolean isToday = date.equals(LocalDate.now());
         boolean isSelected = date.equals(selectedDate);
 
+        // Aplicar estilos CSS
         if (!isCurrentMonth) cell.getStyleClass().add("calendar-cell-other-month");
         if (isToday) cell.getStyleClass().add("calendar-cell-today");
         if (isSelected) cell.getStyleClass().add("calendar-cell-selected");
 
+        // Header del día
         if (dayHeader != null) {
             Label headerLabel = new Label(dayHeader);
             headerLabel.getStyleClass().add("day-header-integrated");
             cell.getChildren().add(headerLabel);
         }
 
+        // Número del día
         Label dayNumber = new Label(String.valueOf(date.getDayOfMonth()));
         dayNumber.getStyleClass().add("day-number");
         if (isToday) dayNumber.getStyleClass().add("day-number-today");
         cell.getChildren().add(dayNumber);
 
+        // Eventos del día
         if (events.containsKey(date)) {
             List<String> dateEvents = events.get(date);
             int maxEventsToShow = 3;
             for (int i = 0; i < Math.min(dateEvents.size(), maxEventsToShow); i++) {
                 Label eventLabel = new Label(dateEvents.get(i));
                 eventLabel.getStyleClass().add("event-item");
+                // Colores rotativos
                 switch (i % 4) {
                     case 0: eventLabel.getStyleClass().add("event-item-blue"); break;
                     case 1: eventLabel.getStyleClass().add("event-item-green"); break;
@@ -246,6 +259,8 @@ public class CalendarMonthController implements Initializable {
                 }
                 cell.getChildren().add(eventLabel);
             }
+
+            // Indicador de "más eventos"
             if (dateEvents.size() > maxEventsToShow) {
                 Label moreLabel = new Label("+" + (dateEvents.size() - maxEventsToShow) + " más");
                 moreLabel.getStyleClass().add("more-events-label");
@@ -253,6 +268,7 @@ public class CalendarMonthController implements Initializable {
             }
         }
 
+        // Event handlers
         cell.setOnMouseClicked(e -> handleDateClick(date));
         cell.setOnMouseEntered(e -> cell.getStyleClass().add("calendar-cell-hover"));
         cell.setOnMouseExited(e -> cell.getStyleClass().remove("calendar-cell-hover"));
@@ -267,15 +283,20 @@ public class CalendarMonthController implements Initializable {
                 User user = authService.getCurrentUser();
                 userInfo = " | " + user.getDisplayId() + " (" + user.getRole().getDisplayName() + ")";
             }
+
+            // Usar Locale.of() en lugar del constructor deprecado
+            Locale spanishLocale = Locale.of("es", "ES");
             String status = String.format("Vista: %s | Mes: %s %d | Eventos: %d%s",
                     viewModes.get(currentViewMode),
-                    currentYearMonth.getMonth().getDisplayName(TextStyle.FULL, new Locale("es", "ES")),
+                    currentYearMonth.getMonth().getDisplayName(TextStyle.FULL, spanishLocale),
                     currentYearMonth.getYear(),
                     events.size(),
                     userInfo);
             statusLabel.setText(status);
         }
     }
+
+    // ========== EVENT HANDLERS ==========
 
     @FXML
     private void handleTodayClick() {
@@ -299,10 +320,9 @@ public class CalendarMonthController implements Initializable {
     @FXML
     private void handleCreateButton() {
         if (authService.getCurrentUser() != null) {
-            User user = authService.getCurrentUser();
-            openEventDialog("CREATE", selectedDate);
+            openEventDialog("CREATE", selectedDate != null ? selectedDate : LocalDate.now());
         } else {
-            showAlert("Error", "No hay usuario logueado", javafx.scene.control.Alert.AlertType.ERROR);
+            showAlert("Error", "No hay usuario logueado", Alert.AlertType.ERROR);
         }
     }
 
@@ -312,7 +332,11 @@ public class CalendarMonthController implements Initializable {
             Parent dialogRoot = loader.load();
             com.utez.calendario.controllers.EventDialogController dialogController = loader.getController();
 
-            Runnable onEventChanged = () -> loadEventsFromDatabase();
+            Runnable onEventChanged = () -> {
+                System.out.println("✓ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                        "Recargando eventos tras cambio");
+                loadEventsFromDatabase();
+            };
 
             if ("CREATE".equals(mode)) {
                 dialogController.initializeForCreate(date, onEventChanged);
@@ -326,9 +350,12 @@ public class CalendarMonthController implements Initializable {
             dialogStage.initOwner(createButton.getScene().getWindow());
             Scene dialogScene = new Scene(dialogRoot);
 
+            // Cargar estilos CSS
             try {
                 dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+                System.out.println(" No se pudo cargar CSS para el diálogo");
+            }
 
             dialogStage.setScene(dialogScene);
             dialogStage.setResizable(true);
@@ -337,10 +364,11 @@ public class CalendarMonthController implements Initializable {
             dialogStage.showAndWait();
 
         } catch (IOException e) {
-            System.err.println("Error abriendo diálogo: " + e.getMessage());
+            System.err.println("✗ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                    "Error abriendo diálogo: " + e.getMessage());
             e.printStackTrace();
-            showAlert("Error", "No se pudo abrir el diálogo de eventos: " + e.getMessage(),
-                    javafx.scene.control.Alert.AlertType.ERROR);
+            showAlert("Error", "No se pudo abrir el diálogo de eventos:\n" + e.getMessage(),
+                    Alert.AlertType.ERROR);
         }
     }
 
@@ -389,12 +417,16 @@ public class CalendarMonthController implements Initializable {
         } else {
             updateCalendarView();
         }
+
+        // Abrir diálogo según si hay eventos o no
         if (events.containsKey(date)) {
             openEventDialog("READ", date);
         } else {
             openEventDialog("CREATE", date);
         }
     }
+
+    // ========== MÉTODOS PÚBLICOS ==========
 
     public void addEvent(LocalDate date, String eventName) {
         events.computeIfAbsent(date, k -> new ArrayList<>()).add(eventName);
@@ -421,8 +453,8 @@ public class CalendarMonthController implements Initializable {
         loadEventsFromDatabase();
     }
 
-    private void showAlert(String title, String message, javafx.scene.control.Alert.AlertType type) {
-        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(type);
+    private void showAlert(String title, String message, Alert.AlertType type) {
+        Alert alert = new Alert(type);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
