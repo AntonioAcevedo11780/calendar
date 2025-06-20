@@ -403,6 +403,59 @@ public class CalendarMonthController implements Initializable {
     private void handleYearView() {
         currentViewMode = 3;
         updateViewModeUI();
+
+        // Navegar a la vista anual
+        try {
+            System.out.println("\n[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                    "Navegando a vista anual...");
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/calendar-year.fxml"));
+            Parent yearRoot = loader.load();
+
+            // Obtener el controlador de la vista anual
+            CalendarYearController yearController = loader.getController();
+
+            // Obtener la ventana actual y sus propiedades
+            Stage stage = (Stage) calendarGrid.getScene().getWindow();
+
+            // Guardar las dimensiones actuales SOLO si son válidas
+            double currentWidth = stage.getWidth() > 100 ? stage.getWidth() : 1200;
+            double currentHeight = stage.getHeight() > 100 ? stage.getHeight() : 800;
+            boolean isMaximized = stage.isMaximized();
+
+            Scene scene = new Scene(yearRoot);
+
+            // Cargar los estilos CSS para la vista anual
+            scene.getStylesheets().add(getClass().getResource("/css/styles-year.css").toExternalForm());
+
+            // Aplicar la nueva escena
+            stage.setScene(scene);
+            stage.setTitle("UTEZ Calendar - Vista Anual");
+
+            // Configurar propiedades de la ventana
+            stage.setResizable(true);
+            stage.setMinWidth(1000);
+            stage.setMinHeight(700);
+
+            // Restaurar dimensiones
+            if (isMaximized) {
+                stage.setMaximized(true);
+            } else {
+                stage.setWidth(currentWidth);
+                stage.setHeight(currentHeight);
+                // Centrar la ventana después del cambio
+                Platform.runLater(() -> stage.centerOnScreen());
+            }
+
+            System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                    "Vista anual cargada correctamente con dimensiones: " + currentWidth + "x" + currentHeight);
+
+        } catch (IOException e) {
+            System.err.println("✗ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                    "Error cargando vista anual: " + e.getMessage());
+            e.printStackTrace();
+            showAlert("Error", "No se pudo cargar la vista anual:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
     }
 
     private void updateViewModeUI() {

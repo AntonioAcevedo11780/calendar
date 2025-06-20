@@ -297,4 +297,7 @@ public class EventService {
 
         return event;
     }
+    public List<Event> getEventsForDateRange(String userId, LocalDate startDate, LocalDate endDate) {
+        return new ArrayList<>(); // Placeholder
+    }
 }

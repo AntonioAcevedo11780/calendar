@@ -1,29 +1,209 @@
-/* Mini-calendario anual */
+/* ==========================================================================
+   CALENDAR-YEAR VIEW - Vista de calendario anual
+   ========================================================================== */
+
+/* Contenedor principal del año */
+.year-scroll-pane {
+    -fx-background-color: white;
+    -fx-padding: 20;
+    -fx-fit-to-width: true;
+    -fx-fit-to-height: true;
+}
+
+.year-calendar-container {
+    -fx-background-color: white;
+    -fx-alignment: center;
+    -fx-spacing: 0;
+    -fx-fill-width: true;
+}
+
+/* Grid principal del año */
+.year-grid {
+    -fx-background-color: white;
+    -fx-hgap: 20;
+    -fx-vgap: 20;
+    -fx-alignment: center;
+    -fx-padding: 20;
+    -fx-max-width: Double.MAX_VALUE;
+    -fx-max-height: Double.MAX_VALUE;
+}
+
+/* Mini-calendario */
 .mini-calendar {
     -fx-background-color: white;
     -fx-border-color: #e1e4e8;
     -fx-border-radius: 8;
     -fx-background-radius: 8;
-    -fx-padding: 10 8 12 8;
+    -fx-padding: 12 10 12 10;
+    -fx-spacing: 6;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 4, 0, 0, 2);
+    -fx-max-width: Double.MAX_VALUE;
+    -fx-min-width: 180;
+    -fx-pref-width: Region.USE_COMPUTED_SIZE;
 }
 
-/* Mes destacado */
-.mini-calendar .month-title {
+.mini-calendar:hover {
+    -fx-border-color: #1a73e8;
+    -fx-effect: dropshadow(gaussian, rgba(26,115,232,0.2), 6, 0, 0, 3);
+}
+
+/* Título del mes */
+.mini-month-title {
     -fx-font-size: 16px;
     -fx-font-weight: 600;
     -fx-text-fill: #4E6688;
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+    -fx-max-width: Double.MAX_VALUE;
 }
 
-/* Días de la semana */
-.mini-calendar .week-days {
+/* Días de la semana en mini-calendario */
+.mini-week-days {
+    -fx-spacing: 2;
+    -fx-alignment: center;
+    -fx-padding: 4 0 2 0;
+    -fx-max-width: Double.MAX_VALUE;
+}
+
+.mini-day-header {
+    -fx-font-size: 10px;
+    -fx-text-fill: #1a73e8;
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+    -fx-min-width: 20;
+    -fx-pref-width: Region.USE_COMPUTED_SIZE;
+    -fx-max-width: Double.MAX_VALUE;
+}
+
+/* Grid de días del mini-calendario */
+.mini-days-grid {
+    -fx-hgap: 1;
+    -fx-vgap: 1;
+    -fx-alignment: center;
+    -fx-max-width: Double.MAX_VALUE;
+}
+
+/* Días individuales */
+.mini-day {
     -fx-font-size: 11px;
-    -fx-text-fill: #555;
+    -fx-text-fill: #1c1e21;
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+    -fx-min-width: 20;
+    -fx-pref-width: Region.USE_COMPUTED_SIZE;
+    -fx-max-width: Double.MAX_VALUE;
+    -fx-min-height: 18;
+    -fx-max-height: 18;
+    -fx-cursor: hand;
+    -fx-background-radius: 2;
+}
+
+.mini-day:hover {
+    -fx-background-color: #f1f3f4;
+    -fx-background-radius: 2;
+}
+
+.mini-day-empty {
+    -fx-font-size: 11px;
+    -fx-text-fill: transparent;
+    -fx-alignment: center;
+    -fx-min-width: 20;
+    -fx-pref-width: Region.USE_COMPUTED_SIZE;
+    -fx-max-width: Double.MAX_VALUE;
+    -fx-min-height: 18;
+    -fx-max-height: 18;
+}
+
+/* Día actual */
+.mini-day-today {
+    -fx-background-color: #1a73e8;
+    -fx-text-fill: white;
+    -fx-background-radius: 9;
     -fx-font-weight: bold;
 }
 
-/* Días */
-.mini-calendar .day {
-    -fx-font-size: 12px;
-    -fx-text-fill: #1c1e21;
+/* Días con eventos */
+.mini-day-with-events {
+    -fx-background-color: #e8f0fe;
+    -fx-text-fill: #1a73e8;
+    -fx-font-weight: 600;
+    -fx-background-radius: 2;
+}
+
+.mini-day-with-events:hover {
+    -fx-background-color: #d2e3fc;
+}
+
+/* Título del año en el header */
+.year-title-center {
+    -fx-font-size: 28px;
+    -fx-font-weight: 300;
+    -fx-text-fill: #3c4043;
     -fx-alignment: center;
+}
+
+.status-text {
+    -fx-text-fill: #5f6368;
+    -fx-font-size: 12px;
+}
+
+/* Responsividad mejorada */
+@media screen and (min-width: 1200px) {
+    .mini-calendar {
+        -fx-min-width: 200;
+        -fx-pref-width: 220;
+    }
+
+    .year-grid {
+        -fx-hgap: 25;
+        -fx-vgap: 25;
+    }
+}
+
+@media screen and (max-width: 1199px) and (min-width: 900px) {
+    .year-grid {
+        -fx-hgap: 20;
+        -fx-vgap: 20;
+        -fx-padding: 15;
+    }
+
+    .mini-calendar {
+        -fx-min-width: 170;
+        -fx-pref-width: 180;
+        -fx-padding: 10 8 10 8;
+    }
+
+    .mini-month-title {
+        -fx-font-size: 14px;
+    }
+}
+
+@media screen and (max-width: 899px) {
+    .year-grid {
+        -fx-hgap: 15;
+        -fx-vgap: 15;
+        -fx-padding: 10;
+    }
+
+    .mini-calendar {
+        -fx-min-width: 150;
+        -fx-pref-width: 160;
+        -fx-padding: 8 6 8 6;
+    }
+
+    .mini-month-title {
+        -fx-font-size: 12px;
+    }
+
+    .mini-day-header {
+        -fx-font-size: 9px;
+    }
+
+    .mini-day {
+        -fx-font-size: 10px;
+        -fx-min-width: 18;
+        -fx-min-height: 16;
+        -fx-max-height: 16;
+    }
 }
