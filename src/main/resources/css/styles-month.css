@@ -1,0 +1,14 @@
+/* ==========================================================================
+   MAIN STYLES - Archivo principal de estilos
+   ========================================================================== */
+
+/* Importar estilos base y configuración general */
+@import "base.css";
+
+/* Importar componentes reutilizables */
+@import "topbar.css";
+@import "sidebar.css";
+
+/* Importar vistas específicas */
+@import "calendar-month.css";
+

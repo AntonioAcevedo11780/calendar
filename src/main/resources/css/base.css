@@ -1,0 +1,64 @@
+/* ==========================================================================
+   BASE STYLES - Configuración general de la aplicación
+   ========================================================================== */
+
+.root {
+    -fx-background-color: #f8f9fa;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-font-size: 13px;
+}
+
+/* Layout principal con grid de 12 columnas */
+.main-grid {
+    -fx-background-color: #f8f9fa;
+    -fx-hgap: 0;
+    -fx-vgap: 0;
+    -fx-padding: 0;
+}
+
+/* Configuración general de botones */
+.button {
+    -fx-cursor: hand;
+}
+
+/* Colores de los diferentes calendarios - Usado en múltiples componentes */
+.calendar-name-blue {
+    -fx-text-fill: #1a73e8;
+    -fx-font-size: 13px;
+    -fx-font-weight: normal;
+}
+
+.calendar-name-green {
+    -fx-text-fill: #137333;
+    -fx-font-size: 13px;
+    -fx-font-weight: normal;
+}
+
+.calendar-name-purple {
+    -fx-text-fill: #8e24aa;
+    -fx-font-size: 13px;
+    -fx-font-weight: normal;
+}
+
+.calendar-name-orange {
+    -fx-text-fill: #ea8600;
+    -fx-font-size: 13px;
+    -fx-font-weight: normal;
+}
+
+/* Eventos - Colores reutilizables */
+.event-item-blue {
+    -fx-background-color: #1a73e8;
+}
+
+.event-item-purple {
+    -fx-background-color: #8e24aa;
+}
+
+.event-item-green {
+    -fx-background-color: #137333;
+}
+
+.event-item-orange {
+    -fx-background-color: #ea8600;
+}

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.image.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utez.calendario.controllers.LoginController" styleClass="root" prefWidth="1100.0" prefHeight="700.0">
+    <center>
+        <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="550.0" prefWidth="650.0" spacing="25.0" styleClass="login-container">
+            <children>
+                <!-- Logo -->
+                <VBox alignment="CENTER" spacing="15.0">
+                    <children>
+                        <ImageView fitHeight="80" fitWidth="80" preserveRatio="true">
+                            <image>
+                                <Image url="@/images/logo.png" />
+                            </image>
+                        </ImageView>
+                    </children>
+                </VBox>
+
+                <!-- Título -->
+                <Label styleClass="login-title" text="Inicia sesión para tu cuenta de Ithera" textAlignment="CENTER" wrapText="true">
+                    <font>
+                        <Font size="22.0" />
+                    </font>
+                </Label>
+
+                <!-- Campos de entrada -->
+                <VBox prefWidth="350.0" spacing="0" styleClass="fields-container">
+                    <children>
+                        <TextField fx:id="emailField" promptText="Correo electrónico" styleClass="input-field-top" />
+                        <StackPane styleClass="password-container">
+                            <PasswordField fx:id="passwordField" promptText="Contraseña" styleClass="input-field-bottom" />
+                            <Button fx:id="loginButton" mnemonicParsing="false" onAction="#handleLogin" styleClass="arrow-button" StackPane.alignment="CENTER_RIGHT">
+                                <graphic>
+                                    <ImageView fitHeight="30" fitWidth="30" preserveRatio="true">
+                                        <image>
+                                            <Image url="@/images/arrow-login.png" />
+                                        </image>
+                                    </ImageView>
+                                </graphic>
+                            </Button>
+                        </StackPane>
+                    </children>
+                </VBox>
+
+                <!-- Enlace "Cree una cuenta" -->
+                <Hyperlink fx:id="createAccountLink" styleClass="create-account-link" text="Cree una cuenta" />
+
+                <!-- Mensaje de error -->
+                <Label fx:id="errorLabel" styleClass="error-message" text="" visible="false" prefWidth="350.0" wrapText="true" />
+            </children>
+            <padding>
+                <Insets bottom="40.0" left="50.0" right="50.0" top="40.0" />
+            </padding>
+        </VBox>
+    </center>
+</BorderPane>

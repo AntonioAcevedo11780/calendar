@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.utez.calendario.controllers.EventDialogController"
+      spacing="10" prefWidth="600" prefHeight="500">
+
+    <padding>
+        <Insets top="15" right="15" bottom="15" left="15" />
+    </padding>
+
+    <!-- Título del diálogo -->
+    <Label fx:id="modeLabel" text="Gestión de Eventos" styleClass="dialog-title" />
+
+    <Separator />
+
+    <!-- Contenedor principal -->
+    <HBox spacing="15" VBox.vgrow="ALWAYS">
+
+        <!-- Lista de eventos (lado izquierdo) -->
+        <VBox fx:id="eventListContainer" spacing="5" prefWidth="250">
+            <Label text="📋 Eventos del día:" styleClass="section-title" />
+            <ListView fx:id="eventsListView" VBox.vgrow="ALWAYS" />
+        </VBox>
+
+        <!-- Formulario (lado derecho) -->
+        <VBox fx:id="eventFormContainer" spacing="10" VBox.vgrow="ALWAYS">
+
+            <!-- Título -->
+            <VBox spacing="5">
+                <Label text="📝 Título *" styleClass="field-label" />
+                <TextField fx:id="titleField" promptText="Ej: Clase de Programación Web" />
+            </VBox>
+
+            <!-- Descripción -->
+            <VBox spacing="5">
+                <Label text="📄 Descripción" styleClass="field-label" />
+                <TextArea fx:id="descriptionArea" promptText="Descripción detallada del evento..."
+                          prefRowCount="3" wrapText="true" />
+            </VBox>
+
+            <!-- Fecha y tiempo -->
+            <HBox spacing="10">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="📅 Fecha *" styleClass="field-label" />
+                    <DatePicker fx:id="datePicker" HBox.hgrow="ALWAYS" />
+                </VBox>
+
+                <VBox spacing="5">
+                    <CheckBox fx:id="allDayCheckBox" text="🕐 Todo el día" />
+                </VBox>
+            </HBox>
+
+            <!-- Horarios -->
+            <HBox spacing="10">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="🕐 Hora inicio" styleClass="field-label" />
+                    <TextField fx:id="startTimeField" promptText="08:00" />
+                </VBox>
+
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="🕑 Hora fin" styleClass="field-label" />
+                    <TextField fx:id="endTimeField" promptText="10:00" />
+                </VBox>
+            </HBox>
+
+            <!-- Ubicación y calendario -->
+            <HBox spacing="10">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="📍 Ubicación" styleClass="field-label" />
+                    <TextField fx:id="locationField" promptText="Ej: Aula 101, Laboratorio A" />
+                </VBox>
+
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="📚 Calendario" styleClass="field-label" />
+                    <ComboBox fx:id="calendarComboBox" HBox.hgrow="ALWAYS" />
+                </VBox>
+            </HBox>
+
+        </VBox>
+    </HBox>
+
+    <Separator />
+
+    <!-- Botones de acción -->
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button fx:id="saveButton" text="💾 Guardar" styleClass="primary-button" />
+        <Button fx:id="updateButton" text="📝 Actualizar" styleClass="primary-button" />
+        <Button fx:id="deleteButton" text="🗑️ Eliminar" styleClass="danger-button" />
+        <Button fx:id="cancelButton" text="❌ Cancelar" styleClass="secondary-button" />
+    </HBox>
+
+</VBox>

@@ -1,0 +1,60 @@
+/* Estilos para la barra de título de la ventana */
+.root {
+    -fx-background-color: #f0f2f5;
+}
+
+/* Personalización de la barra de título (Stage) */
+.stage {
+    -fx-background-color: #f0f2f5;
+}
+
+/* Decoraciones de la ventana - Barra más grande */
+.window-header {
+    -fx-background-color: #4E6688;
+    -fx-padding: 12 16 12 16;
+    -fx-min-height: 45;
+    -fx-pref-height: 45;
+}
+
+/* Título de la ventana - Letras más grandes */
+.window-title {
+    -fx-text-fill: white;
+    -fx-font-size: 30px;
+    -fx-font-weight: 600;
+    -fx-font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Botones de control de ventana - Más grandes */
+.window-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-min-width: 40;
+    -fx-min-height: 40;
+    -fx-pref-width: 40;
+    -fx-pref-height: 40;
+}
+
+.window-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 4;
+}
+
+.window-button:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Botón de cerrar específico */
+.window-close-button:hover {
+    -fx-background-color: #e81123;
+    -fx-text-fill: white;
+}
+
+/* Ícono de la aplicación en la barra de título - Más grande */
+.window-icon {
+    -fx-fit-width: 60;
+    -fx-fit-height: 60;
+    -fx-preserve-ratio: true;
+}

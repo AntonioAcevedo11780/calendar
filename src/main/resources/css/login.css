@@ -1,0 +1,141 @@
+/* Estilos generales */
+.root {
+    -fx-background-color: #f0f2f5;
+    -fx-font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Contenedor principal del login - Efecto elevado */
+.login-container {
+    -fx-background-color: white;
+    -fx-background-radius: 15;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 25, 0.3, 0, 10);
+    -fx-border-color: rgba(0,0,0,0.1);
+    -fx-border-width: 1;
+    -fx-border-radius: 15;
+    -fx-padding: 40;
+}
+
+/* Título */
+.login-title {
+    -fx-text-fill: #000000;
+    -fx-font-size: 25px;
+    -fx-font-weight: bold;
+    -fx-text-alignment: center;
+    -fx-line-spacing: 2px;
+}
+
+/* Contenedor de campos */
+.fields-container {
+    -fx-spacing: 0;
+}
+
+/* Campo de entrada superior - Borde azul #4E6688 */
+.input-field-top {
+    -fx-background-color: white;
+    -fx-border-color: #4E6688;
+    -fx-border-width: 1;
+    -fx-border-radius: 6 6 0 0;
+    -fx-background-radius: 6 6 0 0;
+    -fx-padding: 14 18 14 18;
+    -fx-font-size: 14px;
+    -fx-prompt-text-fill: #8a8d91;
+    -fx-text-fill: #1c1e21;
+    -fx-min-height: 48;
+    -fx-pref-height: 48;
+}
+
+/* Contenedor del PasswordField con botón - Borde azul */
+.password-container {
+    -fx-background-color: white;
+    -fx-border-color: #4E6688;
+    -fx-border-width: 0 1 1 1;
+    -fx-border-radius: 0 0 6 6;
+    -fx-background-radius: 0 0 6 6;
+}
+
+/* Campo de entrada inferior (PasswordField) */
+.input-field-bottom {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-border-radius: 0 0 6 6;
+    -fx-background-radius: 0 0 6 6;
+    -fx-padding: 14 50 14 18;
+    -fx-font-size: 14px;
+    -fx-prompt-text-fill: #8a8d91;
+    -fx-text-fill: #1c1e21;
+    -fx-min-height: 48;
+    -fx-pref-height: 48;
+}
+
+/* Estados de focus - Bordes más intensos */
+.input-field-top:focused {
+    -fx-border-color: #2c4a6b;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(76, 102, 136, 0.4), 6, 0, 0, 0);
+}
+
+.password-container:focused-within {
+    -fx-border-color: #2c4a6b;
+    -fx-effect: dropshadow(gaussian, rgba(76, 102, 136, 0.4), 6, 0, 0, 0);
+}
+
+/* Estados hover */
+.input-field-top:hover {
+    -fx-border-color: #3a5a7a;
+}
+
+.password-container:hover {
+    -fx-border-color: #3a5a7a;
+}
+
+/* Botón flecha dentro del PasswordField */
+.arrow-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-background-radius: 4;
+    -fx-min-width: 40;
+    -fx-pref-width: 40;
+    -fx-min-height: 40;
+    -fx-pref-height: 40;
+    -fx-cursor: hand;
+    -fx-padding: 10;
+}
+
+.arrow-button:hover {
+    -fx-background-color: rgba(78, 102, 136, 0.15);
+    -fx-background-radius: 16;
+}
+
+.arrow-button:pressed {
+    -fx-background-color: rgba(78, 102, 136, 0.25);
+}
+
+.arrow-button:disabled {
+    -fx-opacity: 0.5;
+}
+
+/* Enlace */
+.create-account-link {
+    -fx-text-fill: #039BE5;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-underline: false;
+    -fx-cursor: hand;
+}
+
+.create-account-link:hover {
+    -fx-underline: true;
+    -fx-text-fill: #115978;
+}
+
+/* Mensaje de error */
+.error-message {
+    -fx-text-fill: #e74c3c;
+    -fx-font-size: 13px;
+    -fx-background-color: transparent;
+    -fx-padding: 8 0 4 0;
+    -fx-text-alignment: center;
+    -fx-font-weight: 500;
+}
