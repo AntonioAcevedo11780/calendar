@@ -1,0 +1,29 @@
+/* Mini-calendario anual */
+.mini-calendar {
+    -fx-background-color: white;
+    -fx-border-color: #e1e4e8;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 10 8 12 8;
+}
+
+/* Mes destacado */
+.mini-calendar .month-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #4E6688;
+}
+
+/* Días de la semana */
+.mini-calendar .week-days {
+    -fx-font-size: 11px;
+    -fx-text-fill: #555;
+    -fx-font-weight: bold;
+}
+
+/* Días */
+.mini-calendar .day {
+    -fx-font-size: 12px;
+    -fx-text-fill: #1c1e21;
+    -fx-alignment: center;
+}
