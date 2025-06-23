@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+
+<BorderPane xmlns="http://javafx.com/javafx/11.0.1"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.utez.calendario.controllers.AdminOverviewController"
+            stylesheets="@../css/admin-panel.css">
+
+    <!-- Barra superior -->
+    <top>
+        <VBox styleClass="header-container">
+            <HBox spacing="10" alignment="CENTER_LEFT" styleClass="header-grid">
+                <!-- Logo ITHERA -->
+                <ImageView fitHeight="40" fitWidth="40" preserveRatio="true">
+                    <image>
+                        <Image url="@../images/logo.png" />
+                    </image>
+                </ImageView>
+
+                <Label text="Calendar" styleClass="header-title" />
+
+                <Region HBox.hgrow="ALWAYS" />
+
+                <!-- Perfil de usuario -->
+                <Button text="Cerrar Sesión" styleClass="profile-button" onAction="#handleLogout"> </Button>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+
+        <SplitPane dividerPositions="0.22">
+            <!-- Panel lateral -->
+            <VBox styleClass="admin-sidebar">
+                <!-- Foto de perfil -->
+                <VBox alignment="CENTER" styleClass="profile-container">
+                    <ImageView fitHeight="80" fitWidth="80" styleClass="profile-photo">
+                        <image>
+                            <Image url="@../images/profile-photo.png" />
+                        </image>
+                    </ImageView>
+                    <Label text="Administrador" styleClass="profile-name" />
+                    <Label text="admin@utez.edu.mx" styleClass="profile-email" />
+                </VBox>
+
+                <Separator />
+
+                <!-- Menú principal -->
+                <Label text="ADMINISTRACIÓN" styleClass="sidebar-header" />
+
+                <Button text="Vista General" styleClass="menu-button, active-menu-item" onAction="#handleGeneralView">
+                    <graphic>
+                        <ImageView fitHeight="16" fitWidth="16">
+                            <Image url="@../images/icons8-casa.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
+
+                <Button text="Administración de Usuarios" styleClass="menu-button" onAction="#handleUserManagement">
+                    <graphic>
+                        <ImageView fitHeight="16" fitWidth="16">
+                            <image>
+                                <Image url="@../images/users-icon.png" />
+                            </image>
+                        </ImageView>
+                    </graphic>
+                </Button>
+
+                <Button text="Administración de Calendarios" styleClass="menu-button" onAction="#handleCalendarManagement">
+                    <graphic>
+                        <ImageView fitHeight="16" fitWidth="16">
+                            <image>
+                                <Image url="@../images/calendar-icon.png" />
+                            </image>
+                        </ImageView>
+                    </graphic>
+                </Button>
+
+                <Button text="Estadísticas" styleClass="menu-button" onAction="#handleStatistics">
+                    <graphic>
+                        <ImageView fitHeight="16" fitWidth="16">
+                            <image>
+                                <Image url="@../images/reports-icon.png" />
+                            </image>
+                        </ImageView>
+                    </graphic>
+                </Button>
+
+                <Separator />
+
+                <Region VBox.vgrow="ALWAYS" />
+
+                <!-- Información del sistema -->
+                <VBox styleClass="system-info">
+                    <Label text="Calendar v1.0.0" />
+                    <Label text="© 2025 ITHERA" />
+                </VBox>
+            </VBox>
+
+            <!-- Área de contenido -->
+            <StackPane fx:id="contentArea">
+                <!-- Panel de Dashboard por defecto -->
+                <VBox styleClass="dashboard-container" spacing="20">
+                    <HBox styleClass="section-header">
+                        <Label text="Registros" styleClass="section-title" />
+                        <Region HBox.hgrow="ALWAYS" />
+                    </HBox>
+
+                    <!-- Tarjetas de resumen -->
+                    <HBox spacing="20" styleClass="summary-cards">
+                        <VBox styleClass="summary-card, users-card">
+                            <Label text="Total Usuarios" styleClass="card-title" />
+                            <Label text="152" styleClass="card-value" />
+                            <Label text="+12% desde el mes pasado" styleClass="card-subtitle" />
+                        </VBox>
+
+                        <VBox styleClass="summary-card, events-card">
+                            <Label text="Eventos Activos" styleClass="card-title" />
+                            <Label text="28" styleClass="card-value" />
+                            <Label text="5 próximos esta semana" styleClass="card-subtitle" />
+                        </VBox>
+
+                        <VBox styleClass="summary-card, notifications-card">
+                            <Label text="Notificaciones" styleClass="card-title" />
+                            <Label text="8" styleClass="card-value" />
+                            <Label text="3 requieren atención" styleClass="card-subtitle" />
+                        </VBox>
+                    </HBox>
+                </VBox>
+            </StackPane>
+        </SplitPane>
+    </center>
+
+    <!-- Barra inferior -->
+    <bottom>
+        <HBox styleClass="status-bar">
+            <Region HBox.hgrow="ALWAYS" />
+            <Label fx:id="clockLabel" text="00:00:00" />
+        </HBox>
+    </bottom>
+</BorderPane>

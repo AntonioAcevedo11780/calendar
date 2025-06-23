@@ -164,12 +164,7 @@
         <version>0.0.8</version>
         <configuration>
           <mainClass>com.utez.calendario.MainApp</mainClass>
-          <commandlineArgs>--add-opens java.base/java.lang=ALL-UNNAMED</commandlineArgs>
-          <environmentVariables>
-            <UTEZ_ENV>development</UTEZ_ENV>
-            <UTEZ_USER>AntonioAcevedo11780</UTEZ_USER>
-            <UTEZ_TIMESTAMP>2025-06-14 04:43:53</UTEZ_TIMESTAMP>
-          </environmentVariables>
+          <commandlineArgs>--add-modules javafx.controls,javafx.fxml</commandlineArgs>
         </configuration>
       </plugin>
 
