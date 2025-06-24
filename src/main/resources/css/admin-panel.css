@@ -5,7 +5,7 @@
     -fx-background-color: #f4f6f9;
 }
 
-/* Colores principales - combinados de todos los archivos */
+/* Colores principales */
 * {
     /* Colores pa panel*/
     -primary-color: #3f51b5;
@@ -46,7 +46,7 @@
     -fx-padding: 12 20;
     -fx-hgap: 0;
     -fx-vgap: 0;
-    -fx-alignment: center;
+    -fx-alignment: CENTER;
 }
 
 .header-section {
@@ -106,7 +106,10 @@
     -fx-padding: 16;
     -fx-spacing: 16;
     -fx-min-width: 0;
-    -fx-pref-width: Region.USE_COMPUTED_SIZE;
+    -fx-pref-width: Regizon.USE_COMPUTED_SIZE;
+    /* Pa q la sidebar sea fija xd */
+    -fx-fit-to-height: true;
+    -fx-min-height: 600px;
 }
 
 /* Perfil en sidebar */
@@ -144,6 +147,7 @@
     -fx-padding: 15px 15px 5px 15px;
     -fx-letter-spacing: 0.5px;
     -fx-text-transform: uppercase;
+    -fx-alignment: CENTER_LEFT;
 }
 
 /* ESTILO PRINCIPAL DEL MENÚ  */
@@ -163,23 +167,34 @@
 }
 
 .menu-button:hover {
-    -fx-background-color: -hover-color;
     -fx-text-fill: #1a202c;
+    -fx-font-weight: bold;
 }
 
 /* Elemento activo del menú */
 .active-menu-item {
-    -fx-background-color: #e3f2fd;
     -fx-text-fill: #1976d2;
-    -fx-font-weight: 600;
+    -fx-font-weight: bold;
     -fx-border-color: #1976d2;
     -fx-border-width: 0 0 0 3px;
+}
+
+.active-menu-item:hover {
+    -fx-text-fill: #1976d2;
+    -fx-background-color: #e3f2fd;
 }
 
 /* Estilo específico para "Vista General" */
 .menu-button.vista-general {
     -fx-text-fill: #1976d2;
     -fx-font-weight: 600;
+}
+
+/* Estilo hover específico para el botón Vista General */
+.menu-button.active-menu-item:hover {
+    -fx-background-color: #e3f2fd; /* Fondo azul claro al pasar el mouse */
+    -fx-text-fill: #0d47a1; /* Azul más oscuro al pasar el mouse */
+    -fx-font-weight: bold; /* Negrita al pasar el mouse */
 }
 
 /* Estilo para elementos normales del menú */
@@ -238,10 +253,12 @@
 .dashboard-container {
     -fx-background-color: -background-light;
     -fx-padding: 20px;
+    -fx-alignment: TOP_CENTER;
 }
 
 .section-header {
     -fx-padding: 0 0 15px 0;
+    -fx-alignment: CENTER;
 }
 
 .section-title {
@@ -264,6 +281,7 @@
 /* Tarjetas de resumen */
 .summary-cards {
     -fx-padding: 10px 0;
+    -fx-alignment: CENTER;
 }
 
 .summary-card {
@@ -273,7 +291,7 @@
     -fx-spacing: 5px;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8, 0, 0, 2);
     -fx-pref-width: 200px;
-    -fx-alignment: CENTER_LEFT;
+    -fx-alignment: CENTER;
 }
 
 .users-card {
@@ -319,6 +337,7 @@
     -fx-background-radius: 8px;
     -fx-padding: 15px;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8, 0, 0, 2);
+    -fx-alignment: CENTER;
 }
 
 .chart-title {
@@ -337,6 +356,7 @@
     -fx-padding: 15px;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8, 0, 0, 2);
     -fx-spacing: 10px;
+    -fx-alignment: CENTER;
 }
 
 .table-title {
@@ -370,10 +390,59 @@
     -fx-padding: 5px 15px;
     -fx-border-width: 1 0 0 0;
     -fx-border-color: derive(-background-light, -10%);
+    -fx-alignment: CENTER;
 }
 
 .status-bar Label {
     -fx-font-family: -modern-font-family;
     -fx-font-size: 12px;
     -fx-font-weight: 400;
+}
+
+/* Estilo para el ScrollPane de la vista general */
+.dashboard-scroll {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.dashboard-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* Estilos para las nuevas tarjetas */
+.activeCalendars-card {
+    -fx-border-color: -success-color;
+    -fx-border-width: 0 0 0 4px;
+}
+
+.eventsForThisMonth-card {
+    -fx-border-color: -warning-color;
+    -fx-border-width: 0 0 0 4px;
+}
+
+/* Botón de cierre de sesión */
+.profile-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #e53935; /* Color rojo para indicar acción de cierre */
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 14px 15px;
+    -fx-cursor: hand;
+    -fx-graphic-text-gap: 12px;
+    -fx-font-family: -modern-font-family;
+    -fx-font-size: 15px;
+    -fx-font-weight: 500;
+    -fx-letter-spacing: -0.1px;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+}
+
+.profile-button:hover {
+    -fx-text-fill: #c62828; /* Rojo más oscuro al pasar el mouse */
+    -fx-font-weight: bold;
+}
+
+/* Placeholders centrados */
+.table-container Label,
+.chart-container Label {
+    -fx-alignment: CENTER;
 }
