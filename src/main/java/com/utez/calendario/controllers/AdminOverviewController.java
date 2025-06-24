@@ -3,6 +3,8 @@ package com.utez.calendario.controllers;
 import com.utez.calendario.services.AuthService;
 import com.utez.calendario.models.User;
 
+import javafx.geometry.Rectangle2D;
+import javafx.stage.Screen;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.Region;
@@ -19,6 +21,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.geometry.Pos;
@@ -30,6 +33,8 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+
+import java.awt.*;
 import java.util.List;
 
 import java.io.IOException;
@@ -412,17 +417,32 @@ public class AdminOverviewController implements Initializable {
 
     private void returnToLogin() {
         try {
+            System.out.println("Regresando al login...");
+
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
             Parent loginRoot = loader.load();
 
             Stage stage = (Stage) contentArea.getScene().getWindow();
-            Scene loginScene = new Scene(loginRoot);
 
+            Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+            double width = Math.min(1100, screenBounds.getWidth() * 0.95);
+            double height = Math.min(700, screenBounds.getHeight() * 0.95);
+
+            Scene loginScene = new Scene(loginRoot, width, height);
+
+            // CSS EXACTO DEL login
+            loginScene.getStylesheets().add(getClass().getResource("/css/login.css").toExternalForm());
+
+            stage.setTitle("Ithera");
             stage.setScene(loginScene);
-            stage.centerOnScreen();
+            stage.setMinWidth(800);
+            stage.setMinHeight(600);
             stage.show();
+            stage.centerOnScreen();
 
             cleanup();
+
+            System.out.println("Login cargado exitosamente con características del Main");
 
         } catch (Exception e) {
             System.err.println("No se pudo volver al login: " + e.getMessage());

@@ -100,6 +100,44 @@ public class EventService {
         return events;
     }
 
+    /**
+     * Obtiene todos los eventos de un usuario para una semana específica
+     */
+    public List<Event> getEventsForWeek(String userId, LocalDate startDate, LocalDate endDate) {
+        List<Event> events = new ArrayList<>();
+
+        String sql = """
+            SELECT e.* FROM EVENTS e
+            INNER JOIN CALENDARS c ON e.CALENDAR_ID = c.CALENDAR_ID
+            WHERE c.OWNER_ID = ? AND e.ACTIVE = 'Y' AND c.ACTIVE = 'Y'
+            AND DATE(e.START_DATE) >= ? AND DATE(e.START_DATE) <= ?
+            ORDER BY e.START_DATE
+        """;
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, userId);
+            pstmt.setDate(2, Date.valueOf(startDate));
+            pstmt.setDate(3, Date.valueOf(endDate));
+
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Event event = mapResultSetToEvent(rs);
+                events.add(event);
+            }
+
+            System.out.println("✓ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                    "Encontrados " + events.size() + " eventos para la semana " + startDate + " - " + endDate);
+
+        } catch (SQLException e) {
+            System.err.println("✗ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                    "Error obteniendo eventos de la semana: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return events;
+    }
+
     // ========== MÉTODOS CRUD ==========
 
     /**
@@ -297,7 +335,11 @@ public class EventService {
 
         return event;
     }
+
+    /**
+     * Obtiene todos los eventos de un usuario para un rango de fechas específico
+     */
     public List<Event> getEventsForDateRange(String userId, LocalDate startDate, LocalDate endDate) {
-        return new ArrayList<>(); // Placeholder
+        return getEventsForWeek(userId, startDate, endDate); // Reutilizamos el método de semana
     }
 }

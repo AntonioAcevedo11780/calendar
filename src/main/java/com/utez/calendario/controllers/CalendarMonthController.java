@@ -51,7 +51,7 @@ public class CalendarMonthController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        System.out.println("\n=== INICIANDO CALENDARIO ITHERA ===");
+        System.out.println("\n=== INICIANDO CALENDARIO UTEZ ===");
         System.out.println("Fecha/Hora UTC: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         System.out.println("Usuario Sistema: AntonioAcevedo11780");
 
@@ -384,12 +384,112 @@ public class CalendarMonthController implements Initializable {
     private void handleDayView() {
         currentViewMode = 0;
         updateViewModeUI();
+
+        // Navegar a la vista diaria
+        try {
+            System.out.println("\n[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                    "Navegando a vista diaria...");
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/calendar-day.fxml"));
+            Parent dayRoot = loader.load();
+
+            // Obtener la ventana actual y sus propiedades
+            Stage stage = (Stage) calendarGrid.getScene().getWindow();
+
+            // Guardar las dimensiones actuales SOLO si son válidas
+            double currentWidth = stage.getWidth() > 100 ? stage.getWidth() : 1000;
+            double currentHeight = stage.getHeight() > 100 ? stage.getHeight() : 700;
+            boolean isMaximized = stage.isMaximized();
+
+            Scene scene = new Scene(dayRoot);
+
+            // Cargar los estilos CSS para la vista diaria
+            scene.getStylesheets().add(getClass().getResource("/css/calendar-day.css").toExternalForm());
+
+            // Aplicar la nueva escena
+            stage.setScene(scene);
+            stage.setTitle("UTEZ Calendar - Vista Día");
+
+            // Configurar propiedades de la ventana
+            stage.setResizable(true);
+            stage.setMinWidth(800);
+            stage.setMinHeight(600);
+
+            // Restaurar dimensiones
+            if (isMaximized) {
+                stage.setMaximized(true);
+            } else {
+                stage.setWidth(currentWidth);
+                stage.setHeight(currentHeight);
+                // Centrar la ventana después del cambio
+                Platform.runLater(() -> stage.centerOnScreen());
+            }
+
+            System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                    "Vista diaria cargada correctamente con dimensiones: " + currentWidth + "x" + currentHeight);
+
+        } catch (IOException e) {
+            System.err.println("✗ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                    "Error cargando vista diaria: " + e.getMessage());
+            e.printStackTrace();
+            showAlert("Error", "No se pudo cargar la vista diaria:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
     }
 
     @FXML
     private void handleWeekView() {
         currentViewMode = 1;
         updateViewModeUI();
+
+        // Navegar a la vista semanal
+        try {
+            System.out.println("\n[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                    "Navegando a vista semanal...");
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/calendar-week.fxml"));
+            Parent weekRoot = loader.load();
+
+            // Obtener la ventana actual y sus propiedades
+            Stage stage = (Stage) calendarGrid.getScene().getWindow();
+
+            // Guardar las dimensiones actuales SOLO si son válidas
+            double currentWidth = stage.getWidth() > 100 ? stage.getWidth() : 1200;
+            double currentHeight = stage.getHeight() > 100 ? stage.getHeight() : 800;
+            boolean isMaximized = stage.isMaximized();
+
+            Scene scene = new Scene(weekRoot);
+
+            // Cargar los estilos CSS para la vista semanal
+            scene.getStylesheets().add(getClass().getResource("/css/calendar-week.css").toExternalForm());
+
+            // Aplicar la nueva escena
+            stage.setScene(scene);
+            stage.setTitle("UTEZ Calendar - Vista Semana");
+
+            // Configurar propiedades de la ventana
+            stage.setResizable(true);
+            stage.setMinWidth(1000);
+            stage.setMinHeight(700);
+
+            // Restaurar dimensiones
+            if (isMaximized) {
+                stage.setMaximized(true);
+            } else {
+                stage.setWidth(currentWidth);
+                stage.setHeight(currentHeight);
+                // Centrar la ventana después del cambio
+                Platform.runLater(() -> stage.centerOnScreen());
+            }
+
+            System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                    "Vista semanal cargada correctamente con dimensiones: " + currentWidth + "x" + currentHeight);
+
+        } catch (IOException e) {
+            System.err.println("✗ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                    "Error cargando vista semanal: " + e.getMessage());
+            e.printStackTrace();
+            showAlert("Error", "No se pudo cargar la vista semanal:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
     }
 
     @FXML

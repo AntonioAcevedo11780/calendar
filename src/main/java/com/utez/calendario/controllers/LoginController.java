@@ -41,7 +41,6 @@ public class LoginController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         System.out.println("=== UTEZ CALENDAR - SISTEMA DE LOGIN ===");
         System.out.println("Fecha/Hora: " + LocalDateTime.now());
-        System.out.println("Usuario Sistema: AntonioAcevedo11780");
         System.out.println("========================================");
 
         authService = AuthService.getInstance();
