@@ -14,6 +14,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.image.Image;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.ResourceBundle;
@@ -21,14 +22,18 @@ import java.util.ResourceBundle;
 /**
  * Controlador para la vista del login
  */
-
 public class LoginController implements Initializable {
 
-    @FXML private TextField emailField;
-    @FXML private PasswordField passwordField;
-    @FXML private Button loginButton;
-    @FXML private Hyperlink createAccountLink;
-    @FXML private Label errorLabel;
+    @FXML
+    private TextField emailField;
+    @FXML
+    private PasswordField passwordField;
+    @FXML
+    private Button loginButton;
+    @FXML
+    private Hyperlink createAccountLink;
+    @FXML
+    private Label errorLabel;
 
     private AuthService authService;
 
@@ -45,7 +50,7 @@ public class LoginController implements Initializable {
         Platform.runLater(() -> {
             configureWindow();
             emailField.requestFocus();
-            emailField.setText("20243ds076@utez.edu.mx"); // Prellenado para pruebas
+            emailField.setText("admin@utez.edu.mx"); // Prellenado para pruebas
         });
 
         createAccountLink.setOnAction(e -> handleCreateAccount());
@@ -67,8 +72,7 @@ public class LoginController implements Initializable {
             }
 
             try {
-                stage.getScene().getStylesheets()
-                        .add(getClass().getResource("/css/window-styles.css").toExternalForm());
+                stage.getScene().getStylesheets().add(getClass().getResource("/css/window-styles.css").toExternalForm());
             } catch (Exception e) {
                 System.out.println("No se pudo cargar estilos de ventana");
             }
@@ -146,17 +150,7 @@ public class LoginController implements Initializable {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Crear cuenta ITHERA");
         alert.setHeaderText("Usuarios disponibles para pruebas");
-        alert.setContentText(
-                "ESTUDIANTES:\n" +
-                        "• 20243ds076@utez.edu.mx / 123456 (Antonio Acevedo)\n" +
-                        "• 20243ds085@utez.edu.mx / 123456 (Carlos Gonz)\n" +
-                        "• 20243ds075@utez.edu.mx / 123456 (Daniel Arroyo)\n\n" +
-                        "DOCENTES:\n" +
-                        "• aldoromero@utez.edu.mx / 123456 (Aldo Romero)\n" +
-                        "• mariaperez@utez.edu.mx / 123456 (María Pérez)\n\n" +
-                        "ADMINISTRADOR:\n" +
-                        "• admin@utez.edu.mx / 123456 (Admin Sistema)"
-        );
+        alert.setContentText("ESTUDIANTES:\n" + "• 20243ds076@utez.edu.mx / 123456 (Antonio Acevedo)\n" + "• 20243ds085@utez.edu.mx / 123456 (Carlos Gonz)\n" + "• 20243ds075@utez.edu.mx / 123456 (Daniel Arroyo)\n\n" + "DOCENTES:\n" + "• aldoromero@utez.edu.mx / 123456 (Aldo Romero)\n" + "• mariaperez@utez.edu.mx / 123456 (María Pérez)\n\n" + "ADMINISTRADOR:\n" + "• admin@utez.edu.mx / 123456 (Admin Sistema)");
         try {
             Stage alertStage = (Stage) alert.getDialogPane().getScene().getWindow();
             Image icon = new Image(getClass().getResourceAsStream("/images/logo.png"));
@@ -207,7 +201,20 @@ public class LoginController implements Initializable {
             System.out.println("----------------------\n");
         }
         clearFields();
-        navigateToCalendar();
+
+        // Verificar el rol del usuario para redirigir a su respectiva wbd
+        assert user != null;
+        if (user.getRole() == User.Role.ADMIN) {
+            navigateToAdminPanel();
+        } else {
+            navigateToCalendar();
+        }
+    }
+
+    private void clearFields() {
+        passwordField.clear(); // limpiar password y el usuario puesto pa pruebas xD
+        hideError();
+        setLoginInProgress(false);
     }
 
     private void navigateToCalendar() {
@@ -267,6 +274,66 @@ public class LoginController implements Initializable {
         }
     }
 
+    //Para el panel de Administración
+    private void navigateToAdminPanel() {
+        try {
+            System.out.println("Ingresando al panel de administración...");
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/admin-overview.fxml"));
+            Parent adminRoot = loader.load();
+
+            Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+            double width = Math.min(1350, screenBounds.getWidth() * 0.95);
+            double height = Math.min(750, screenBounds.getHeight() * 0.95);
+
+            Stage adminStage = new Stage();
+            Scene adminScene = new Scene(adminRoot, width, height);
+
+            //Se intentan aplicar los estilos de admin-panel
+            try {
+                adminScene.getStylesheets().add(getClass().getResource("/css/admin-panel.css").toExternalForm());
+                adminScene.getStylesheets().add(getClass().getResource("/css/window-styles.css").toExternalForm());
+            } catch (Exception e) {
+                System.out.println("No se pudieron cargar los estilos del panel de administración");
+            }
+
+            adminStage.initStyle(javafx.stage.StageStyle.UNDECORATED);
+            adminStage.setScene(adminScene);
+            adminStage.setMinWidth(1000);
+            adminStage.setMinHeight(600);
+
+            //Se intenta poner el logo de ITHERA
+            try {
+                Image icon = new Image(getClass().getResourceAsStream("/images/logo.png"));
+                adminStage.getIcons().add(icon);
+            } catch (Exception e) {
+                System.out.println("No se pudo cargar el ícono del panel de administración: " + e.getMessage());
+            }
+
+            adminStage.show();
+            adminStage.centerOnScreen();
+            addDragFunctionality(adminRoot, adminStage);
+
+            // Cerrar login
+            Stage loginStage = (Stage) emailField.getScene().getWindow();
+            loginStage.close();
+
+            System.out.println("Panel de administración cargado exitosamente");
+
+        } catch (Exception e) {
+            System.err.println("ERROR al cargar el panel de administración: " + e.getMessage());
+            e.printStackTrace();
+
+            Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+            errorAlert.setTitle("Error");
+            errorAlert.setHeaderText("No se pudo cargar el panel de administración");
+            errorAlert.setContentText("Error: " + e.getMessage());
+            errorAlert.showAndWait();
+
+            setLoginInProgress(false);
+        }
+    }
+
     private void addDragFunctionality(Parent root, Stage stage) {
         final double[] xOffset = {0};
         final double[] yOffset = {0};
@@ -278,11 +345,5 @@ public class LoginController implements Initializable {
             stage.setX(event.getScreenX() - xOffset[0]);
             stage.setY(event.getScreenY() - yOffset[0]);
         });
-    }
-
-    public void clearFields() {
-        passwordField.clear(); // limpiar password y el usuario puesto pa pruebas xD
-        hideError();
-        setLoginInProgress(false);
     }
 }

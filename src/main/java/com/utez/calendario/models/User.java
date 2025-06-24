@@ -1,6 +1,9 @@
 package com.utez.calendario.models;
+import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.ArrayList;
 
 public class User {
     private String userId;
@@ -13,6 +16,157 @@ public class User {
     private char active;
     private LocalDateTime createdDate;
     private LocalDateTime lastLogin;
+
+    private static Connection getConnection() throws SQLException {
+        // Ajusta esto según tu configuración actual de conexión
+        String url = "jdbc:mysql://localhost:3306/calendar";
+        String user = "root";
+        String password = "";
+        return DriverManager.getConnection(url, user, password);
+    }
+
+    /**
+     * Cuenta el total de usuarios registrados
+     */
+    public static int getTotalUsersCount() {
+        int count = 0;
+        String sql = "SELECT COUNT(*) FROM users";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al contar usuarios: " + e.getMessage());
+        }
+
+        return count;
+    }
+
+    /*
+     * Cuenta estudiantes activos
+     */
+    public static int getActiveStudentsCount() {
+        int count = 0;
+        String sql = "SELECT COUNT(*) FROM users WHERE role = 'alumno' AND active = 'Y'";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al contar estudiantes activos: " + e.getMessage());
+        }
+
+        return count;
+    }
+
+    /**
+     * Cuenta eventos para el mes actual
+     */
+    public static int getEventsForCurrentMonth() {
+        int count = 0;
+        String sql = "SELECT COUNT(*) FROM events WHERE MONTH(START_DATE) = MONTH(CURRENT_DATE()) " +
+                "AND YEAR(START_DATE) = YEAR(CURRENT_DATE())";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al contar eventos del mes: " + e.getMessage());
+        }
+
+        return count;
+    }
+
+    /**
+     * Cuenta eventos próximos (en los siguientes 7 días)
+     */
+    public static int getUpcomingEventsCount() {
+        int count = 0;
+        String sql = "SELECT COUNT(*) FROM events WHERE START_DATE BETWEEN CURRENT_DATE() " +
+                "AND DATE_ADD(CURRENT_DATE(), INTERVAL 7 DAY)";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al contar eventos próximos: " + e.getMessage());
+        }
+
+        return count;
+    }
+
+    /**
+     * Cuenta calendarios activos
+     */
+    public static int getActiveCalendarsCount() {
+        int count = 0;
+        String sql = "SELECT COUNT(*) FROM calendars WHERE active = 'Y'";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al contar calendarios activos: " + e.getMessage());
+        }
+
+        return count;
+    }
+
+    public static List<User> getAllUsers() {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT USER_ID, MATRICULA, EMAIL, FIRST_NAME, LAST_NAME, ROLE, ACTIVE, CREATED_DATE, LAST_LOGIN FROM users";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                User user = new User();
+                user.setMatricula(rs.getString("MATRICULA"));
+                user.setEmail(rs.getString("EMAIL"));
+                user.setFirstName(rs.getString("FIRST_NAME"));
+                user.setLastName(rs.getString("LAST_NAME"));
+                user.setRole(Role.fromString(rs.getString("ROLE")));
+                user.setActive(rs.getString("ACTIVE").charAt(0));
+
+                Timestamp createdDate = rs.getTimestamp("CREATED_DATE");
+                if (createdDate != null) {
+                    user.setCreatedDate(createdDate.toLocalDateTime());
+                }
+
+                Timestamp lastLogin = rs.getTimestamp("LAST_LOGIN");
+                if (lastLogin != null) {
+                    user.setLastLogin(lastLogin.toLocalDateTime());
+                }
+
+                users.add(user);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener usuarios: " + e.getMessage());
+        }
+
+        return users;
+    }
 
     // Enum para los roles UTEZ
     public enum Role {

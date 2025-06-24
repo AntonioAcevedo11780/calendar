@@ -1,0 +1,448 @@
+/* Estilos generales */
+.root {
+    -fx-font-family: 'Inter', 'Segoe UI', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+    -fx-font-size: 13px;
+    -fx-background-color: #f4f6f9;
+}
+
+/* Colores principales */
+* {
+    /* Colores pa panel*/
+    -primary-color: #3f51b5;
+    -primary-light-color: #757de8;
+    -primary-dark-color: #002984;
+    -secondary-color: #ff9800;
+    -text-light-color: #ffffff;
+    -text-dark-color: #212121;
+    -background-light: #ffffff;
+    -background-dark: #1c2331;
+    -error-color: #f44336;
+    -success-color: #4caf50;
+    -warning-color: #ff9800;
+    -info-color: #2196f3;
+
+    /* Colores de sidebar y topbar */
+    -sidebar-border-color: #bdc1c6;
+    -text-primary-color: #3c4043;
+    -text-secondary-color: #5f6368;
+    -hover-color: #f1f3f4;
+    -hover-light: #f8f9fa;
+    -accent-blue: #1a73e8;
+
+    /* Tipografía*/
+    -modern-font-family: 'Inter', 'Segoe UI', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Header */
+.header-container {
+    -fx-background-color: white;
+    -fx-border-color: #bdc1c6;
+    -fx-border-width: 0 0 2 0;
+    -fx-padding: 0;
+}
+
+.header-grid {
+    -fx-background-color: white;
+    -fx-padding: 12 20;
+    -fx-hgap: 0;
+    -fx-vgap: 0;
+    -fx-alignment: CENTER;
+}
+
+.header-section {
+    -fx-padding: 0 8;
+}
+
+.header-title {
+    -fx-font-family: -modern-font-family;
+    -fx-font-size: 18px;
+    -fx-font-weight: 600;
+    -fx-text-fill: -text-primary-color;
+    -fx-letter-spacing: -0.5px;
+}
+
+/* Menú botón*/
+.menu-btn {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: -text-secondary-color;
+    -fx-cursor: hand;
+    -fx-min-width: 32;
+    -fx-min-height: 32;
+    -fx-font-size: 16px;
+    -fx-background-radius: 16;
+    -fx-font-family: -modern-font-family;
+}
+
+.menu-btn:hover {
+    -fx-background-color: -hover-color;
+}
+
+/* Botones de la barra superior */
+.icon-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 50%;
+    -fx-padding: 8px;
+    -fx-cursor: hand;
+}
+
+.icon-button:hover {
+    -fx-background-color: -hover-color;
+}
+
+.app-title {
+    -fx-text-fill: -text-primary-color;
+    -fx-font-weight: 500;
+    -fx-font-size: 20px;
+    -fx-font-family: -modern-font-family;
+    -fx-letter-spacing: -0.3px;
+}
+
+/* Sidebar*/
+.admin-sidebar {
+    -fx-background-color: white;
+    -fx-border-color: -sidebar-border-color;
+    -fx-border-width: 0 2 0 0;
+    -fx-padding: 16;
+    -fx-spacing: 16;
+    -fx-min-width: 0;
+    -fx-pref-width: Regizon.USE_COMPUTED_SIZE;
+    /* Pa q la sidebar sea fija xd */
+    -fx-fit-to-height: true;
+    -fx-min-height: 600px;
+}
+
+/* Perfil en sidebar */
+.profile-container {
+    -fx-padding: 20px 10px;
+}
+
+.profile-photo {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 0, 0);
+    -fx-background-radius: 50%;
+}
+
+.profile-name {
+    -fx-font-family: -modern-font-family;
+    -fx-font-weight: 600;
+    -fx-text-fill: -text-primary-color;
+    -fx-font-size: 16px;
+    -fx-padding: 5px 0 0 0;
+    -fx-letter-spacing: -0.2px;
+}
+
+.profile-email {
+    -fx-font-family: -modern-font-family;
+    -fx-text-fill: -text-secondary-color;
+    -fx-font-size: 12px;
+    -fx-font-weight: 400;
+}
+
+/* Menú de sidebar */
+.sidebar-header {
+    -fx-font-family: -modern-font-family;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -text-secondary-color;
+    -fx-padding: 15px 15px 5px 15px;
+    -fx-letter-spacing: 0.5px;
+    -fx-text-transform: uppercase;
+    -fx-alignment: CENTER_LEFT;
+}
+
+/* ESTILO PRINCIPAL DEL MENÚ  */
+.menu-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #2c3e50;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 14px 15px;
+    -fx-cursor: hand;
+    -fx-graphic-text-gap: 12px;
+    -fx-font-family: -modern-font-family;
+    -fx-font-size: 15px;
+    -fx-font-weight: 500;
+    -fx-letter-spacing: -0.1px;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+}
+
+.menu-button:hover {
+    -fx-text-fill: #1a202c;
+    -fx-font-weight: bold;
+}
+
+/* Elemento activo del menú */
+.active-menu-item {
+    -fx-text-fill: #1976d2;
+    -fx-font-weight: bold;
+    -fx-border-color: #1976d2;
+    -fx-border-width: 0 0 0 3px;
+}
+
+.active-menu-item:hover {
+    -fx-text-fill: #1976d2;
+    -fx-background-color: #e3f2fd;
+}
+
+/* Estilo específico para "Vista General" */
+.menu-button.vista-general {
+    -fx-text-fill: #1976d2;
+    -fx-font-weight: 600;
+}
+
+/* Estilo hover específico para el botón Vista General */
+.menu-button.active-menu-item:hover {
+    -fx-background-color: #e3f2fd; /* Fondo azul claro al pasar el mouse */
+    -fx-text-fill: #0d47a1; /* Azul más oscuro al pasar el mouse */
+    -fx-font-weight: bold; /* Negrita al pasar el mouse */
+}
+
+/* Estilo para elementos normales del menú */
+.menu-button.menu-item {
+    -fx-text-fill: #2c3e50;
+    -fx-font-weight: 500;
+}
+
+.nav-arrow {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: -text-secondary-color;
+    -fx-cursor: hand;
+    -fx-min-width: 50;
+    -fx-min-height: 50;
+    -fx-font-size: 16px;
+    -fx-background-radius: 16;
+    -fx-font-family: -modern-font-family;
+}
+
+.nav-arrow:hover {
+    -fx-background-color: -hover-color;
+}
+
+/* Cerrar botón */
+.close-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: -text-secondary-color;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+    -fx-min-width: 32;
+    -fx-min-height: 32;
+    -fx-font-size: 18px;
+    -fx-background-radius: 16;
+    -fx-font-family: -modern-font-family;
+}
+
+.close-btn:hover {
+    -fx-background-color: -hover-color;
+}
+
+/* Sistema info */
+.system-info {
+    -fx-padding: 10px;
+    -fx-alignment: center;
+}
+
+.system-info Label {
+    -fx-text-fill: -text-secondary-color;
+    -fx-font-size: 11px;
+    -fx-font-family: -modern-font-family;
+    -fx-font-weight: 400;
+}
+
+/* Área de contenido*/
+.dashboard-container {
+    -fx-background-color: -background-light;
+    -fx-padding: 20px;
+    -fx-alignment: TOP_CENTER;
+}
+
+.section-header {
+    -fx-padding: 0 0 15px 0;
+    -fx-alignment: CENTER;
+}
+
+.section-title {
+    -fx-font-family: -modern-font-family;
+    -fx-font-size: 24px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -text-primary-color;
+    -fx-letter-spacing: -0.5px;
+}
+
+.action-button {
+    -fx-background-color: -secondary-color;
+    -fx-text-fill: -text-light-color;
+    -fx-background-radius: 4px;
+    -fx-cursor: hand;
+    -fx-font-family: -modern-font-family;
+    -fx-font-weight: 500;
+}
+
+/* Tarjetas de resumen */
+.summary-cards {
+    -fx-padding: 10px 0;
+    -fx-alignment: CENTER;
+}
+
+.summary-card {
+    -fx-background-color: -background-light;
+    -fx-background-radius: 8px;
+    -fx-padding: 20px;
+    -fx-spacing: 5px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8, 0, 0, 2);
+    -fx-pref-width: 200px;
+    -fx-alignment: CENTER;
+}
+
+.users-card {
+    -fx-border-color: -info-color;
+    -fx-border-width: 0 0 0 4px;
+}
+
+.events-card {
+    -fx-border-color: -success-color;
+    -fx-border-width: 0 0 0 4px;
+}
+
+.notifications-card {
+    -fx-border-color: -warning-color;
+    -fx-border-width: 0 0 0 4px;
+}
+
+.card-title {
+    -fx-font-family: -modern-font-family;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-text-fill: derive(-text-dark-color, 20%);
+}
+
+.card-value {
+    -fx-font-family: -modern-font-family;
+    -fx-font-size: 28px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -text-dark-color;
+    -fx-letter-spacing: -0.5px;
+}
+
+.card-subtitle {
+    -fx-font-family: -modern-font-family;
+    -fx-font-size: 12px;
+    -fx-font-weight: 400;
+    -fx-text-fill: derive(-text-dark-color, 40%);
+}
+
+/* Gráficos - Por si se llegase a utilizar, más adelante en stats xd*/
+.chart-container {
+    -fx-background-color: -background-light;
+    -fx-background-radius: 8px;
+    -fx-padding: 15px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8, 0, 0, 2);
+    -fx-alignment: CENTER;
+}
+
+.chart-title {
+    -fx-font-family: -modern-font-family;
+    -fx-font-size: 16px;
+    -fx-font-weight: 600;
+    -fx-text-fill: -text-dark-color;
+    -fx-padding: 0 0 10px 0;
+    -fx-letter-spacing: -0.2px;
+}
+
+/* Tabla - pa agregarselo a GeneralOverview y más adelante a UserManagement*/
+.table-container {
+    -fx-background-color: -background-light;
+    -fx-background-radius: 8px;
+    -fx-padding: 15px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8, 0, 0, 2);
+    -fx-spacing: 10px;
+    -fx-alignment: CENTER;
+}
+
+.table-title {
+    -fx-font-family: -modern-font-family;
+    -fx-font-size: 16px;
+    -fx-font-weight: 600;
+    -fx-text-fill: -text-dark-color;
+    -fx-letter-spacing: -0.2px;
+}
+
+.table-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-font-family: -modern-font-family;
+}
+
+.table-view .column-header {
+    -fx-background-color: derive(-background-light, -5%);
+    -fx-font-family: -modern-font-family;
+    -fx-font-weight: 600;
+}
+
+.table-view .table-cell {
+    -fx-font-family: -modern-font-family;
+    -fx-font-weight: 400;
+}
+
+/* Barra de estado */
+.status-bar {
+    -fx-background-color: -background-light;
+    -fx-padding: 5px 15px;
+    -fx-border-width: 1 0 0 0;
+    -fx-border-color: derive(-background-light, -10%);
+    -fx-alignment: CENTER;
+}
+
+.status-bar Label {
+    -fx-font-family: -modern-font-family;
+    -fx-font-size: 12px;
+    -fx-font-weight: 400;
+}
+
+/* Estilo para el ScrollPane de la vista general */
+.dashboard-scroll {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.dashboard-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* Estilos para las nuevas tarjetas */
+.activeCalendars-card {
+    -fx-border-color: -success-color;
+    -fx-border-width: 0 0 0 4px;
+}
+
+.eventsForThisMonth-card {
+    -fx-border-color: -warning-color;
+    -fx-border-width: 0 0 0 4px;
+}
+
+/* Botón de cierre de sesión */
+.profile-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #e53935; /* Color rojo para indicar acción de cierre */
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 14px 15px;
+    -fx-cursor: hand;
+    -fx-graphic-text-gap: 12px;
+    -fx-font-family: -modern-font-family;
+    -fx-font-size: 15px;
+    -fx-font-weight: 500;
+    -fx-letter-spacing: -0.1px;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+}
+
+.profile-button:hover {
+    -fx-text-fill: #c62828; /* Rojo más oscuro al pasar el mouse */
+    -fx-font-weight: bold;
+}
+
+/* Placeholders centrados */
+.table-container Label,
+.chart-container Label {
+    -fx-alignment: CENTER;
+}

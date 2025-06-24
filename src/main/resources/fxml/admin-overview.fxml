@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+
+<BorderPane xmlns="http://javafx.com/javafx/11.0.1"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.utez.calendario.controllers.AdminOverviewController"
+            stylesheets="@../css/admin-panel.css">
+
+    <!-- Barra superior -->
+    <top>
+        <VBox styleClass="header-container">
+            <HBox spacing="10" alignment="CENTER" styleClass="header-grid">
+                <!-- Logo ITHERA -->
+                <ImageView fitHeight="40" fitWidth="40" preserveRatio="true">
+                    <image>
+                        <Image url="@../images/logo.png" />
+                    </image>
+                </ImageView>
+
+                <Label text="Calendar" styleClass="header-title" />
+
+                <Region HBox.hgrow="ALWAYS" />
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <SplitPane dividerPositions="0.22" fx:id="splitPane">
+            <!-- Panel lateral -->
+            <VBox styleClass="admin-sidebar">
+                <!-- Foto de perfil -->
+                <VBox alignment="CENTER" styleClass="profile-container">
+                    <ImageView fitHeight="80" fitWidth="80" styleClass="profile-photo">
+                        <image>
+                            <Image url="@../images/profile-photo.png" />
+                        </image>
+                    </ImageView>
+                    <Label text="Administrador" styleClass="profile-name" />
+                    <Label text="admin@utez.edu.mx" styleClass="profile-email" />
+                </VBox>
+
+                <Separator />
+
+                <!-- Menú principal -->
+                <VBox alignment="TOP_LEFT" spacing="5">
+                    <Label text="ADMINISTRACIÓN" styleClass="sidebar-header" />
+
+                    <Button text="Vista General" styleClass="menu-button, active-menu-item" onAction="#handleGeneralView" maxWidth="Infinity">
+                        <graphic>
+                            <ImageView fitHeight="16" fitWidth="16">
+                                <Image url="@../images/icons8-casa.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+
+                    <Separator />
+
+                    <Button text="Cerrar Sesión" styleClass="profile-button" onAction="#handleLogout" maxWidth="Infinity" />
+                </VBox>
+
+                <Region VBox.vgrow="ALWAYS" />
+
+                <!-- Información del sistema -->
+                <VBox styleClass="system-info" alignment="CENTER">
+                    <Label text="Calendar v1.0.0" />
+                    <Label text="© 2025 ITHERA" />
+                </VBox>
+            </VBox>
+
+            <!-- Área de contenido -->
+            <StackPane fx:id="contentArea" alignment="CENTER">
+                <!-- Se va a generar el content por el controller xd -->
+            </StackPane>
+        </SplitPane>
+    </center>
+
+    <!-- Barra inferior -->
+    <bottom>
+        <HBox styleClass="status-bar" alignment="CENTER">
+            <Label fx:id="statusLabel"/>
+            <Region HBox.hgrow="ALWAYS" />
+            <Label fx:id="clockLabel" text="00:00:00" />
+        </HBox>
+    </bottom>
+</BorderPane>
