@@ -48,7 +48,6 @@
     -fx-border-width: 0 1 1 0; /* línea derecha y abajo */
 }
 
-/* Opcional: al pasar mouse sobre la celda */
 .calendar-hour-cell:hover {
     -fx-background-color: #e6f0ff;
 }
