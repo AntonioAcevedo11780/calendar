@@ -1,59 +1,11 @@
 /* ==========================================================================
-   MAIN STYLES - Archivo principal de estilos para vista semanal
+   MAIN STYLES - Vista semanal del calendario
    ========================================================================== */
 
-/* Importar estilos base y configuración general */
+/* Importar estilos base y componentes reutilizables */
 @import "base.css";
-
-/* Importar componentes reutilizables */
 @import "topbar.css";
 @import "sidebar.css";
 
 /* Importar vista específica semanal */
 @import "calendar-week.css";
-
-
-
-.day-header{
-    -fx-border-color: #cccc;
-    -fx-padding: 0 0 25 0;
-
-
-}
-
-
-/* Encabezados de días */
-.day-header-integrated {
-    -fx-font-weight: bold;
-    -fx-font-size: 15px;
-    -fx-text-fill: #666666;
-    -fx-alignment: center;
-    -fx-border-color: #ccccc;
-    -fx-border-width: 0 0 2 0;
-    -fx-background-color: #f9f9f9;
-}
-
-/* Etiquetas de hora */
-.hour-label {
-    -fx-font-size: 12px;
-    -fx-text-fill: #666666;
-    -fx-padding: 0 5 0 0;
-    -fx-alignment: center-right;
-}
-
-/* Celdas de horas para eventos */
-.calendar-hour-cell {
-    -fx-background-color: #fff;
-    -fx-border-color: #ddd;
-    -fx-border-width: 0 1 1 0; /* línea derecha y abajo */
-}
-
-.calendar-hour-cell:hover {
-    -fx-background-color: #e6f0ff;
-}
-
-/* Para que el GridPane ocupe todo el espacio */
-.main-calendar-grid {
-    -fx-background-color: white;
-    -fx-padding: 10;
-}

@@ -402,6 +402,22 @@ public class EventDialogController implements Initializable {
         alert.showAndWait();
     }
 
+    public void initializeForEdit(Event event, Runnable onEventChanged) {
+        this.mode = "UPDATE";
+        this.currentEvent = event;
+        this.selectedDate = event.getStartDate().toLocalDate();
+        this.onEventChanged = onEventChanged;
+
+        modeLabel.setText("Editar Evento - " + event.getTitle());
+        eventFormContainer.setVisible(true);
+        eventListContainer.setVisible(false);
+        saveButton.setVisible(false);
+        updateButton.setVisible(true);
+        deleteButton.setVisible(true);
+
+        loadEventToForm(event);
+    }
+
     private void closeDialog() {
         Stage stage = (Stage) titleField.getScene().getWindow();
         stage.close();

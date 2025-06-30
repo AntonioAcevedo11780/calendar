@@ -11,7 +11,6 @@
             fx:controller="com.utez.calendario.controllers.CalendarWeekController"
             stylesheets="@../css/styles-week.css">
 
-
     <!-- Barra superior -->
     <top>
         <VBox styleClass="header-container">
@@ -65,29 +64,11 @@
 
     <!-- Contenido principal -->
     <center>
-        <GridPane styleClass="main-grid" VBox.vgrow="ALWAYS">
-            <!-- Layout principal de 12 columnas -->
-            <columnConstraints>
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-            </columnConstraints>
+        <!-- Grid simplificado: sidebar + calendario -->
+        <HBox styleClass="main-grid" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
 
-            <rowConstraints>
-                <RowConstraints vgrow="ALWAYS" />
-            </rowConstraints>
-
-            <!-- Main: Sidebar - Columnas 1-2 - 16.67% -->
-            <VBox styleClass="sidebar" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.vgrow="ALWAYS">
+            <!-- Sidebar - 200px fijo -->
+            <VBox styleClass="sidebar" minWidth="200" prefWidth="200" maxWidth="200">
                 <Button fx:id="createButton"
                         text="Crear"
                         styleClass="create-button"
@@ -138,30 +119,28 @@
                     </HBox>
 
                     <HBox styleClass="calendar-item">
-                        <CheckBox styleClass="calendar-checkbox" />
+                        <CheckBox fx:id="holidaysCalendarCheck" styleClass="calendar-checkbox" />
                         <Label text="🇲🇽 Días Festivos México" styleClass="calendar-name-purple" />
                     </HBox>
 
                     <HBox styleClass="calendar-item">
-                        <CheckBox styleClass="calendar-checkbox" />
+                        <CheckBox fx:id="utezCalendarCheck" styleClass="calendar-checkbox" />
                         <Label text="🎓 Eventos UTEZ" styleClass="calendar-name-orange" />
                     </HBox>
                 </VBox>
 
-                <!-- Espaciador para empujar contenido hacia arriba -->
+                <!-- Espaciador -->
                 <Region VBox.vgrow="ALWAYS" />
             </VBox>
 
-            <!-- Main: Área de calendario semanal - Columnas 3-12 - 83.33% -->
-            <VBox styleClass="calendar-area" GridPane.columnIndex="2" GridPane.columnSpan="10" GridPane.vgrow="ALWAYS">
-
-                <ScrollPane fx:id="calendarScrollPane" fitToWidth="true" fitToHeight="true" VBox.vgrow="ALWAYS" styleClass="calendar-scrollpane">
-
+            <!-- Área de calendario - resto del espacio -->
+            <VBox styleClass="calendar-area" HBox.hgrow="ALWAYS">
+                <ScrollPane fx:id="calendarScrollPane" fitToWidth="true" fitToHeight="true"
+                            VBox.vgrow="ALWAYS" styleClass="calendar-scrollpane">
                     <GridPane fx:id="calendarGrid" styleClass="main-calendar-grid" />
-
                 </ScrollPane>
             </VBox>
 
-        </GridPane>
+        </HBox>
     </center>
 </BorderPane>

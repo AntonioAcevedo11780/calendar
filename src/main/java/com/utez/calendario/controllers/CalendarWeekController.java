@@ -8,23 +8,18 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.geometry.HPos;
 import javafx.geometry.Pos;
-import javafx.geometry.VPos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.time.format.TextStyle;
-import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 
 public class CalendarWeekController implements Initializable {
@@ -33,6 +28,12 @@ public class CalendarWeekController implements Initializable {
     @FXML private GridPane calendarGrid;
     @FXML private ScrollPane calendarScrollPane;
     @FXML private Button createButton;
+    @FXML private CheckBox userCalendarCheck;
+    @FXML private CheckBox tasksCalendarCheck;
+    @FXML private CheckBox personalCalendarCheck;
+    @FXML private CheckBox examsCalendarCheck;
+    @FXML private CheckBox holidaysCalendarCheck;
+    @FXML private CheckBox utezCalendarCheck;
 
     private LocalDate startOfWeek;
     private LocalDate selectedDate;
@@ -42,8 +43,8 @@ public class CalendarWeekController implements Initializable {
     private EventService eventService;
     private AuthService authService;
 
-    // Configuración de horas - AHORA 24 HORAS
-    private static final int START_HOUR = 0;  // 12 AM (medianoche)
+    // Configuración de horas - 24 HORAS
+    private static final int START_HOUR = 0;  // 12 AM
     private static final int END_HOUR = 23;   // 11 PM
     private static final int TOTAL_HOURS = END_HOUR - START_HOUR + 1; // 24 horas
 
@@ -61,6 +62,7 @@ public class CalendarWeekController implements Initializable {
         }
 
         initializeCalendar();
+        setupCalendarCheckboxes();
 
         Platform.runLater(() -> {
             setupCalendarGrid();
@@ -76,13 +78,39 @@ public class CalendarWeekController implements Initializable {
         updateCalendarView();
     }
 
+    private void setupCalendarCheckboxes() {
+        // Agregar listeners para los checkboxes de calendarios
+        if (userCalendarCheck != null) {
+            userCalendarCheck.setOnAction(e -> refreshCalendarDisplay());
+        }
+        if (tasksCalendarCheck != null) {
+            tasksCalendarCheck.setOnAction(e -> refreshCalendarDisplay());
+        }
+        if (personalCalendarCheck != null) {
+            personalCalendarCheck.setOnAction(e -> refreshCalendarDisplay());
+        }
+        if (examsCalendarCheck != null) {
+            examsCalendarCheck.setOnAction(e -> refreshCalendarDisplay());
+        }
+        if (holidaysCalendarCheck != null) {
+            holidaysCalendarCheck.setOnAction(e -> refreshCalendarDisplay());
+        }
+        if (utezCalendarCheck != null) {
+            utezCalendarCheck.setOnAction(e -> refreshCalendarDisplay());
+        }
+    }
+
+    private void refreshCalendarDisplay() {
+        Platform.runLater(this::createWeekView);
+    }
+
     private void setupScrollPane() {
         if (calendarScrollPane != null) {
             calendarScrollPane.setFitToWidth(true);
             calendarScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
             calendarScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
-            // Scroll a las 8 AM al inicio (8/24 = 0.33)
+            // Scroll a las 8 AM al inicio
             Platform.runLater(() -> {
                 double scrollPosition = 8.0 / TOTAL_HOURS;
                 calendarScrollPane.setVvalue(scrollPosition);
@@ -118,7 +146,7 @@ public class CalendarWeekController implements Initializable {
         headerRow.setPrefHeight(50);
         calendarGrid.getRowConstraints().add(headerRow);
 
-        // Filas para cada hora (24 horas)
+        // Filas para cada hora
         for (int i = 0; i < TOTAL_HOURS; i++) {
             RowConstraints hourRow = new RowConstraints();
             hourRow.setMinHeight(60);
@@ -131,6 +159,9 @@ public class CalendarWeekController implements Initializable {
     }
 
     private void createWeekView() {
+        // Limpiar contenido existente pero mantener constraints
+        calendarGrid.getChildren().clear();
+
         // Celda vacía para esquina superior izquierda
         Label cornerLabel = new Label("");
         cornerLabel.getStyleClass().add("corner-cell");
@@ -203,14 +234,16 @@ public class CalendarWeekController implements Initializable {
         cell.setAlignment(Pos.TOP_LEFT);
         cell.setSpacing(2);
 
-        // Agregar eventos para esta hora y fecha
+        // Agregar eventos para esta hora y fecha si los calendarios están habilitados
         List<Event> dayEvents = events.get(date);
         if (dayEvents != null) {
             for (Event event : dayEvents) {
-                LocalTime eventTime = event.getStartDate().toLocalTime();
-                if (eventTime.getHour() == hour) {
-                    Label eventLabel = createEventLabel(event);
-                    cell.getChildren().add(eventLabel);
+                if (shouldShowEvent(event)) {
+                    LocalTime eventTime = event.getStartDate().toLocalTime();
+                    if (eventTime.getHour() == hour) {
+                        Label eventLabel = createEventLabel(event);
+                        cell.getChildren().add(eventLabel);
+                    }
                 }
             }
         }
@@ -219,7 +252,31 @@ public class CalendarWeekController implements Initializable {
         cell.setOnMouseEntered(e -> cell.getStyleClass().add("hour-cell-hover"));
         cell.setOnMouseExited(e -> cell.getStyleClass().remove("hour-cell-hover"));
 
+        // Click para crear evento
+        cell.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 2) { // Doble click
+                LocalDateTime clickDateTime = LocalDateTime.of(date, LocalTime.of(hour, 0));
+                openEventDialogForCreate(clickDateTime.toLocalDate());
+            }
+        });
+
         return cell;
+    }
+
+    private boolean shouldShowEvent(Event event) {
+        String calendarId = event.getCalendarId();
+        switch (calendarId) {
+            case "CAL0000001": // Mis Clases
+                return userCalendarCheck != null && userCalendarCheck.isSelected();
+            case "CAL0000002": // Tareas y Proyectos
+                return tasksCalendarCheck != null && tasksCalendarCheck.isSelected();
+            case "CAL0000003": // Personal
+                return personalCalendarCheck != null && personalCalendarCheck.isSelected();
+            case "CAL0000004": // Exámenes
+                return examsCalendarCheck != null && examsCalendarCheck.isSelected();
+            default:
+                return true; // Mostrar otros eventos por defecto
+        }
     }
 
     private Label createEventLabel(Event event) {
@@ -247,6 +304,13 @@ public class CalendarWeekController implements Initializable {
                 eventLabel.getStyleClass().add("event-default");
         }
 
+        // Click para ver/editar evento
+        eventLabel.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 1) {
+                openEventDialogForRead(event.getStartDate().toLocalDate());
+            }
+        });
+
         return eventLabel;
     }
 
@@ -272,33 +336,11 @@ public class CalendarWeekController implements Initializable {
             } catch (Exception e) {
                 System.err.println("✗ Error cargando eventos de BD: " + e.getMessage());
                 e.printStackTrace();
-                loadSampleEvents();
+                showAlert("Error", "No se pudieron cargar los eventos desde la base de datos", Alert.AlertType.WARNING);
             }
         } else {
-            System.out.println("⚠ No hay usuario logueado, cargando eventos de ejemplo");
-            loadSampleEvents();
+            System.out.println("⚠ No hay usuario logueado");
         }
-    }
-
-    private void loadSampleEvents() {
-        events.clear();
-
-        // Crear eventos de ejemplo
-        Event sampleEvent1 = new Event();
-        sampleEvent1.setTitle("Reunión importante");
-        sampleEvent1.setStartDate(LocalDateTime.of(LocalDate.now(), LocalTime.of(9, 0)));
-        sampleEvent1.setCalendarId("CAL0000001");
-
-        Event sampleEvent2 = new Event();
-        sampleEvent2.setTitle("Entrega proyecto");
-        sampleEvent2.setStartDate(LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.of(14, 0)));
-        sampleEvent2.setCalendarId("CAL0000002");
-
-        events.computeIfAbsent(LocalDate.now(), k -> new ArrayList<>()).add(sampleEvent1);
-        events.computeIfAbsent(LocalDate.now().plusDays(1), k -> new ArrayList<>()).add(sampleEvent2);
-
-        Platform.runLater(this::createWeekView);
-        System.out.println("✓ Eventos de ejemplo cargados");
     }
 
     private void updateCalendarView() {
@@ -311,7 +353,7 @@ public class CalendarWeekController implements Initializable {
         }
     }
 
-    // Navegación - MÉTODOS CORREGIDOS
+    // ========== NAVEGACIÓN ==========
     @FXML
     private void handleTodayClick() {
         System.out.println("🔄 Navegando a hoy...");
@@ -340,12 +382,81 @@ public class CalendarWeekController implements Initializable {
         loadEventsFromDatabase();
     }
 
+    // ========== GESTIÓN DE EVENTOS ==========
     @FXML
-    private void handleCloseButton() {
-        System.exit(0);
+    private void handleCreateButton() {
+        if (authService.getCurrentUser() != null) {
+            openEventDialogForCreate(LocalDate.now());
+        } else {
+            showAlert("Error", "No hay usuario logueado", Alert.AlertType.ERROR);
+        }
     }
 
-    // Navegación entre vistas
+    private void openEventDialogForCreate(LocalDate date) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/event-dialog.fxml"));
+            Parent dialogRoot = loader.load();
+            com.utez.calendario.controllers.EventDialogController dialogController = loader.getController();
+
+            Runnable onEventChanged = this::loadEventsFromDatabase;
+            dialogController.initializeForCreate(date, onEventChanged);
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("UTEZ Calendar - Crear Evento");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(createButton.getScene().getWindow());
+            Scene dialogScene = new Scene(dialogRoot);
+
+            try {
+                dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
+            } catch (Exception ignored) {}
+
+            dialogStage.setScene(dialogScene);
+            dialogStage.setResizable(true);
+            dialogStage.setMinWidth(600);
+            dialogStage.setMinHeight(500);
+            dialogStage.showAndWait();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Error", "No se pudo abrir el diálogo de eventos: " + e.getMessage(),
+                    Alert.AlertType.ERROR);
+        }
+    }
+
+    private void openEventDialogForRead(LocalDate date) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/event-dialog.fxml"));
+            Parent dialogRoot = loader.load();
+            com.utez.calendario.controllers.EventDialogController dialogController = loader.getController();
+
+            Runnable onEventChanged = this::loadEventsFromDatabase;
+            dialogController.initializeForRead(date, onEventChanged);
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("UTEZ Calendar - Ver Eventos");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(createButton.getScene().getWindow());
+            Scene dialogScene = new Scene(dialogRoot);
+
+            try {
+                dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
+            } catch (Exception ignored) {}
+
+            dialogStage.setScene(dialogScene);
+            dialogStage.setResizable(true);
+            dialogStage.setMinWidth(600);
+            dialogStage.setMinHeight(500);
+            dialogStage.showAndWait();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Error", "No se pudo abrir el diálogo de eventos: " + e.getMessage(),
+                    Alert.AlertType.ERROR);
+        }
+    }
+
+    // ========== NAVEGACIÓN ENTRE VISTAS ==========
     @FXML
     private void handleDayView() {
         navigateToView("/fxml/calendar-day.fxml", "/css/styles-day.css", "Vista Día");
@@ -372,19 +483,47 @@ public class CalendarWeekController implements Initializable {
             Parent root = loader.load();
 
             Stage stage = (Stage) calendarGrid.getScene().getWindow();
+
+            // Guardar dimensiones
+            double currentWidth = stage.getWidth() > 100 ? stage.getWidth() : 1200;
+            double currentHeight = stage.getHeight() > 100 ? stage.getHeight() : 800;
+            boolean isMaximized = stage.isMaximized();
+
             Scene scene = new Scene(root);
             scene.getStylesheets().add(getClass().getResource(cssPath).toExternalForm());
 
             stage.setScene(scene);
             stage.setTitle("UTEZ Calendar - " + title);
 
+            // Restaurar dimensiones
+            if (isMaximized) {
+                stage.setMaximized(true);
+            } else {
+                stage.setWidth(currentWidth);
+                stage.setHeight(currentHeight);
+                Platform.runLater(stage::centerOnScreen);
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
+            showAlert("Error", "No se pudo cargar la vista: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
     @FXML
-    private void handleCreateButton() {
-        System.out.println("➕ Crear nuevo evento");
+    private void handleCloseButton() {
+        if (authService.getCurrentUser() != null) {
+            authService.logout();
+        }
+        Platform.exit();
+    }
+
+    // ========== UTILIDADES ==========
+    private void showAlert(String title, String message, Alert.AlertType type) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }
