@@ -141,7 +141,10 @@ public class User {
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
+
                 User user = new User();
+
+                user.setUserId(rs.getString("USER_ID"));
                 user.setMatricula(rs.getString("MATRICULA"));
                 user.setEmail(rs.getString("EMAIL"));
                 user.setFirstName(rs.getString("FIRST_NAME"));
@@ -166,6 +169,29 @@ public class User {
         }
 
         return users;
+    }
+
+    public boolean toggleActive() {
+        char newStatus = this.isActive() ? 'N' : 'Y';  // Cambia el estado de el usuario seleccionado pa desactivarlo
+
+        String sql = "UPDATE users SET ACTIVE = ? WHERE USER_ID = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, String.valueOf(newStatus));
+            stmt.setString(2, this.getUserId());
+
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0) {
+                // Actualiza el objeto local también
+                this.setActive(newStatus);
+                return true;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al cambiar estado del usuario: " + e.getMessage());
+        }
+
+        return false;
     }
 
     // Enum para los roles UTEZ

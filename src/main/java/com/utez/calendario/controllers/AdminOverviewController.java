@@ -33,6 +33,10 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 import java.awt.*;
 import java.util.List;
@@ -75,6 +79,18 @@ public class AdminOverviewController implements Initializable {
             System.err.println("Error en inicialización: " + e.getMessage());
             setStatus("Error en inicialización");
         }
+    }
+
+    private ImageView createIcon(String path) {
+
+        ImageView imageView = new ImageView(new Image(getClass().getResourceAsStream(path)));
+
+        imageView.setFitHeight(30);
+        imageView.setFitWidth(30);
+        imageView.setPreserveRatio(true);
+
+        return imageView;
+
     }
 
     @FXML
@@ -236,7 +252,7 @@ public class AdminOverviewController implements Initializable {
         userTable.getStyleClass().add("user-table");
         userTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        // Definir columnas de la tabla
+        // Definir columnas
         TableColumn<User, String> matriculaColumn = new TableColumn<>("Matrícula");
         matriculaColumn.setCellValueFactory(new PropertyValueFactory<>("matricula"));
 
@@ -264,26 +280,55 @@ public class AdminOverviewController implements Initializable {
 
         TableColumn<User, Void> actionsColumn = new TableColumn<>("Acciones");
         actionsColumn.setCellFactory(col -> new TableCell<User, Void>() {
-            private final Button editButton = new Button("Editar");
-            private final Button deactivateButton = new Button("Desactivar");
-            private final HBox pane = new HBox(5, editButton, deactivateButton);
+            private final Button toggleButton = new Button();
+            private final HBox pane = new HBox(5, toggleButton);
 
             {
-                editButton.setOnAction(event -> {
-                    User user = getTableView().getItems().get(getIndex());
-                    setStatus("Editando usuario: " + user.getFullName());
-                });
+                pane.setAlignment(Pos.CENTER);
 
-                deactivateButton.setOnAction(event -> {
+                toggleButton.setOnAction(event -> {
                     User user = getTableView().getItems().get(getIndex());
-                    setStatus("Eliminando usuario: " + user.getFullName());
+                    boolean success = user.toggleActive();
+
+                    if (success) {
+                        // Actualizar el texto del botón según el nuevo estado
+                        updateButtonText(user);
+
+                        // Refrescar la tabla para mostrar el nuevo estado
+                        getTableView().refresh();
+
+                        setStatus(user.isActive()
+                                ? "Usuario activado: " + user.getFullName()
+                                : "Usuario desactivado: " + user.getFullName());
+                    } else {
+                        setStatus("Error al cambiar estado del usuario: " + user.getFullName());
+                    }
                 });
             }
 
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                setGraphic(empty ? null : pane);
+
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    User user = getTableView().getItems().get(getIndex());
+                    updateButtonText(user);
+                    setGraphic(pane);
+                }
+            }
+
+            private void updateButtonText(User user) {
+                if (user.isActive()) {
+                    toggleButton.setText("Desactivar");
+                    toggleButton.getStyleClass().remove("activate-button");
+                    toggleButton.getStyleClass().add("deactivate-button");
+                } else {
+                    toggleButton.setText("Activar");
+                    toggleButton.getStyleClass().remove("deactivate-button");
+                    toggleButton.getStyleClass().add("activate-button");
+                }
             }
         });
 
@@ -293,19 +338,66 @@ public class AdminOverviewController implements Initializable {
                 roleColumn, activeColumn, actionsColumn
         );
 
-        // Cargar datos
-        try {
-            List<User> users = User.getAllUsers();
-            userTable.getItems().addAll(users);
-            setStatus("Se han cargado " + users.size() + " usuarios");
-        } catch (Exception e) {
-            setStatus("Error al cargar usuarios: " + e.getMessage());
-        }
+        // Variables para la paginación
+        final int itemsPerPage = 10;
+        final IntegerProperty currentPageIndex = new SimpleIntegerProperty(0);
+        final List<User> masterData = User.getAllUsers();
 
-        // Contenedor para la tabla
-        VBox userContent = new VBox();
+        // Función para actualizar los datos mostrados
+        Runnable updatePageData = () -> {
+            int startIndex = currentPageIndex.get() * itemsPerPage;
+            int endIndex = Math.min(startIndex + itemsPerPage, masterData.size());
+
+            userTable.getItems().clear();
+            userTable.getItems().addAll(masterData.subList(startIndex, endIndex));
+
+            setStatus("Mostrando usuarios " + (startIndex + 1) + " a " + endIndex +
+                    " de " + masterData.size());
+        };
+
+        // Crear botones de navegación
+        Button prevButton = new Button();
+        prevButton.getStyleClass().addAll("pagination-button", "icon-button");
+        prevButton.setGraphic(createIcon("/images/arrow-left.png"));
+        prevButton.setDisable(true);
+        prevButton.setOnAction(e -> {
+            currentPageIndex.set(currentPageIndex.get() - 1);
+            updatePageData.run();
+        });
+
+        Button nextButton = new Button();
+        nextButton.getStyleClass().addAll("pagination-button", "icon-button");
+        nextButton.setGraphic(createIcon("/images/arrow-right.png"));
+        nextButton.setOnAction(e -> {
+            currentPageIndex.set(currentPageIndex.get() + 1);
+            updatePageData.run();
+        });
+
+        Label pageInfoLabel = new Label();
+
+        // Listener para actualizar estado de botones
+        currentPageIndex.addListener((obs, oldVal, newVal) -> {
+            int pageIndex = newVal.intValue();
+            prevButton.setDisable(pageIndex == 0);
+            nextButton.setDisable((pageIndex + 1) * itemsPerPage >= masterData.size());
+            pageInfoLabel.setText("Página " + (pageIndex + 1) + " de " +
+                    ((masterData.size() - 1) / itemsPerPage + 1));
+        });
+
+        // Barra de paginación
+        HBox paginationBar = new HBox(10);
+        paginationBar.setAlignment(Pos.CENTER);
+        paginationBar.getStyleClass().add("pagination-bar");
+        paginationBar.getChildren().addAll(prevButton, pageInfoLabel, nextButton);
+
+        // Inicializar con la primera página
+        updatePageData.run();
+        pageInfoLabel.setText("Página 1 de " + ((masterData.size() - 1) / itemsPerPage + 1));
+
+        // Contenedor para la tabla y la paginación
+        VBox userContent = new VBox(10);
         userContent.getStyleClass().add("table-container");
-        userContent.getChildren().add(userTable);
+        userContent.getChildren().addAll(userTable, paginationBar);
 
         userManagementSection.getChildren().addAll(userHeader, userContent);
         return userManagementSection;
@@ -442,7 +534,7 @@ public class AdminOverviewController implements Initializable {
 
             cleanup();
 
-            System.out.println("Login cargado exitosamente con características del Main");
+            System.out.println("Login cargado exitosamente");
 
         } catch (Exception e) {
             System.err.println("No se pudo volver al login: " + e.getMessage());

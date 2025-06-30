@@ -129,8 +129,22 @@ public class LoginController implements Initializable {
                 System.out.println("Email: " + email);
                 System.out.println("Hora: " + LocalDateTime.now());
 
-                if (authService.login(email, password)) {
-                    handleSuccessfulLogin();
+                // Verificar si las credenciales son correctas pero la cuenta está desactivada
+                if (authService.authenticateOnly(email, password)) {
+                    User user = authService.findUserByEmail(email);
+                    if (user != null && !user.isActive()) {
+                        showError("Tu cuenta está desactivada, favor de contactar con un administrador.");
+                        setLoginInProgress(false);
+                        return;
+                    }
+
+                    // Si las credenciales son correctas y la cuenta está activa
+                    if (authService.login(email, password)) {
+                        handleSuccessfulLogin();
+                    } else {
+                        showError("Credenciales incorrectas. Verifica tu correo y contraseña.");
+                        setLoginInProgress(false);
+                    }
                 } else {
                     showError("Credenciales incorrectas. Verifica tu correo y contraseña.");
                     setLoginInProgress(false);
