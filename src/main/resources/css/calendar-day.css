@@ -1,0 +1,389 @@
+/* ==========================================================================
+   CALENDAR-DAY VIEW - Vista de calendario diaria
+   ========================================================================== */
+
+/* ========== CONTENEDOR PRINCIPAL ========== */
+.main-grid {
+    -fx-background-color: white;
+    -fx-padding: 0;
+    -fx-spacing: 0;
+}
+
+/* ========== ÁREA DEL CALENDARIO ========== */
+.calendar-area {
+    -fx-background-color: white;
+    -fx-padding: 0;
+    -fx-spacing: 0;
+    -fx-max-width: Double.MAX_VALUE;
+    -fx-max-height: Double.MAX_VALUE;
+}
+
+/* ScrollPane del calendario */
+.day-scrollpane {
+    -fx-background-color: white;
+    -fx-padding: 20;
+    -fx-fit-to-width: true;
+    -fx-fit-to-height: true;
+    -fx-hbar-policy: never; /* No necesitamos scroll horizontal en vista diaria */
+    -fx-vbar-policy: as-needed;
+}
+
+.day-scrollpane .viewport {
+    -fx-background-color: white;
+}
+
+.day-scrollpane .scroll-bar:vertical {
+    -fx-background-color: #f5f5f5;
+    -fx-border-color: transparent;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+}
+
+.day-scrollpane .scroll-bar .track {
+    -fx-background-color: #f5f5f5;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+}
+
+.day-scrollpane .scroll-bar .thumb {
+    -fx-background-color: #c1c1c1;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+}
+
+/* ========== GRID PRINCIPAL DEL CALENDARIO ========== */
+.main-calendar-grid {
+    -fx-background-color: white;
+    -fx-border-color: #dadce0;
+    -fx-border-width: 1 0 0 1;
+    -fx-grid-lines-visible: false;
+    -fx-hgap: 0;
+    -fx-vgap: 0;
+    -fx-padding: 0;
+    -fx-min-width: 600; /* Ancho mínimo para vista diaria */
+    -fx-pref-width: Region.USE_COMPUTED_SIZE;
+    -fx-max-width: Double.MAX_VALUE;
+}
+
+/* ========== CELDA DE ESQUINA ========== */
+.corner-cell {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #dadce0;
+    -fx-border-width: 0 1 1 0;
+    -fx-min-width: 100;
+    -fx-pref-width: 100;
+    -fx-max-width: 100;
+    -fx-min-height: 80;
+    -fx-pref-height: 80;
+    -fx-alignment: center;
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+}
+
+/* ========== ENCABEZADO DEL DÍA - ESTILO ESPECIAL PARA VISTA DIARIA ========== */
+.day-header {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #dadce0;
+    -fx-border-width: 0 1 1 0;
+    -fx-padding: 15 20;
+    -fx-alignment: center;
+    -fx-spacing: 8;
+    -fx-min-height: 80;
+    -fx-pref-height: 80;
+    -fx-min-width: 400; /* Más ancho para vista diaria */
+    -fx-pref-width: Region.USE_COMPUTED_SIZE;
+    -fx-max-width: Double.MAX_VALUE;
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+}
+
+.day-header-name {
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #5f6368;
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+    -fx-wrap-text: false;
+    -fx-text-overrun: none;
+}
+
+.day-header-number {
+    -fx-font-size: 36px;
+    -fx-font-weight: 300;
+    -fx-text-fill: #3c4043;
+    -fx-min-width: 50;
+    -fx-min-height: 50;
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+}
+
+.day-header-today {
+    -fx-background-color: #1a73e8;
+    -fx-text-fill: white;
+    -fx-background-radius: 25;
+    -fx-font-weight: 500;
+}
+
+/* ========== ETIQUETAS DE HORA - OPTIMIZADAS PARA VISTA DIARIA ========== */
+.hour-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #70757a;
+    -fx-padding: 0 20 0 0;
+    -fx-alignment: center-right;
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #dadce0;
+    -fx-border-width: 0 1 1 0;
+    -fx-min-height: 60;
+    -fx-pref-height: 60;
+    -fx-min-width: 100;
+    -fx-pref-width: 100;
+    -fx-max-width: 100;
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+}
+
+/* ========== CELDAS DE HORAS - OPTIMIZADAS PARA VISTA DIARIA ========== */
+.hour-cell {
+    -fx-background-color: white;
+    -fx-border-color: #dadce0;
+    -fx-border-width: 0 1 1 0;
+    -fx-padding: 6;
+    -fx-spacing: 3;
+    -fx-alignment: top-left;
+    -fx-min-height: 60;
+    -fx-pref-height: 60;
+    -fx-min-width: 400; /* Más ancho para vista diaria */
+    -fx-pref-width: Region.USE_COMPUTED_SIZE;
+    -fx-max-width: Double.MAX_VALUE;
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+}
+
+.hour-cell-hover {
+    -fx-background-color: #f1f3f4;
+}
+
+.hour-cell-selected {
+    -fx-background-color: #e8f0fe;
+    -fx-border-color: #1a73e8;
+    -fx-border-width: 0 1 1 2;
+}
+
+/* ========== EVENTOS - MEJORADOS PARA VISTA DIARIA ========== */
+.event-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: white;
+    -fx-padding: 6 12;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 3, 0, 0, 1);
+    -fx-max-width: Double.MAX_VALUE;
+    -fx-wrap-text: true;
+    -fx-text-overrun: ellipsis;
+    -fx-alignment: center-left;
+}
+
+.event-blue {
+    -fx-background-color: #1976d2;
+}
+
+.event-red {
+    -fx-background-color: #e53935;
+}
+
+.event-green {
+    -fx-background-color: #43a047;
+}
+
+.event-orange {
+    -fx-background-color: #fb8c00;
+}
+
+.event-purple {
+    -fx-background-color: #8e24aa;
+}
+
+.event-pink {
+    -fx-background-color: #e91e63;
+}
+
+.event-teal {
+    -fx-background-color: #00acc1;
+}
+
+.event-indigo {
+    -fx-background-color: #3f51b5;
+}
+
+.event-default {
+    -fx-background-color: #757575;
+}
+
+.event-label:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 3);
+    -fx-scale-x: 1.03;
+    -fx-scale-y: 1.03;
+}
+
+/* ========== LÍNEA DE HORA ACTUAL ========== */
+.current-time-line {
+    -fx-background-color: #ea4335;
+    -fx-min-height: 3;
+    -fx-pref-height: 3;
+    -fx-max-height: 3;
+    -fx-effect: dropshadow(gaussian, rgba(234,67,53,0.6), 3, 0, 0, 0);
+}
+
+.current-time-indicator {
+    -fx-background-color: #ea4335;
+    -fx-background-radius: 50%;
+    -fx-min-width: 12;
+    -fx-min-height: 12;
+    -fx-max-width: 12;
+    -fx-max-height: 12;
+    -fx-effect: dropshadow(gaussian, rgba(234,67,53,0.6), 3, 0, 0, 0);
+}
+
+/* ========== EFECTOS Y ANIMACIONES ========== */
+.day-header:hover {
+    -fx-background-color: #e8eaed;
+}
+
+.hour-cell:hover {
+    -fx-cursor: crosshair;
+}
+
+/* ========== RESPONSIVE PARA VISTA DIARIA ========== */
+@media screen and (min-width: 1400px) {
+    .hour-cell {
+        -fx-min-width: 500;
+    }
+
+    .day-header {
+        -fx-min-width: 500;
+    }
+
+    .day-header-name {
+        -fx-font-size: 18px;
+    }
+
+    .day-header-number {
+        -fx-font-size: 40px;
+    }
+
+    .event-label {
+        -fx-font-size: 13px;
+    }
+}
+
+@media screen and (max-width: 1200px) {
+    .hour-cell {
+        -fx-min-width: 350;
+    }
+
+    .day-header {
+        -fx-min-width: 350;
+        -fx-padding: 12 15;
+    }
+
+    .day-header-name {
+        -fx-font-size: 14px;
+    }
+
+    .day-header-number {
+        -fx-font-size: 32px;
+    }
+
+    .corner-cell {
+        -fx-min-width: 80;
+        -fx-pref-width: 80;
+        -fx-max-width: 80;
+    }
+
+    .hour-label {
+        -fx-font-size: 11px;
+        -fx-min-width: 80;
+        -fx-pref-width: 80;
+        -fx-max-width: 80;
+    }
+
+    .event-label {
+        -fx-font-size: 11px;
+        -fx-padding: 5 10;
+    }
+}
+
+@media screen and (max-width: 900px) {
+    .hour-cell {
+        -fx-min-width: 300;
+    }
+
+    .day-header {
+        -fx-min-width: 300;
+        -fx-min-height: 70;
+        -fx-pref-height: 70;
+    }
+
+    .day-header-name {
+        -fx-font-size: 12px;
+    }
+
+    .day-header-number {
+        -fx-font-size: 28px;
+    }
+
+    .corner-cell {
+        -fx-min-width: 70;
+        -fx-pref-width: 70;
+        -fx-max-width: 70;
+        -fx-min-height: 70;
+        -fx-pref-height: 70;
+    }
+
+    .hour-label {
+        -fx-font-size: 10px;
+        -fx-min-width: 70;
+        -fx-pref-width: 70;
+        -fx-max-width: 70;
+        -fx-min-height: 50;
+        -fx-pref-height: 50;
+    }
+
+    .hour-cell {
+        -fx-min-height: 50;
+        -fx-pref-height: 50;
+    }
+}
+
+/* ========== TOOLTIPS ========== */
+.tooltip {
+    -fx-background-color: #2c2c2c;
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+    -fx-padding: 8 12;
+    -fx-background-radius: 6;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 4, 0, 0, 2);
+}
+
+/* ========== ESTADOS ESPECIALES ========== */
+.weekend-hour-cell {
+    -fx-background-color: #fafbff;
+}
+
+.all-day-events-area {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #dadce0;
+    -fx-border-width: 0 1 1 0;
+    -fx-padding: 8;
+    -fx-spacing: 4;
+    -fx-min-height: 40;
+    -fx-pref-height: Region.USE_COMPUTED_SIZE;
+    -fx-max-height: 120;
+}
+
+.all-day-event {
+    -fx-background-radius: 15;
+    -fx-padding: 4 12;
+    -fx-font-size: 11px;
+    -fx-font-weight: 500;
+}

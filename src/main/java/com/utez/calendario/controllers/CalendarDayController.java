@@ -22,11 +22,11 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-public class CalendarWeekController implements Initializable {
+public class CalendarDayController implements Initializable {
 
     @FXML private Label monthYearLabel;
     @FXML private GridPane calendarGrid;
-    @FXML private ScrollPane weekScrollPane;
+    @FXML private ScrollPane dayScrollPane;
     @FXML private Button createButton;
     @FXML private CheckBox userCalendarCheck;
     @FXML private CheckBox tasksCalendarCheck;
@@ -35,10 +35,9 @@ public class CalendarWeekController implements Initializable {
     @FXML private CheckBox holidaysCalendarCheck;
     @FXML private CheckBox utezCalendarCheck;
 
-    private LocalDate startOfWeek;
-    private LocalDate selectedDate;
-    private Map<LocalDate, List<Event>> events;
-    private int currentViewMode = 1; // Semana
+    private LocalDate currentDate;
+    private List<Event> events;
+    private int currentViewMode = 0; // Día
 
     private EventService eventService;
     private AuthService authService;
@@ -50,7 +49,7 @@ public class CalendarWeekController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        System.out.println("\n=== INICIANDO VISTA SEMANAL ===");
+        System.out.println("\n=== INICIANDO VISTA DIARIA ===");
         System.out.println("Fecha/Hora: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         eventService = EventService.getInstance();
@@ -72,9 +71,8 @@ public class CalendarWeekController implements Initializable {
     }
 
     private void initializeCalendar() {
-        selectedDate = LocalDate.now();
-        startOfWeek = selectedDate.with(DayOfWeek.SUNDAY);
-        events = new HashMap<>();
+        currentDate = LocalDate.now();
+        events = new ArrayList<>();
         updateCalendarView();
     }
 
@@ -101,62 +99,62 @@ public class CalendarWeekController implements Initializable {
     }
 
     private void refreshCalendarDisplay() {
-        Platform.runLater(this::createWeekView);
+        Platform.runLater(this::createDayView);
     }
 
     private void setupScrollPane() {
-        if (weekScrollPane != null) {
-            weekScrollPane.setFitToWidth(true);
-            weekScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-            weekScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED); //
+        if (dayScrollPane != null) {
+            dayScrollPane.setFitToWidth(true);
+            dayScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+            dayScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER); // No scroll horizontal en vista diaria
+
             // Scroll a las 8 AM al inicio
             Platform.runLater(() -> {
                 double scrollPosition = 8.0 / TOTAL_HOURS;
-                weekScrollPane.setVvalue(scrollPosition);
+                dayScrollPane.setVvalue(scrollPosition);
             });
         }
     }
 
     private void setupCalendarGrid() {
-
         if (calendarGrid == null) return;
 
         calendarGrid.getChildren().clear();
         calendarGrid.getColumnConstraints().clear();
         calendarGrid.getRowConstraints().clear();
 
-
+        // Columna para etiquetas de hora (más ancha para vista diaria)
         ColumnConstraints hourColumn = new ColumnConstraints();
-        hourColumn.setMinWidth(60);
-        hourColumn.setPrefWidth(60);
-        hourColumn.setMaxWidth(60);
+        hourColumn.setMinWidth(100);
+        hourColumn.setPrefWidth(100);
+        hourColumn.setMaxWidth(100);
         calendarGrid.getColumnConstraints().add(hourColumn);
 
-        for (int i = 0; i < 7; i++) {
-            ColumnConstraints dayColumn = new ColumnConstraints();
-            dayColumn.setMinWidth(94);
-            dayColumn.setPercentWidth(94.0 / 7.0);
-            dayColumn.setHgrow(Priority.ALWAYS);
-            calendarGrid.getColumnConstraints().add(dayColumn);
-        }
+        // Una sola columna para el día (toma todo el espacio restante)
+        ColumnConstraints dayColumn = new ColumnConstraints();
+        dayColumn.setMinWidth(400);
+        dayColumn.setHgrow(Priority.ALWAYS);
+        calendarGrid.getColumnConstraints().add(dayColumn);
 
-
+        // Fila para encabezado
         RowConstraints headerRow = new RowConstraints();
-        headerRow.setMinHeight(60);
-        headerRow.setPrefHeight(60);
+        headerRow.setMinHeight(80);
+        headerRow.setPrefHeight(80);
         calendarGrid.getRowConstraints().add(headerRow);
 
         // Filas para cada hora
         for (int i = 0; i < TOTAL_HOURS; i++) {
             RowConstraints hourRow = new RowConstraints();
+            hourRow.setMinHeight(60);
+            hourRow.setPrefHeight(60);
             hourRow.setVgrow(Priority.NEVER);
             calendarGrid.getRowConstraints().add(hourRow);
         }
 
-        createWeekView();
+        createDayView();
     }
 
-    private void createWeekView() {
+    private void createDayView() {
         // Limpiar contenido existente pero mantener constraints
         calendarGrid.getChildren().clear();
 
@@ -165,13 +163,9 @@ public class CalendarWeekController implements Initializable {
         cornerLabel.getStyleClass().add("corner-cell");
         calendarGrid.add(cornerLabel, 0, 0);
 
-        // Encabezados de días
-        String[] dayNames = {"DOM", "LUN", "MAR", "MIE", "JUE", "VIE", "SAB"};
-        for (int day = 0; day < 7; day++) {
-            LocalDate date = startOfWeek.plusDays(day);
-            VBox dayHeader = createDayHeader(dayNames[day], date);
-            calendarGrid.add(dayHeader, day + 1, 0);
-        }
+        // Encabezado del día
+        VBox dayHeader = createDayHeader();
+        calendarGrid.add(dayHeader, 1, 0);
 
         // Etiquetas de horas y celdas
         for (int hour = 0; hour < TOTAL_HOURS; hour++) {
@@ -181,30 +175,36 @@ public class CalendarWeekController implements Initializable {
             Label hourLabel = createHourLabel(actualHour);
             calendarGrid.add(hourLabel, 0, hour + 1);
 
-            // Celdas para cada día en esta hora
-            for (int day = 0; day < 7; day++) {
-                LocalDate cellDate = startOfWeek.plusDays(day);
-                VBox hourCell = createHourCell(cellDate, actualHour);
-                calendarGrid.add(hourCell, day + 1, hour + 1);
-            }
+            // Celda para esta hora
+            VBox hourCell = createHourCell(actualHour);
+            calendarGrid.add(hourCell, 1, hour + 1);
         }
 
-        System.out.println("✓ Vista semanal creada con " + TOTAL_HOURS + " horas");
+        // Agregar línea de hora actual si es hoy
+        if (currentDate.equals(LocalDate.now())) {
+            addCurrentTimeLine();
+        }
+
+        System.out.println("✓ Vista diaria creada para: " + currentDate + " con " + TOTAL_HOURS + " horas");
     }
 
-    private VBox createDayHeader(String dayName, LocalDate date) {
+    private VBox createDayHeader() {
         VBox header = new VBox();
         header.getStyleClass().add("day-header");
         header.setAlignment(Pos.CENTER);
 
+        // Nombre del día
+        String dayName = currentDate.getDayOfWeek().getDisplayName(
+                java.time.format.TextStyle.FULL, Locale.getDefault()).toUpperCase();
         Label dayLabel = new Label(dayName);
         dayLabel.getStyleClass().add("day-header-name");
 
-        Label dateLabel = new Label(String.valueOf(date.getDayOfMonth()));
+        // Número del día
+        Label dateLabel = new Label(String.valueOf(currentDate.getDayOfMonth()));
         dateLabel.getStyleClass().add("day-header-number");
 
         // Marcar día actual
-        if (date.equals(LocalDate.now())) {
+        if (currentDate.equals(LocalDate.now())) {
             dateLabel.getStyleClass().add("day-header-today");
         }
 
@@ -226,16 +226,15 @@ public class CalendarWeekController implements Initializable {
         return (hour - 12) + " PM";
     }
 
-    private VBox createHourCell(LocalDate date, int hour) {
+    private VBox createHourCell(int hour) {
         VBox cell = new VBox();
         cell.getStyleClass().add("hour-cell");
         cell.setAlignment(Pos.TOP_LEFT);
-        cell.setSpacing(2);
+        cell.setSpacing(3);
 
-        // Agregar eventos para esta hora y fecha si los calendarios están habilitados
-        List<Event> dayEvents = events.get(date);
-        if (dayEvents != null) {
-            for (Event event : dayEvents) {
+        // Agregar eventos para esta hora si los calendarios están habilitados
+        if (events != null) {
+            for (Event event : events) {
                 if (shouldShowEvent(event)) {
                     LocalTime eventTime = event.getStartDate().toLocalTime();
                     if (eventTime.getHour() == hour) {
@@ -253,12 +252,33 @@ public class CalendarWeekController implements Initializable {
         // Click para crear evento
         cell.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) { // Doble click
-                LocalDateTime clickDateTime = LocalDateTime.of(date, LocalTime.of(hour, 0));
+                LocalDateTime clickDateTime = LocalDateTime.of(currentDate, LocalTime.of(hour, 0));
                 openEventDialogForCreate(clickDateTime.toLocalDate());
             }
         });
 
         return cell;
+    }
+
+    private void addCurrentTimeLine() {
+        LocalTime now = LocalTime.now();
+        int currentHour = now.getHour();
+        int currentMinute = now.getMinute();
+
+        // Calcular posición exacta dentro de la hora
+        double hourProgress = currentMinute / 60.0;
+        int rowIndex = currentHour + 1; // +1 porque la primera fila es el encabezado
+
+        // Crear línea de tiempo actual
+        HBox timeLine = new HBox();
+        timeLine.getStyleClass().add("current-time-line");
+        timeLine.setMaxWidth(Double.MAX_VALUE);
+
+        // Agregar la línea en la posición correcta
+        calendarGrid.add(timeLine, 1, rowIndex);
+
+        // Ajustar posición vertical dentro de la celda usando margins
+        VBox.setMargin(timeLine, new javafx.geometry.Insets(hourProgress * 60, 0, 0, 0));
     }
 
     private boolean shouldShowEvent(Event event) {
@@ -317,19 +337,14 @@ public class CalendarWeekController implements Initializable {
             String userId = authService.getCurrentUser().getUserId();
 
             try {
-                // Cargar eventos para la semana
-                List<Event> weekEvents = eventService.getEventsForWeek(userId, startOfWeek, startOfWeek.plusDays(6));
-                events.clear();
-
-                for (Event event : weekEvents) {
-                    LocalDate eventDate = event.getStartDate().toLocalDate();
-                    events.computeIfAbsent(eventDate, k -> new ArrayList<>()).add(event);
-                }
+                // Cargar eventos para el día actual
+                List<Event> dayEvents = eventService.getEventsForDay(userId, currentDate);
+                events = dayEvents != null ? dayEvents : new ArrayList<>();
 
                 // Recrear la vista con los eventos cargados
-                Platform.runLater(this::createWeekView);
+                Platform.runLater(this::createDayView);
 
-                System.out.println("✓ Eventos cargados para la semana: " + weekEvents.size());
+                System.out.println("✓ Eventos cargados para el día: " + events.size());
 
             } catch (Exception e) {
                 System.err.println("✗ Error cargando eventos de BD: " + e.getMessage());
@@ -343,11 +358,8 @@ public class CalendarWeekController implements Initializable {
 
     private void updateCalendarView() {
         if (monthYearLabel != null) {
-            LocalDate endOfWeek = startOfWeek.plusDays(6);
-            String weekRange = startOfWeek.format(DateTimeFormatter.ofPattern("d MMM")) +
-                    " - " +
-                    endOfWeek.format(DateTimeFormatter.ofPattern("d MMM yyyy"));
-            monthYearLabel.setText(weekRange);
+            String dateText = currentDate.format(DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM 'de' yyyy"));
+            monthYearLabel.setText(dateText.toUpperCase());
         }
     }
 
@@ -355,26 +367,25 @@ public class CalendarWeekController implements Initializable {
     @FXML
     private void handleTodayClick() {
         System.out.println("🔄 Navegando a hoy...");
-        selectedDate = LocalDate.now();
-        startOfWeek = selectedDate.with(DayOfWeek.SUNDAY);
+        currentDate = LocalDate.now();
         updateCalendarView();
         setupCalendarGrid();
         loadEventsFromDatabase();
     }
 
     @FXML
-    private void handlePreviousWeek() {
-        System.out.println("⬅ Semana anterior");
-        startOfWeek = startOfWeek.minusWeeks(1);
+    private void handlePreviousDay() {
+        System.out.println("⬅ Día anterior");
+        currentDate = currentDate.minusDays(1);
         updateCalendarView();
         setupCalendarGrid();
         loadEventsFromDatabase();
     }
 
     @FXML
-    private void handleNextWeek() {
-        System.out.println("➡ Semana siguiente");
-        startOfWeek = startOfWeek.plusWeeks(1);
+    private void handleNextDay() {
+        System.out.println("➡ Día siguiente");
+        currentDate = currentDate.plusDays(1);
         updateCalendarView();
         setupCalendarGrid();
         loadEventsFromDatabase();
@@ -384,7 +395,7 @@ public class CalendarWeekController implements Initializable {
     @FXML
     private void handleCreateButton() {
         if (authService.getCurrentUser() != null) {
-            openEventDialogForCreate(LocalDate.now());
+            openEventDialogForCreate(currentDate);
         } else {
             showAlert("Error", "No hay usuario logueado", Alert.AlertType.ERROR);
         }
@@ -457,12 +468,12 @@ public class CalendarWeekController implements Initializable {
     // ========== NAVEGACIÓN ENTRE VISTAS ==========
     @FXML
     private void handleDayView() {
-        navigateToView("/fxml/calendar-day.fxml", "/css/styles-day.css", "Vista Día");
+        // Ya estamos en vista diaria
     }
 
     @FXML
     private void handleWeekView() {
-        // Ya estamos en vista semanal
+        navigateToView("/fxml/calendar-week.fxml", "/css/styles-week.css", "Vista Semana");
     }
 
     @FXML

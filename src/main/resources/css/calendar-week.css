@@ -77,14 +77,6 @@
     -fx-background-color: #f8f9fa;
     -fx-border-color: #dadce0;
     -fx-border-width: 0 1 1 0;
-    -fx-min-width: 90;
-    -fx-pref-width: 90;
-    -fx-max-width: 90;
-    -fx-min-height: 60;
-    -fx-pref-height: 60;
-    -fx-alignment: center;
-    -fx-background-insets: 0;
-    -fx-border-insets: 0;
 }
 
 /* ========== ENCABEZADOS DE DÍAS -  ========== */

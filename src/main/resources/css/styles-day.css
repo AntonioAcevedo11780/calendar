@@ -1,0 +1,11 @@
+/* ==========================================================================
+   MAIN STYLES - Vista diaria del calendario
+   ========================================================================== */
+
+/* Importar estilos base y componentes reutilizables */
+@import "base.css";
+@import "topbar.css";
+@import "sidebar.css";
+
+/* Importar vista específica diaria */
+@import "calendar-day.css";
