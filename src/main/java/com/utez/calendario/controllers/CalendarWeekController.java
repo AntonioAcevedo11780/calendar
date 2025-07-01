@@ -108,8 +108,7 @@ public class CalendarWeekController implements Initializable {
         if (weekScrollPane != null) {
             weekScrollPane.setFitToWidth(true);
             weekScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-            weekScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-
+            weekScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED); //
             // Scroll a las 8 AM al inicio
             Platform.runLater(() -> {
                 double scrollPosition = 8.0 / TOTAL_HOURS;
@@ -126,25 +125,25 @@ public class CalendarWeekController implements Initializable {
         calendarGrid.getColumnConstraints().clear();
         calendarGrid.getRowConstraints().clear();
 
-        // Configurar columnas: 1 para horas + 7 para días
+
         ColumnConstraints hourColumn = new ColumnConstraints();
-        hourColumn.setMinWidth(80);
-        hourColumn.setPrefWidth(80);
-        hourColumn.setMaxWidth(80);
+        hourColumn.setMinWidth(60);
+        hourColumn.setPrefWidth(60);
+        hourColumn.setMaxWidth(60);
         calendarGrid.getColumnConstraints().add(hourColumn);
 
-        // Columnas para días de la semana
         for (int i = 0; i < 7; i++) {
             ColumnConstraints dayColumn = new ColumnConstraints();
-            dayColumn.setPercentWidth(100.0 / 7.0);
+            dayColumn.setMinWidth(94);
+            dayColumn.setPercentWidth(94.0 / 7.0);
             dayColumn.setHgrow(Priority.ALWAYS);
             calendarGrid.getColumnConstraints().add(dayColumn);
         }
 
-        // Configurar filas: 1 para encabezados + TOTAL_HOURS para horas
+
         RowConstraints headerRow = new RowConstraints();
-        headerRow.setMinHeight(50);
-        headerRow.setPrefHeight(50);
+        headerRow.setMinHeight(60);
+        headerRow.setPrefHeight(60);
         calendarGrid.getRowConstraints().add(headerRow);
 
         // Filas para cada hora
