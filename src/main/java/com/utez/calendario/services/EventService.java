@@ -101,6 +101,13 @@ public class EventService {
     }
 
     /**
+     * Alias para getEventsForDate - para mantener compatibilidad con CalendarDayController
+     */
+    public List<Event> getEventsForDay(String userId, LocalDate date) {
+        return getEventsForDate(userId, date);
+    }
+
+    /**
      * Obtiene todos los eventos de un usuario para una semana específica
      */
     public List<Event> getEventsForWeek(String userId, LocalDate startDate, LocalDate endDate) {

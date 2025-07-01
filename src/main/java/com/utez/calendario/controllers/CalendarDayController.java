@@ -8,6 +8,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -123,31 +124,41 @@ public class CalendarDayController implements Initializable {
         calendarGrid.getColumnConstraints().clear();
         calendarGrid.getRowConstraints().clear();
 
-        // Columna para etiquetas de hora (más ancha para vista diaria)
+        // ELIMINAR TODOS LOS GAPS
+        calendarGrid.setHgap(0);
+        calendarGrid.setVgap(0);
+        calendarGrid.setPadding(new Insets(0));
+
+        // Columna para etiquetas de hora (sin gaps)
         ColumnConstraints hourColumn = new ColumnConstraints();
-        hourColumn.setMinWidth(100);
-        hourColumn.setPrefWidth(100);
-        hourColumn.setMaxWidth(100);
+        hourColumn.setMinWidth(80);
+        hourColumn.setPrefWidth(80);
+        hourColumn.setMaxWidth(80);
+        hourColumn.setFillWidth(false);
         calendarGrid.getColumnConstraints().add(hourColumn);
 
-        // Una sola columna para el día (toma todo el espacio restante)
+        // Una sola columna para el día (sin gaps)
         ColumnConstraints dayColumn = new ColumnConstraints();
         dayColumn.setMinWidth(400);
         dayColumn.setHgrow(Priority.ALWAYS);
+        dayColumn.setFillWidth(true);
         calendarGrid.getColumnConstraints().add(dayColumn);
 
-        // Fila para encabezado
+        // Fila para encabezado (sin gaps)
         RowConstraints headerRow = new RowConstraints();
-        headerRow.setMinHeight(80);
-        headerRow.setPrefHeight(80);
+        headerRow.setMinHeight(60);
+        headerRow.setPrefHeight(60);
+        headerRow.setVgrow(Priority.NEVER);
+        headerRow.setFillHeight(false);
         calendarGrid.getRowConstraints().add(headerRow);
 
-        // Filas para cada hora
+        // Filas para cada hora (sin gaps)
         for (int i = 0; i < TOTAL_HOURS; i++) {
             RowConstraints hourRow = new RowConstraints();
             hourRow.setMinHeight(60);
             hourRow.setPrefHeight(60);
             hourRow.setVgrow(Priority.NEVER);
+            hourRow.setFillHeight(false);
             calendarGrid.getRowConstraints().add(hourRow);
         }
 
@@ -161,10 +172,13 @@ public class CalendarDayController implements Initializable {
         // Celda vacía para esquina superior izquierda
         Label cornerLabel = new Label("");
         cornerLabel.getStyleClass().add("corner-cell");
+        // ASEGURAR QUE NO HAYA MARGINS
+        GridPane.setMargin(cornerLabel, new javafx.geometry.Insets(0));
         calendarGrid.add(cornerLabel, 0, 0);
 
         // Encabezado del día
         VBox dayHeader = createDayHeader();
+        GridPane.setMargin(dayHeader, new javafx.geometry.Insets(0));
         calendarGrid.add(dayHeader, 1, 0);
 
         // Etiquetas de horas y celdas
@@ -173,10 +187,12 @@ public class CalendarDayController implements Initializable {
 
             // Etiqueta de hora
             Label hourLabel = createHourLabel(actualHour);
+            GridPane.setMargin(hourLabel, new javafx.geometry.Insets(0));
             calendarGrid.add(hourLabel, 0, hour + 1);
 
             // Celda para esta hora
             VBox hourCell = createHourCell(actualHour);
+            GridPane.setMargin(hourCell, new javafx.geometry.Insets(0));
             calendarGrid.add(hourCell, 1, hour + 1);
         }
 
@@ -192,6 +208,8 @@ public class CalendarDayController implements Initializable {
         VBox header = new VBox();
         header.getStyleClass().add("day-header");
         header.setAlignment(Pos.CENTER);
+        header.setSpacing(4);
+        header.setPadding(new javafx.geometry.Insets(8, 15, 8, 15));
 
         // Nombre del día
         String dayName = currentDate.getDayOfWeek().getDisplayName(
@@ -216,6 +234,9 @@ public class CalendarDayController implements Initializable {
         String timeText = formatHour(hour);
         Label hourLabel = new Label(timeText);
         hourLabel.getStyleClass().add("hour-label");
+        // ASEGURAR ALINEACIÓN Y SIN PADDING EXTRA
+        hourLabel.setAlignment(Pos.CENTER_RIGHT);
+        hourLabel.setPadding(new javafx.geometry.Insets(0, 15, 0, 0));
         return hourLabel;
     }
 
@@ -230,7 +251,8 @@ public class CalendarDayController implements Initializable {
         VBox cell = new VBox();
         cell.getStyleClass().add("hour-cell");
         cell.setAlignment(Pos.TOP_LEFT);
-        cell.setSpacing(3);
+        cell.setSpacing(2);
+        cell.setPadding(new javafx.geometry.Insets(4));
 
         // Agregar eventos para esta hora si los calendarios están habilitados
         if (events != null) {
@@ -269,16 +291,29 @@ public class CalendarDayController implements Initializable {
         double hourProgress = currentMinute / 60.0;
         int rowIndex = currentHour + 1; // +1 porque la primera fila es el encabezado
 
-        // Crear línea de tiempo actual
-        HBox timeLine = new HBox();
+        // Crear contenedor para la línea de tiempo con bolita
+        HBox timeContainer = new HBox();
+        timeContainer.getStyleClass().add("current-time-container");
+        timeContainer.setAlignment(Pos.CENTER_LEFT);
+        timeContainer.setSpacing(0);
+        timeContainer.setMaxWidth(Double.MAX_VALUE);
+        timeContainer.setPadding(new javafx.geometry.Insets(0));
+
+        // Crear bolita roja
+        Region timeIndicator = new Region();
+        timeIndicator.getStyleClass().add("current-time-indicator");
+
+        // Crear línea roja
+        Region timeLine = new Region();
         timeLine.getStyleClass().add("current-time-line");
-        timeLine.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(timeLine, Priority.ALWAYS);
 
-        // Agregar la línea en la posición correcta
-        calendarGrid.add(timeLine, 1, rowIndex);
+        // Agregar bolita y línea al contenedor
+        timeContainer.getChildren().addAll(timeIndicator, timeLine);
 
-        // Ajustar posición vertical dentro de la celda usando margins
-        VBox.setMargin(timeLine, new javafx.geometry.Insets(hourProgress * 60, 0, 0, 0));
+        // Agregar el contenedor en la posición correcta SIN MARGIN
+        GridPane.setMargin(timeContainer, new javafx.geometry.Insets(hourProgress * 60, 0, 0, 0));
+        calendarGrid.add(timeContainer, 1, rowIndex);
     }
 
     private boolean shouldShowEvent(Event event) {

@@ -24,7 +24,7 @@
     -fx-padding: 20;
     -fx-fit-to-width: true;
     -fx-fit-to-height: true;
-    -fx-hbar-policy: never; /* No necesitamos scroll horizontal en vista diaria */
+    -fx-hbar-policy: never;
     -fx-vbar-policy: as-needed;
 }
 
@@ -51,46 +51,46 @@
     -fx-border-radius: 5;
 }
 
-/* ========== GRID PRINCIPAL DEL CALENDARIO ========== */
+/* ========== GRID PRINCIPAL DEL CALENDARIO - SIN ESPACIOS ========== */
 .main-calendar-grid {
     -fx-background-color: white;
     -fx-border-color: #dadce0;
-    -fx-border-width: 1 0 0 1;
+    -fx-border-width: 1 1 1 1;
     -fx-grid-lines-visible: false;
     -fx-hgap: 0;
     -fx-vgap: 0;
     -fx-padding: 0;
-    -fx-min-width: 600; /* Ancho mínimo para vista diaria */
+    -fx-min-width: 600;
     -fx-pref-width: Region.USE_COMPUTED_SIZE;
     -fx-max-width: Double.MAX_VALUE;
 }
 
-/* ========== CELDA DE ESQUINA ========== */
+/* ========== CELDA DE ESQUINA - SIN ESPACIOS ========== */
 .corner-cell {
     -fx-background-color: #f8f9fa;
     -fx-border-color: #dadce0;
-    -fx-border-width: 0 1 1 0;
-    -fx-min-width: 100;
-    -fx-pref-width: 100;
-    -fx-max-width: 100;
-    -fx-min-height: 80;
-    -fx-pref-height: 80;
+    -fx-border-width: 0 0 1 0;
+    -fx-min-width: 80;
+    -fx-pref-width: 80;
+    -fx-max-width: 80;
+    -fx-min-height: 60;
+    -fx-pref-height: 60;
     -fx-alignment: center;
     -fx-background-insets: 0;
     -fx-border-insets: 0;
 }
 
-/* ========== ENCABEZADO DEL DÍA - ESTILO ESPECIAL PARA VISTA DIARIA ========== */
+/* ========== ENCABEZADO DEL DÍA - SIN ESPACIOS ========== */
 .day-header {
     -fx-background-color: #f8f9fa;
     -fx-border-color: #dadce0;
-    -fx-border-width: 0 1 1 0;
-    -fx-padding: 15 20;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 8 15;
     -fx-alignment: center;
-    -fx-spacing: 8;
-    -fx-min-height: 80;
-    -fx-pref-height: 80;
-    -fx-min-width: 400; /* Más ancho para vista diaria */
+    -fx-spacing: 4;
+    -fx-min-height: 60;
+    -fx-pref-height: 60;
+    -fx-min-width: 400;
     -fx-pref-width: Region.USE_COMPUTED_SIZE;
     -fx-max-width: Double.MAX_VALUE;
     -fx-background-insets: 0;
@@ -98,8 +98,8 @@
 }
 
 .day-header-name {
-    -fx-font-size: 16px;
-    -fx-font-weight: 700;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
     -fx-text-fill: #5f6368;
     -fx-alignment: center;
     -fx-text-alignment: center;
@@ -108,11 +108,11 @@
 }
 
 .day-header-number {
-    -fx-font-size: 36px;
-    -fx-font-weight: 300;
+    -fx-font-size: 24px;
+    -fx-font-weight: 400;
     -fx-text-fill: #3c4043;
-    -fx-min-width: 50;
-    -fx-min-height: 50;
+    -fx-min-width: 30;
+    -fx-min-height: 30;
     -fx-alignment: center;
     -fx-text-alignment: center;
 }
@@ -120,39 +120,38 @@
 .day-header-today {
     -fx-background-color: #1a73e8;
     -fx-text-fill: white;
-    -fx-background-radius: 25;
+    -fx-background-radius: 20;
     -fx-font-weight: 500;
+    -fx-padding: 4 8;
 }
 
-/* ========== ETIQUETAS DE HORA - OPTIMIZADAS PARA VISTA DIARIA ========== */
+/* ========== ETIQUETAS DE HORA - SIN ESPACIOS ========== */
 .hour-label {
-    -fx-font-size: 12px;
+    -fx-font-size: 11px;
     -fx-text-fill: #70757a;
-    -fx-padding: 0 20 0 0;
     -fx-alignment: center-right;
     -fx-background-color: #f8f9fa;
     -fx-border-color: #dadce0;
-    -fx-border-width: 0 1 1 0;
+    -fx-border-width: 0 0 1 0;
     -fx-min-height: 60;
     -fx-pref-height: 60;
-    -fx-min-width: 100;
-    -fx-pref-width: 100;
-    -fx-max-width: 100;
+    -fx-min-width: 150;
+    -fx-pref-width: 150;
+    -fx-max-width: 80;
     -fx-background-insets: 0;
     -fx-border-insets: 0;
 }
 
-/* ========== CELDAS DE HORAS - OPTIMIZADAS PARA VISTA DIARIA ========== */
+/* ========== CELDAS DE HORAS - COMPLETAMENTE SIN ESPACIOS ========== */
 .hour-cell {
     -fx-background-color: white;
     -fx-border-color: #dadce0;
-    -fx-border-width: 0 1 1 0;
-    -fx-padding: 6;
-    -fx-spacing: 3;
+    -fx-border-width: 0 0 1 0;
+    -fx-spacing: 2;
     -fx-alignment: top-left;
     -fx-min-height: 60;
     -fx-pref-height: 60;
-    -fx-min-width: 400; /* Más ancho para vista diaria */
+    -fx-min-width: 400;
     -fx-pref-width: Region.USE_COMPUTED_SIZE;
     -fx-max-width: Double.MAX_VALUE;
     -fx-background-insets: 0;
@@ -166,17 +165,17 @@
 .hour-cell-selected {
     -fx-background-color: #e8f0fe;
     -fx-border-color: #1a73e8;
-    -fx-border-width: 0 1 1 2;
+    -fx-border-width: 0 0 1 2;
 }
 
-/* ========== EVENTOS - MEJORADOS PARA VISTA DIARIA ========== */
+/* ========== EVENTOS ========== */
 .event-label {
-    -fx-font-size: 12px;
+    -fx-font-size: 11px;
     -fx-text-fill: white;
-    -fx-padding: 6 12;
-    -fx-background-radius: 8;
+    -fx-padding: 4 8;
+    -fx-background-radius: 6;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 3, 0, 0, 1);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 2, 0, 0, 1);
     -fx-max-width: Double.MAX_VALUE;
     -fx-wrap-text: true;
     -fx-text-overrun: ellipsis;
@@ -220,28 +219,37 @@
 }
 
 .event-label:hover {
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 3);
-    -fx-scale-x: 1.03;
-    -fx-scale-y: 1.03;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 4, 0, 0, 2);
+    -fx-scale-x: 1.02;
+    -fx-scale-y: 1.02;
 }
 
-/* ========== LÍNEA DE HORA ACTUAL ========== */
-.current-time-line {
-    -fx-background-color: #ea4335;
-    -fx-min-height: 3;
-    -fx-pref-height: 3;
-    -fx-max-height: 3;
-    -fx-effect: dropshadow(gaussian, rgba(234,67,53,0.6), 3, 0, 0, 0);
+/* ========== LÍNEA DE HORA ACTUAL CON BOLITA ========== */
+.current-time-container {
+    -fx-alignment: center-left;
+    -fx-spacing: 0;
+    -fx-padding: 0;
+    -fx-max-width: Double.MAX_VALUE;
 }
 
 .current-time-indicator {
     -fx-background-color: #ea4335;
     -fx-background-radius: 50%;
-    -fx-min-width: 12;
-    -fx-min-height: 12;
-    -fx-max-width: 12;
-    -fx-max-height: 12;
-    -fx-effect: dropshadow(gaussian, rgba(234,67,53,0.6), 3, 0, 0, 0);
+    -fx-min-width: 8;
+    -fx-min-height: 8;
+    -fx-max-width: 8;
+    -fx-max-height: 8;
+    -fx-effect: dropshadow(gaussian, rgba(234,67,53,0.6), 2, 0, 0, 0);
+}
+
+.current-time-line {
+    -fx-background-color: #ea4335;
+    -fx-min-height: 2;
+    -fx-pref-height: 2;
+    -fx-max-height: 2;
+    -fx-effect: dropshadow(gaussian, rgba(234,67,53,0.6), 2, 0, 0, 0);
+    -fx-hgrow: always;
+    -fx-max-width: Double.MAX_VALUE;
 }
 
 /* ========== EFECTOS Y ANIMACIONES ========== */
@@ -264,15 +272,15 @@
     }
 
     .day-header-name {
-        -fx-font-size: 18px;
+        -fx-font-size: 14px;
     }
 
     .day-header-number {
-        -fx-font-size: 40px;
+        -fx-font-size: 28px;
     }
 
     .event-label {
-        -fx-font-size: 13px;
+        -fx-font-size: 12px;
     }
 }
 
@@ -283,33 +291,33 @@
 
     .day-header {
         -fx-min-width: 350;
-        -fx-padding: 12 15;
+        -fx-padding: 6 12;
     }
 
     .day-header-name {
-        -fx-font-size: 14px;
+        -fx-font-size: 11px;
     }
 
     .day-header-number {
-        -fx-font-size: 32px;
+        -fx-font-size: 20px;
     }
 
     .corner-cell {
-        -fx-min-width: 80;
-        -fx-pref-width: 80;
-        -fx-max-width: 80;
+        -fx-min-width: 70;
+        -fx-pref-width: 70;
+        -fx-max-width: 70;
     }
 
     .hour-label {
-        -fx-font-size: 11px;
-        -fx-min-width: 80;
-        -fx-pref-width: 80;
-        -fx-max-width: 80;
+        -fx-font-size: 10px;
+        -fx-min-width: 70;
+        -fx-pref-width: 70;
+        -fx-max-width: 70;
     }
 
     .event-label {
-        -fx-font-size: 11px;
-        -fx-padding: 5 10;
+        -fx-font-size: 10px;
+        -fx-padding: 3 6;
     }
 }
 
@@ -320,31 +328,31 @@
 
     .day-header {
         -fx-min-width: 300;
-        -fx-min-height: 70;
-        -fx-pref-height: 70;
+        -fx-min-height: 50;
+        -fx-pref-height: 50;
     }
 
     .day-header-name {
-        -fx-font-size: 12px;
+        -fx-font-size: 10px;
     }
 
     .day-header-number {
-        -fx-font-size: 28px;
+        -fx-font-size: 18px;
     }
 
     .corner-cell {
-        -fx-min-width: 70;
-        -fx-pref-width: 70;
-        -fx-max-width: 70;
-        -fx-min-height: 70;
-        -fx-pref-height: 70;
+        -fx-min-width: 60;
+        -fx-pref-width: 60;
+        -fx-max-width: 60;
+        -fx-min-height: 50;
+        -fx-pref-height: 50;
     }
 
     .hour-label {
-        -fx-font-size: 10px;
-        -fx-min-width: 70;
-        -fx-pref-width: 70;
-        -fx-max-width: 70;
+        -fx-font-size: 9px;
+        -fx-min-width: 60;
+        -fx-pref-width: 60;
+        -fx-max-width: 60;
         -fx-min-height: 50;
         -fx-pref-height: 50;
     }
@@ -359,10 +367,10 @@
 .tooltip {
     -fx-background-color: #2c2c2c;
     -fx-text-fill: white;
-    -fx-font-size: 12px;
-    -fx-padding: 8 12;
-    -fx-background-radius: 6;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 4, 0, 0, 2);
+    -fx-font-size: 11px;
+    -fx-padding: 6 10;
+    -fx-background-radius: 4;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 3, 0, 0, 1);
 }
 
 /* ========== ESTADOS ESPECIALES ========== */
@@ -373,17 +381,17 @@
 .all-day-events-area {
     -fx-background-color: #f8f9fa;
     -fx-border-color: #dadce0;
-    -fx-border-width: 0 1 1 0;
-    -fx-padding: 8;
-    -fx-spacing: 4;
-    -fx-min-height: 40;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 6;
+    -fx-spacing: 3;
+    -fx-min-height: 30;
     -fx-pref-height: Region.USE_COMPUTED_SIZE;
-    -fx-max-height: 120;
+    -fx-max-height: 100;
 }
 
 .all-day-event {
-    -fx-background-radius: 15;
-    -fx-padding: 4 12;
-    -fx-font-size: 11px;
+    -fx-background-radius: 12;
+    -fx-padding: 3 10;
+    -fx-font-size: 10px;
     -fx-font-weight: 500;
 }

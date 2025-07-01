@@ -129,20 +129,6 @@
                     </HBox>
                 </VBox>
 
-                <!-- Mini calendario de navegación -->
-                <VBox styleClass="calendar-section">
-                    <HBox alignment="CENTER_LEFT" spacing="6">
-                        <Label text="▲" styleClass="section-arrow" />
-                        <Label text="Navegación rápida" styleClass="section-header" />
-                    </HBox>
-
-                    <HBox alignment="CENTER" spacing="8" styleClass="quick-nav">
-                        <Button text="Ayer" styleClass="mini-nav-btn" onAction="#handlePreviousDay" />
-                        <Button text="Hoy" styleClass="mini-nav-btn" onAction="#handleTodayClick" />
-                        <Button text="Mañana" styleClass="mini-nav-btn" onAction="#handleNextDay" />
-                    </HBox>
-                </VBox>
-
                 <!-- Espaciador -->
                 <Region VBox.vgrow="ALWAYS" />
             </VBox>
