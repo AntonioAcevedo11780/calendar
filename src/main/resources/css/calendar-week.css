@@ -14,37 +14,16 @@
     -fx-background-color: white;
     -fx-padding: 0;
     -fx-spacing: 0;
+    -fx-max-width: Double.MAX_VALUE;
+    -fx-max-height: Double.MAX_VALUE;
 }
 
-/* ScrollPane del calendario */
-.calendar-scrollpane {
+/* ScrollPane del calendario  */
+.week-scrollpane {
     -fx-background-color: white;
-    -fx-border-color: transparent;
+    -fx-padding: 20;
     -fx-fit-to-width: true;
     -fx-fit-to-height: true;
-}
-
-.calendar-scrollpane .viewport {
-    -fx-background-color: white;
-}
-
-.calendar-scrollpane .scroll-bar:vertical {
-    -fx-background-color: #f5f5f5;
-    -fx-border-color: transparent;
-    -fx-background-radius: 5;
-    -fx-border-radius: 5;
-}
-
-.calendar-scrollpane .scroll-bar:vertical .track {
-    -fx-background-color: #f5f5f5;
-    -fx-background-radius: 5;
-    -fx-border-radius: 5;
-}
-
-.calendar-scrollpane .scroll-bar:vertical .thumb {
-    -fx-background-color: #c1c1c1;
-    -fx-background-radius: 5;
-    -fx-border-radius: 5;
 }
 
 /* ========== GRID PRINCIPAL DEL CALENDARIO ========== */
@@ -56,6 +35,9 @@
     -fx-hgap: 0;
     -fx-vgap: 0;
     -fx-padding: 0;
+    -fx-min-width: 900; /* Ancho mínimo para evitar que se comprima */
+    -fx-pref-width: Region.USE_COMPUTED_SIZE;
+    -fx-max-width: Double.MAX_VALUE;
 }
 
 /* ========== CELDA DE ESQUINA ========== */
@@ -70,7 +52,7 @@
     -fx-pref-height: 50;
 }
 
-/* ========== ENCABEZADOS DE DÍAS ========== */
+/* ========== ENCABEZADOS DE DÍAS - MEJORADOS ========== */
 .day-header {
     -fx-background-color: #f8f9fa;
     -fx-border-color: #dadce0;
@@ -80,6 +62,9 @@
     -fx-spacing: 4;
     -fx-min-height: 50;
     -fx-pref-height: 50;
+    -fx-min-width: 120; /* Ancho mínimo para que los títulos se vean completos */
+    -fx-pref-width: Region.USE_COMPUTED_SIZE;
+    -fx-max-width: Double.MAX_VALUE;
 }
 
 .day-header-name {
@@ -87,6 +72,8 @@
     -fx-font-weight: 500;
     -fx-text-fill: #5f6368;
     -fx-alignment: center;
+    -fx-text-alignment: center;
+    -fx-wrap-text: false; /* Evitar que se corte el texto */
 }
 
 .day-header-number {
@@ -96,6 +83,7 @@
     -fx-min-width: 36;
     -fx-min-height: 36;
     -fx-alignment: center;
+    -fx-text-alignment: center;
 }
 
 .day-header-today {
@@ -121,7 +109,7 @@
     -fx-max-width: 80;
 }
 
-/* ========== CELDAS DE HORAS ========== */
+/* ========== CELDAS DE HORAS - MEJORADAS ========== */
 .hour-cell {
     -fx-background-color: white;
     -fx-border-color: #dadce0;
@@ -131,6 +119,9 @@
     -fx-alignment: top-left;
     -fx-min-height: 60;
     -fx-pref-height: 60;
+    -fx-min-width: 120; /* Ancho mínimo para que no se compriman */
+    -fx-pref-width: Region.USE_COMPUTED_SIZE;
+    -fx-max-width: Double.MAX_VALUE;
 }
 
 .hour-cell-hover {
@@ -179,7 +170,17 @@
     -fx-scale-y: 1.02;
 }
 
-/* ========== RESPONSIVE ========== */
+/* ========== RESPONSIVE - MEJORADO ========== */
+@media screen and (max-width: 1400px) {
+    .day-header {
+        -fx-min-width: 100;
+    }
+
+    .hour-cell {
+        -fx-min-width: 100;
+    }
+}
+
 @media screen and (max-width: 1200px) {
     .main-calendar-grid .hour-label {
         -fx-font-size: 10px;
@@ -194,6 +195,10 @@
         -fx-max-width: 60;
     }
 
+    .day-header {
+        -fx-min-width: 90;
+    }
+
     .day-header-name {
         -fx-font-size: 10px;
     }
@@ -202,6 +207,10 @@
         -fx-font-size: 20px;
         -fx-min-width: 32;
         -fx-min-height: 32;
+    }
+
+    .hour-cell {
+        -fx-min-width: 90;
     }
 
     .event-label {
@@ -223,6 +232,10 @@
         -fx-max-width: 50;
     }
 
+    .day-header {
+        -fx-min-width: 80;
+    }
+
     .day-header-name {
         -fx-font-size: 9px;
     }
@@ -231,5 +244,24 @@
         -fx-font-size: 18px;
         -fx-min-width: 28;
         -fx-min-height: 28;
+    }
+
+    .hour-cell {
+        -fx-min-width: 80;
+    }
+}
+
+/* ========== MODO PANTALLA PEQUEÑA ========== */
+@media screen and (max-width: 768px) {
+    .main-calendar-grid {
+        -fx-min-width: 700; /* Forzar scroll horizontal en pantallas pequeñas */
+    }
+
+    .day-header {
+        -fx-min-width: 70;
+    }
+
+    .hour-cell {
+        -fx-min-width: 70;
     }
 }

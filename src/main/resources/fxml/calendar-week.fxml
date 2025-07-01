@@ -135,8 +135,13 @@
 
             <!-- Área de calendario - resto del espacio -->
             <VBox styleClass="calendar-area" HBox.hgrow="ALWAYS">
-                <ScrollPane fx:id="calendarScrollPane" fitToWidth="true" fitToHeight="true"
-                            VBox.vgrow="ALWAYS" styleClass="calendar-scrollpane">
+                <ScrollPane fx:id="weekScrollPane"
+                            fitToWidth="false"
+                            fitToHeight="true"
+                            hbarPolicy="AS_NEEDED"
+                            vbarPolicy="AS_NEEDED"
+                            VBox.vgrow="ALWAYS"
+                            styleClass="week-scrollpane">
                     <GridPane fx:id="calendarGrid" styleClass="main-calendar-grid" />
                 </ScrollPane>
             </VBox>

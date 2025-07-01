@@ -26,7 +26,7 @@ public class CalendarWeekController implements Initializable {
 
     @FXML private Label monthYearLabel;
     @FXML private GridPane calendarGrid;
-    @FXML private ScrollPane calendarScrollPane;
+    @FXML private ScrollPane weekScrollPane;
     @FXML private Button createButton;
     @FXML private CheckBox userCalendarCheck;
     @FXML private CheckBox tasksCalendarCheck;
@@ -105,20 +105,21 @@ public class CalendarWeekController implements Initializable {
     }
 
     private void setupScrollPane() {
-        if (calendarScrollPane != null) {
-            calendarScrollPane.setFitToWidth(true);
-            calendarScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-            calendarScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        if (weekScrollPane != null) {
+            weekScrollPane.setFitToWidth(true);
+            weekScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+            weekScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
             // Scroll a las 8 AM al inicio
             Platform.runLater(() -> {
                 double scrollPosition = 8.0 / TOTAL_HOURS;
-                calendarScrollPane.setVvalue(scrollPosition);
+                weekScrollPane.setVvalue(scrollPosition);
             });
         }
     }
 
     private void setupCalendarGrid() {
+
         if (calendarGrid == null) return;
 
         calendarGrid.getChildren().clear();
