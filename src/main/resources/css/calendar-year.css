@@ -138,7 +138,7 @@
 /* Título del año en el header */
 .year-title-center {
     -fx-font-size: 28px;
-    -fx-font-weight: 300;
+    -fx-font-weight: Bold;
     -fx-text-fill: #3c4043;
     -fx-alignment: center;
 }

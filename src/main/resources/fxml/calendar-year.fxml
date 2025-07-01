@@ -31,7 +31,6 @@
 
                 <!-- Top bar: Logo y menú - Columnas 1-3 - 25% -->
                 <HBox alignment="CENTER_LEFT" spacing="8" GridPane.columnIndex="0" GridPane.columnSpan="3" styleClass="header-section">
-                    <Button fx:id="menuButton" text="☰" styleClass="menu-btn" />
                     <ImageView fitHeight="24" fitWidth="24" preserveRatio="true">
                         <image>
                             <Image url="@/images/logo.png" />
@@ -54,7 +53,6 @@
 
                 <!-- Top bar: Búsqueda y cerrar - Columnas 9-12 - 25% -->
                 <HBox alignment="CENTER_RIGHT" spacing="12" GridPane.columnIndex="9" GridPane.columnSpan="3" styleClass="header-section">
-                    <Label text="🔍" styleClass="search-placeholder" />
                     <Button fx:id="closeButton" text="×" styleClass="close-btn" onAction="#handleCloseButton" />
                 </HBox>
             </GridPane>
@@ -128,25 +126,6 @@
                         <Label text="📝 Exámenes" styleClass="calendar-name-orange" />
                     </HBox>
                 </VBox>
-
-                <!-- Calendarios adicionales -->
-                <VBox styleClass="calendar-section">
-                    <HBox alignment="CENTER_LEFT" spacing="6">
-                        <Label text="►" styleClass="section-arrow" />
-                        <Label text="Otros calendarios" styleClass="section-header" />
-                    </HBox>
-
-                    <HBox styleClass="calendar-item">
-                        <CheckBox styleClass="calendar-checkbox" />
-                        <Label text="🇲🇽 Días Festivos México" styleClass="calendar-name-purple" />
-                    </HBox>
-
-                    <HBox styleClass="calendar-item">
-                        <CheckBox styleClass="calendar-checkbox" />
-                        <Label text="🎓 Eventos UTEZ" styleClass="calendar-name-orange" />
-                    </HBox>
-                </VBox>
-
                 <!-- Espaciador para empujar contenido hacia arriba -->
                 <Region VBox.vgrow="ALWAYS" />
             </VBox>

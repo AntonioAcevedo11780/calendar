@@ -49,7 +49,7 @@ public class LoginController implements Initializable {
         Platform.runLater(() -> {
             configureWindow();
             emailField.requestFocus();
-            emailField.setText("admin@utez.edu.mx"); // Prellenado para pruebas
+            emailField.setText("20243ds076@utez.edu.mx"); // Prellenado para pruebas
         });
 
         createAccountLink.setOnAction(e -> handleCreateAccount());
