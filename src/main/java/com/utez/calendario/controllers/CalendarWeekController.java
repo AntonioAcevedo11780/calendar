@@ -356,7 +356,7 @@ public class CalendarWeekController implements Initializable {
     private void handleTodayClick() {
         System.out.println("🔄 Navegando a hoy...");
         selectedDate = LocalDate.now();
-        startOfWeek = selectedDate.with(DayOfWeek.SUNDAY);
+        startOfWeek = selectedDate.minusDays(selectedDate.getDayOfWeek().getValue() % 7);
         updateCalendarView();
         setupCalendarGrid();
         loadEventsFromDatabase();
