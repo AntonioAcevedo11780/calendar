@@ -6,11 +6,13 @@ import com.utez.calendario.services.AuthService;
 import com.utez.calendario.services.EventService;
 import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.HPos;
+import javafx.geometry.Rectangle2D;
 import javafx.geometry.VPos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -19,6 +21,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.stage.Modality;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -39,6 +42,12 @@ public class CalendarMonthController implements Initializable {
     @FXML private Label statusLabel;
     @FXML private Button createButton;
     @FXML private Label todayLabel;
+
+
+    //cosas para el logout
+    @FXML
+    private StackPane contentArea;
+    private Timeline clockTimeline;
 
     private YearMonth currentYearMonth;
     private LocalDate selectedDate;
@@ -558,6 +567,24 @@ public class CalendarMonthController implements Initializable {
         }
     }
 
+    @FXML
+    private  void handleLogout(){
+        try {
+            setStatus("Cerrando sesión...");
+
+            // Detener el reloj antes de cerrar sesión
+            if (clockTimeline != null) {
+                clockTimeline.stop();
+            }
+
+            AuthService.getInstance().logout();
+            Platform.runLater(this::returnToLogin);
+        } catch (Exception e) {
+            System.err.println("Error al cerrar sesión: " + e.getMessage());
+            setStatus("Error al cerrar sesión");
+        }
+    }
+
     private void updateViewModeUI() {
         updateStatusBar();
     }
@@ -613,4 +640,44 @@ public class CalendarMonthController implements Initializable {
         alert.setContentText(message);
         alert.showAndWait();
     }
+
+    private void setStatus(String message) {
+        if (statusLabel != null) {
+            Platform.runLater(() -> statusLabel.setText(message));
+        }
+    }
+
+    private void returnToLogin() {
+        try {
+            System.out.println("Regresando al login...");
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
+            Parent loginRoot = loader.load();
+
+            Stage stage = (Stage) calendarGrid.getScene().getWindow();
+
+            Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+            double width = Math.min(1100, screenBounds.getWidth() * 0.95);
+            double height = Math.min(700, screenBounds.getHeight() * 0.95);
+
+            Scene loginScene = new Scene(loginRoot, width, height);
+
+            // CSS EXACTO DEL login
+            loginScene.getStylesheets().add(getClass().getResource("/css/login.css").toExternalForm());
+
+            stage.setTitle("Ithera");
+            stage.setScene(loginScene);
+            stage.setMinWidth(800);
+            stage.setMinHeight(600);
+            stage.show();
+            stage.centerOnScreen();
+
+            System.out.println("Login cargado exitosamente");
+
+        } catch (Exception e) {
+            System.err.println("No se pudo volver al login: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
 }

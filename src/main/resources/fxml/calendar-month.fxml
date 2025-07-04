@@ -126,6 +126,9 @@
                         <Label text="📝 Exámenes" styleClass="calendar-name-orange" />
                     </HBox>
                 </VBox>
+
+                <Button text="Cerrar Sesión" styleClass="profile-button" onAction="#handleLogout" maxWidth="Infinity" />
+
                 <!-- Espaciador para empujar contenido hacia arriba -->
                 <Region VBox.vgrow="ALWAYS" />
             </VBox>
@@ -154,6 +157,7 @@
                 </GridPane>
             </VBox>
         </GridPane>
+        
     </center>
 
 </BorderPane>
