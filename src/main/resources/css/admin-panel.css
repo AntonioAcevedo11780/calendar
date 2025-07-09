@@ -1,6 +1,6 @@
 /* Estilos generales */
 .root {
-    -fx-font-family: 'Inter', 'Segoe UI', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+    -fx-font-family: "Inria Sans", 'Inter', 'Segoe UI', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
     -fx-font-size: 13px;
     -fx-background-color: #f4f6f9;
 }
@@ -30,7 +30,7 @@
     -accent-blue: #1a73e8;
 
     /* Tipografía*/
-    -modern-font-family: 'Inter', 'Segoe UI', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+    -modern-font-family: "Inria Sans", 'Inter', 'Segoe UI', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* Header */
