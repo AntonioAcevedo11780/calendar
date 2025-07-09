@@ -9,6 +9,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
 public class EventService {
     private static EventService instance;
@@ -32,6 +33,7 @@ public class EventService {
         LocalDate startOfMonth = date.withDayOfMonth(1);
         LocalDate endOfMonth = date.withDayOfMonth(date.lengthOfMonth());
 
+        // Esta consulta solo muestra eventos de calendarios propiedad del usuario
         String sql = """
             SELECT e.* FROM EVENTS e
             INNER JOIN CALENDARS c ON e.CALENDAR_ID = c.CALENDAR_ID
@@ -70,6 +72,7 @@ public class EventService {
     public List<Event> getEventsForDate(String userId, LocalDate date) {
         List<Event> events = new ArrayList<>();
 
+        // Esta consulta solo muestra eventos de calendarios propiedad del usuario
         String sql = """
             SELECT e.* FROM EVENTS e
             INNER JOIN CALENDARS c ON e.CALENDAR_ID = c.CALENDAR_ID
@@ -113,6 +116,7 @@ public class EventService {
     public List<Event> getEventsForWeek(String userId, LocalDate startDate, LocalDate endDate) {
         List<Event> events = new ArrayList<>();
 
+        // Esta consulta solo muestra eventos de calendarios propiedad del usuario
         String sql = """
             SELECT e.* FROM EVENTS e
             INNER JOIN CALENDARS c ON e.CALENDAR_ID = c.CALENDAR_ID
@@ -151,6 +155,12 @@ public class EventService {
      * Crear un nuevo evento en la base de datos
      */
     public boolean createEvent(Event event) {
+        // Si no tiene ID de calendario, verificar si el usuario ya tiene uno o crear uno nuevo
+        if (event.getCalendarId() == null || event.getCalendarId().isEmpty()) {
+            String calendarId = getOrCreateUserCalendar(event.getCreatorId());
+            event.setCalendarId(calendarId);
+        }
+
         String sql = """
             INSERT INTO EVENTS (EVENT_ID, CALENDAR_ID, CREATOR_ID, TITLE, DESCRIPTION,
                               START_DATE, END_DATE, ALL_DAY, LOCATION, RECURRENCE, ACTIVE, CREATED_DATE)
@@ -160,9 +170,9 @@ public class EventService {
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            // Generar ID único si no existe
+            // Generar ID único corto para el evento
             if (event.getEventId() == null || event.getEventId().isEmpty()) {
-                event.setEventId(generateEventId());
+                event.setEventId(generateShortId("E"));
             }
 
             pstmt.setString(1, event.getEventId());
@@ -274,44 +284,153 @@ public class EventService {
     }
 
     /**
-     * Obtener el calendario por defecto del usuario
+     * Obtiene o crea un calendario para el usuario
+     * Si el usuario ya tiene un calendario, lo devuelve
+     * Si no, crea uno nuevo con ID corto
      */
-    public String getDefaultCalendarId(String userId) {
-        String sql = "SELECT CALENDAR_ID FROM CALENDARS WHERE OWNER_ID = ? AND ACTIVE = 'Y' LIMIT 1";
+    public String getOrCreateUserCalendar(String userId) {
+        String calendarId = null;
+
+        // Primero intentamos encontrar un calendario existente para el usuario
+        String selectSql = "SELECT CALENDAR_ID FROM CALENDARS WHERE OWNER_ID = ? AND ACTIVE = 'Y' LIMIT 1";
 
         try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(selectSql)) {
 
             pstmt.setString(1, userId);
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                String calendarId = rs.getString("CALENDAR_ID");
-                System.out.println("✓ Calendario por defecto encontrado: " + calendarId);
+                calendarId = rs.getString("CALENDAR_ID");
+                System.out.println("✓ Calendario existente encontrado: " + calendarId);
                 return calendarId;
+            }
+
+            // No hay calendario existente, crear uno nuevo (usando la misma conexión)
+            String newCalendarId = createCalendarForUser(userId, conn);
+            if (newCalendarId != null) {
+                return newCalendarId;
             } else {
-                System.out.println("⚠ No se encontró calendario por defecto para usuario: " + userId);
+                // Si falla la creación, intentamos una última opción
+                return "C" + userId.hashCode() % 10000;
             }
 
         } catch (SQLException e) {
-            System.err.println("✗ Error obteniendo calendario por defecto: " + e.getMessage());
+            System.err.println("✗ Error obteniendo/creando calendario: " + e.getMessage());
+            // Último recurso: un ID basado en el hash del userId
+            return "C" + Math.abs(userId.hashCode() % 10000);
+        }
+    }
+
+    /**
+     * Crea un nuevo calendario para un usuario con ID corto (máximo 10 caracteres)
+     */
+    private String createCalendarForUser(String userId, Connection conn) {
+        // Generar un ID más aleatorio para el calendario
+        String timeStamp = String.valueOf(System.currentTimeMillis() % 100000); // 5 dígitos del tiempo
+        String random = String.format("%04d", new Random().nextInt(10000)); // 4 dígitos aleatorios
+        String calendarId = "C" + timeStamp + random; // "C" + 5 + 4 = 10 caracteres
+
+        String name = "Mi Calendario";
+        String description = "Calendario personal";
+        String color = "#1976D2"; // Azul
+
+        // Verificar si el ID ya existe antes de intentar insertarlo
+        boolean idExists = checkIfCalendarIdExists(calendarId, conn);
+        int attempts = 0;
+
+        // Si el ID ya existe, generar uno nuevo hasta encontrar uno disponible
+        while (idExists && attempts < 5) {
+            random = String.format("%04d", new Random().nextInt(10000));
+            calendarId = "C" + timeStamp + random;
+            idExists = checkIfCalendarIdExists(calendarId, conn);
+            attempts++;
         }
 
-        return null;
+        // Si después de 5 intentos no encontramos un ID único, usamos un UUID corto
+        if (idExists) {
+            calendarId = "C" + Math.abs(UUID.randomUUID().hashCode() % 100000000); // 9 dígitos
+            idExists = checkIfCalendarIdExists(calendarId, conn);
+
+            if (idExists) {
+                // Como último recurso, un ID con microsegundos
+                calendarId = "C" + System.nanoTime() % 100000000;
+            }
+        }
+
+        String sql = """
+        INSERT INTO CALENDARS (CALENDAR_ID, OWNER_ID, NAME, DESCRIPTION, COLOR, ACTIVE, CREATED_DATE)
+        VALUES (?, ?, ?, ?, ?, 'Y', NOW())
+    """;
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, calendarId);
+            pstmt.setString(2, userId);
+            pstmt.setString(3, name);
+            pstmt.setString(4, description);
+            pstmt.setString(5, color);
+
+            int result = pstmt.executeUpdate();
+            boolean success = result > 0;
+
+            if (success) {
+                System.out.println("✓ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                        "Calendario creado para el usuario: " + userId + " (ID: " + calendarId + ")");
+                return calendarId;
+            } else {
+                System.err.println("✗ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                        "No se pudo crear el calendario para el usuario: " + userId);
+                return null;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("✗ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                    "Error creando calendario para el usuario " + userId + ": " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Verifica si un ID de calendario ya existe
+     */
+    private boolean checkIfCalendarIdExists(String calendarId, Connection conn) {
+        String sql = "SELECT COUNT(*) FROM CALENDARS WHERE CALENDAR_ID = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, calendarId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error verificando ID de calendario: " + e.getMessage());
+        }
+        return false; // Si hay un error, asumimos que no existe
+    }
+
+    /**
+     * Obtener el calendario por defecto del usuario
+     * Lo crea si no existe
+     */
+    public String getDefaultCalendarId(String userId) {
+        return getOrCreateUserCalendar(userId);
     }
 
     // ========== GENERADOR DE IDS ==========
 
-    private String generateEventId() {
+    /**
+     * Genera un ID para eventos con el formato EVT + fecha (YYYYMMDD) + hora (HHMMSS) + número aleatorio
+     */
+    private String generateShortId(String prefix) {
         LocalDateTime now = LocalDateTime.now();
-        String timestamp = now.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        String date = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String time = now.format(DateTimeFormatter.ofPattern("HHmmss"));
         String random = String.format("%03d", new Random().nextInt(1000));
 
-        String eventId = "EVT" + timestamp + random;
-        System.out.println("✓ ID generado: " + eventId);
-        return eventId;
+        String id = prefix + date + time + random;
+        System.out.println("✓ ID generado: " + id);
+        return id;
     }
-
     // ========== MÉTODOS AUXILIARES ==========
 
     private Event mapResultSetToEvent(ResultSet rs) throws SQLException {
