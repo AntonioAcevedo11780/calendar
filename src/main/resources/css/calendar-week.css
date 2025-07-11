@@ -400,3 +400,25 @@
     -fx-background-radius: 4;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 4, 0, 0, 2);
 }
+
+/*logout */
+/* Botón de cierre de sesión */
+.profile-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #e53935; /* Color rojo para indicar acción de cierre */
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 14px 15px;
+    -fx-cursor: hand;
+    -fx-graphic-text-gap: 12px;
+    -fx-font-family: -modern-font-family;
+    -fx-font-size: 15px;
+    -fx-font-weight: 500;
+    -fx-letter-spacing: -0.1px;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+}
+
+.profile-button:hover {
+    -fx-text-fill: #c62828; /* Rojo más oscuro al pasar el mouse */
+    -fx-font-weight: bold;
+}
