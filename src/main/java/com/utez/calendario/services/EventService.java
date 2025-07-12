@@ -34,13 +34,11 @@ public class EventService {
         LocalDate endOfMonth = date.withDayOfMonth(date.lengthOfMonth());
 
         // Esta consulta solo muestra eventos de calendarios propiedad del usuario
-        String sql = """
-            SELECT e.* FROM EVENTS e
-            INNER JOIN CALENDARS c ON e.CALENDAR_ID = c.CALENDAR_ID
-            WHERE c.OWNER_ID = ? AND e.ACTIVE = 'Y' AND c.ACTIVE = 'Y'
-            AND DATE(e.START_DATE) >= ? AND DATE(e.START_DATE) <= ?
-            ORDER BY e.START_DATE
-        """;
+        String sql = "SELECT e.* FROM EVENTS e " +
+                "INNER JOIN CALENDARS c ON e.CALENDAR_ID = c.CALENDAR_ID " +
+                "WHERE c.OWNER_ID = ? AND e.ACTIVE = 'Y' AND c.ACTIVE = 'Y' " +
+                "AND TRUNC(e.START_DATE) >= ? AND TRUNC(e.START_DATE) <= ? " +
+                "ORDER BY e.START_DATE";
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -73,13 +71,11 @@ public class EventService {
         List<Event> events = new ArrayList<>();
 
         // Esta consulta solo muestra eventos de calendarios propiedad del usuario
-        String sql = """
-            SELECT e.* FROM EVENTS e
-            INNER JOIN CALENDARS c ON e.CALENDAR_ID = c.CALENDAR_ID
-            WHERE c.OWNER_ID = ? AND e.ACTIVE = 'Y' AND c.ACTIVE = 'Y'
-            AND DATE(e.START_DATE) = ?
-            ORDER BY e.START_DATE
-        """;
+        String sql = "SELECT e.* FROM EVENTS e " +
+                "INNER JOIN CALENDARS c ON e.CALENDAR_ID = c.CALENDAR_ID " +
+                "WHERE c.OWNER_ID = ? AND e.ACTIVE = 'Y' AND c.ACTIVE = 'Y' " +
+                "AND TRUNC(e.START_DATE) = ? " +
+                "ORDER BY e.START_DATE";
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -117,13 +113,11 @@ public class EventService {
         List<Event> events = new ArrayList<>();
 
         // Esta consulta solo muestra eventos de calendarios propiedad del usuario
-        String sql = """
-            SELECT e.* FROM EVENTS e
-            INNER JOIN CALENDARS c ON e.CALENDAR_ID = c.CALENDAR_ID
-            WHERE c.OWNER_ID = ? AND e.ACTIVE = 'Y' AND c.ACTIVE = 'Y'
-            AND DATE(e.START_DATE) >= ? AND DATE(e.START_DATE) <= ?
-            ORDER BY e.START_DATE
-        """;
+        String sql = "SELECT e.* FROM EVENTS e " +
+                "INNER JOIN CALENDARS c ON e.CALENDAR_ID = c.CALENDAR_ID " +
+                "WHERE c.OWNER_ID = ? AND e.ACTIVE = 'Y' AND c.ACTIVE = 'Y' " +
+                "AND TRUNC(e.START_DATE) >= ? AND TRUNC(e.START_DATE) <= ? " +
+                "ORDER BY e.START_DATE";
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -161,11 +155,9 @@ public class EventService {
             event.setCalendarId(calendarId);
         }
 
-        String sql = """
-            INSERT INTO EVENTS (EVENT_ID, CALENDAR_ID, CREATOR_ID, TITLE, DESCRIPTION,
-                              START_DATE, END_DATE, ALL_DAY, LOCATION, RECURRENCE, ACTIVE, CREATED_DATE)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Y', NOW())
-        """;
+        String sql = "INSERT INTO EVENTS (EVENT_ID, CALENDAR_ID, CREATOR_ID, TITLE, DESCRIPTION, " +
+                "START_DATE, END_DATE, ALL_DAY, LOCATION, RECURRENCE, ACTIVE, CREATED_DATE) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Y', SYSDATE)";
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -211,12 +203,10 @@ public class EventService {
      * Actualizar un evento existente
      */
     public boolean updateEvent(Event event) {
-        String sql = """
-            UPDATE EVENTS SET 
-                TITLE = ?, DESCRIPTION = ?, START_DATE = ?, END_DATE = ?,
-                ALL_DAY = ?, LOCATION = ?, RECURRENCE = ?, MODIFIED_DATE = NOW()
-            WHERE EVENT_ID = ? AND ACTIVE = 'Y'
-        """;
+        String sql = "UPDATE EVENTS SET " +
+                "TITLE = ?, DESCRIPTION = ?, START_DATE = ?, END_DATE = ?, " +
+                "ALL_DAY = ?, LOCATION = ?, RECURRENCE = ?, MODIFIED_DATE = SYSDATE " +
+                "WHERE EVENT_ID = ? AND ACTIVE = 'Y'";
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -255,7 +245,7 @@ public class EventService {
      * Eliminar un evento (cambiar ACTIVE a 'N')
      */
     public boolean deleteEvent(String eventId) {
-        String sql = "UPDATE EVENTS SET ACTIVE = 'N', MODIFIED_DATE = NOW() WHERE EVENT_ID = ?";
+        String sql = "UPDATE EVENTS SET ACTIVE = 'N', MODIFIED_DATE = SYSDATE WHERE EVENT_ID = ?";
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -292,7 +282,7 @@ public class EventService {
         String calendarId = null;
 
         // Primero intentamos encontrar un calendario existente para el usuario
-        String selectSql = "SELECT CALENDAR_ID FROM CALENDARS WHERE OWNER_ID = ? AND ACTIVE = 'Y' LIMIT 1";
+        String selectSql = "SELECT CALENDAR_ID FROM CALENDARS WHERE OWNER_ID = ? AND ACTIVE = 'Y' AND ROWNUM = 1";
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(selectSql)) {
@@ -358,10 +348,9 @@ public class EventService {
             }
         }
 
-        String sql = """
-        INSERT INTO CALENDARS (CALENDAR_ID, OWNER_ID, NAME, DESCRIPTION, COLOR, ACTIVE, CREATED_DATE)
-        VALUES (?, ?, ?, ?, ?, 'Y', NOW())
-    """;
+        //(Corregido para que funcione en oracle xd)
+        String sql = "INSERT INTO CALENDARS (CALENDAR_ID, OWNER_ID, NAME, DESCRIPTION, COLOR, ACTIVE, CREATED_DATE) " +
+                "VALUES (?, ?, ?, ?, ?, 'Y', SYSDATE)";
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, calendarId);

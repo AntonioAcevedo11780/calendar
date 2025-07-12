@@ -18,11 +18,9 @@ public class User {
     private LocalDateTime lastLogin;
 
     private static Connection getConnection() throws SQLException {
-        // Ajusta esto según tu configuración actual de conexión
-        String url = "jdbc:mysql://localhost:3306/calendar";
-        String user = "root";
-        String password = "";
-        return DriverManager.getConnection(url, user, password);
+
+        return com.utez.calendario.config.DatabaseConfig.getConnection();
+
     }
 
     /**
@@ -88,7 +86,6 @@ public class User {
 
         return count;
     }
-
     /**
      * Cuenta eventos próximos (en los siguientes 7 días)
      */

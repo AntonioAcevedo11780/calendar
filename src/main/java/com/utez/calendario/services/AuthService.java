@@ -71,14 +71,19 @@ public class AuthService {
      * Verifica únicamente las credenciales sin importar el estado de activación
      */
     public boolean authenticateOnly(String email, String password) {
-        String sql = "SELECT * FROM USERS WHERE EMAIL = ? AND PASSWORD = ?";
+        String sql = "SELECT COUNT(*) FROM USERS WHERE EMAIL = ? AND PASSWORD = ? AND ACTIVE = 'Y'";
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, email);
             pstmt.setString(2, password);
             ResultSet rs = pstmt.executeQuery();
-            return rs.next(); // Devuelve true si las credenciales son correctas
+
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+
+            return false;
         } catch (SQLException e) {
             System.err.println("Error al verificar credenciales: " + e.getMessage());
             return false;
