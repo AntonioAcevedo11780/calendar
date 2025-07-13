@@ -199,12 +199,40 @@ public class CalendarDayController implements Initializable {
             calendarGrid.add(hourCell, 1, hour + 1);
         }
 
+        // Mostrar eventos con rowspan (un solo bloque por evento)
+        for (Event event : events) {
+            if (shouldShowEvent(event)) {
+                LocalDateTime start = event.getStartDate();
+                LocalDateTime end = event.getEndDate();
+
+                if (!start.toLocalDate().equals(currentDate)) continue;
+
+                int startHour = start.getHour();
+                int endHour = end.getHour();
+
+                int rowIndex = startHour + 1; // +1 por encabezado
+                //int rowSpan = Math.max(1, endHour - startHour);
+                int rowSpan = Math.max(1, endHour - startHour + 1);
+
+
+                Label eventLabel = createEventLabel(event);
+                eventLabel.setMinHeight(60 * rowSpan); // Ajustar altura visual (opcional)
+                GridPane.setRowIndex(eventLabel, rowIndex);
+                GridPane.setColumnIndex(eventLabel, 1);
+                GridPane.setRowSpan(eventLabel, rowSpan);
+
+                calendarGrid.getChildren().add(eventLabel);
+            }
+        }
+
+
         // Agregar línea de hora actual si es hoy
         if (currentDate.equals(LocalDate.now())) {
             addCurrentTimeLine();
         }
 
         System.out.println("✓ Vista diaria creada para: " + currentDate + " con " + TOTAL_HOURS + " horas");
+
     }
 
     private VBox createDayHeader() {
@@ -257,18 +285,23 @@ public class CalendarDayController implements Initializable {
         cell.setSpacing(2);
         cell.setPadding(new javafx.geometry.Insets(4));
 
+        /*
         // Agregar eventos para esta hora si los calendarios están habilitados
         if (events != null) {
             for (Event event : events) {
                 if (shouldShowEvent(event)) {
-                    LocalTime eventTime = event.getStartDate().toLocalTime();
-                    if (eventTime.getHour() == hour) {
+                    LocalTime start = event.getStartDate().toLocalTime();
+                    LocalTime end = event.getEndDate().toLocalTime();
+
+                    // Si el evento ocurre (aunque sea parcialmente) dentro de esta hora
+                    if (!start.isAfter(LocalTime.of(hour + 1, 0)) && !end.isBefore(LocalTime.of(hour, 0))) {
                         Label eventLabel = createEventLabel(event);
                         cell.getChildren().add(eventLabel);
                     }
                 }
             }
         }
+        */
 
         // Efectos hover
         cell.setOnMouseEntered(e -> cell.getStyleClass().add("hour-cell-hover"));
@@ -336,12 +369,20 @@ public class CalendarDayController implements Initializable {
     }
 
     private Label createEventLabel(Event event) {
-        Label eventLabel = new Label(event.getTitle());
+        // Formatear hora de inicio y fin
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+        String startTime = event.getStartDate().toLocalTime().format(timeFormatter);
+        String endTime = event.getEndDate().toLocalTime().format(timeFormatter);
+
+        String timeRange = "[" + startTime + " - " + endTime + "]";
+        String labelText = timeRange + "\n" + event.getTitle();
+
+        Label eventLabel = new Label(labelText);
         eventLabel.getStyleClass().add("event-label");
         eventLabel.setMaxWidth(Double.MAX_VALUE);
         eventLabel.setWrapText(true);
 
-        // Color basado en el calendario
+        // Colores por tipo de calendario
         String calendarId = event.getCalendarId();
         switch (calendarId) {
             case "CAL0000001": // Mis Clases
@@ -360,7 +401,7 @@ public class CalendarDayController implements Initializable {
                 eventLabel.getStyleClass().add("event-default");
         }
 
-        // Click para ver/editar evento
+        // Click para ver/editar
         eventLabel.setOnMouseClicked(e -> {
             if (e.getClickCount() == 1) {
                 openEventDialogForRead(event.getStartDate().toLocalDate());
@@ -369,6 +410,7 @@ public class CalendarDayController implements Initializable {
 
         return eventLabel;
     }
+
 
     private void loadEventsFromDatabase() {
         if (authService.getCurrentUser() != null) {
