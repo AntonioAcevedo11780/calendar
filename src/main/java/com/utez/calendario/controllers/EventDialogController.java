@@ -189,8 +189,15 @@ public class EventDialogController implements Initializable {
     @FXML
     private void handleSave() {
         if (!validateForm()) return;
+
         try {
             Event newEvent = createEventFromForm();
+
+            if (!isTimeSlotAvailable(newEvent)) {
+                showAlert("Conflicto de horario", "Ya hay un evento en ese horario para este día.", Alert.AlertType.WARNING);
+                return;
+            }
+
             boolean success = saveEventToDatabase(newEvent);
             if (success) {
                 showAlert("Éxito", "Evento creado exitosamente", Alert.AlertType.INFORMATION);
@@ -212,8 +219,15 @@ public class EventDialogController implements Initializable {
             return;
         }
         if (!validateForm()) return;
+
         try {
             updateEventFromForm(currentEvent);
+
+            if (!isTimeSlotAvailable(currentEvent)) {
+                showAlert("Conflicto de horario", "Ya hay un evento en ese horario para este día.", Alert.AlertType.WARNING);
+                return;
+            }
+
             boolean success = updateEventInDatabase(currentEvent);
             if (success) {
                 showAlert("Éxito", "Evento actualizado exitosamente", Alert.AlertType.INFORMATION);
@@ -331,6 +345,32 @@ public class EventDialogController implements Initializable {
         return true;
     }
 
+    private boolean isTimeSlotAvailable(Event newEvent) {
+        try {
+            String userId = authService.getCurrentUser().getUserId();
+            List<Event> events = eventService.getEventsForDate(userId, newEvent.getStartDate().toLocalDate());
+
+            for (Event e : events) {
+                if (mode.equals("UPDATE") && currentEvent != null && e.getEventId().equals(currentEvent.getEventId())) {
+                    continue;
+                }
+
+                System.out.println("Comparando con evento: " + e.getTitle() + " de " + e.getStartDate() + " a " + e.getEndDate());
+
+                if (newEvent.getStartDate().isBefore(e.getEndDate()) && newEvent.getEndDate().isAfter(e.getStartDate())) {
+                    System.out.println("Solapamiento detectado.");
+                    return false;
+                }
+
+            }
+            return true;
+        } catch (Exception e) {
+            System.err.println("Error validando solapamiento: " + e.getMessage());
+            return false;
+        }
+    }
+
+
     private void clearForm() {
         titleField.clear();
         descriptionArea.clear();
@@ -399,8 +439,20 @@ public class EventDialogController implements Initializable {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
+
+        DialogPane dialogPane = alert.getDialogPane();
+        try {
+            String css = getClass().getResource("/css/alert-style.css").toExternalForm();
+            dialogPane.getStylesheets().add(css);
+            System.out.println("CSS cargado: " + css);
+        } catch (Exception ex) {
+            System.err.println("No se pudo cargar el CSS: " + ex.getMessage());
+        }
+
+
         alert.showAndWait();
     }
+
 
     public void initializeForEdit(Event event, Runnable onEventChanged) {
         this.mode = "UPDATE";
@@ -422,4 +474,5 @@ public class EventDialogController implements Initializable {
         Stage stage = (Stage) titleField.getScene().getWindow();
         stage.close();
     }
+
 }

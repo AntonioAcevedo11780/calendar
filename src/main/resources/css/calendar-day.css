@@ -170,12 +170,15 @@
 
 /* ========== EVENTOS ========== */
 .event-label {
-    -fx-font-size: 11px;
+    -fx-font-size: 16px;
+    /*-fx-background-color: #4A90E2;*/
     -fx-text-fill: white;
     -fx-padding: 4 8;
-    -fx-background-radius: 6;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-font-weight: bold;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 2, 0, 0, 1);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 4, 0, 0, 2);
     -fx-max-width: Double.MAX_VALUE;
     -fx-wrap-text: true;
     -fx-text-overrun: ellipsis;
@@ -416,31 +419,4 @@
 .profile-button:hover {
     -fx-text-fill: #c62828; /* Rojo más oscuro al pasar el mouse */
     -fx-font-weight: bold;
-}
-
-.event-label {
-    -fx-font-size: 16px;
-    -fx-background-color: #4A90E2;
-    -fx-text-fill: white;
-    -fx-padding: 8px;
-    -fx-background-radius: 8px;
-    -fx-border-radius: 8px;
-    -fx-font-weight: bold;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 4, 0, 0, 2);
-}
-
-.event-blue {
-    -fx-background-color: #4A90E2;
-}
-.event-red {
-    -fx-background-color: #D0021B;
-}
-.event-green {
-    -fx-background-color: #7ED321;
-}
-.event-orange {
-    -fx-background-color: #F5A623;
-}
-.event-default {
-    -fx-background-color: #9B9B9B;
 }
