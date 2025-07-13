@@ -106,7 +106,7 @@
     -fx-padding: 16;
     -fx-spacing: 16;
     -fx-min-width: 0;
-    -fx-pref-width: Regizon.USE_COMPUTED_SIZE;
+    -fx-pref-width: Region.USE_COMPUTED_SIZE;
     /* Pa q la sidebar sea fija xd */
     -fx-fit-to-height: true;
     -fx-min-height: 600px;

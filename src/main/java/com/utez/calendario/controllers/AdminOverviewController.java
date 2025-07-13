@@ -1,5 +1,6 @@
 package com.utez.calendario.controllers;
 
+import com.utez.calendario.models.Calendar;
 import com.utez.calendario.services.AuthService;
 import com.utez.calendario.models.User;
 
@@ -21,7 +22,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
-import javafx.stage.Screen;
+
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.geometry.Pos;
@@ -38,14 +39,14 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-import java.awt.*;
 import java.util.List;
 
-import java.io.IOException;
 import java.net.URL;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
+// Me corrooooo
+import java.util.concurrent.CompletableFuture;
 
 public class AdminOverviewController implements Initializable {
 
@@ -61,12 +62,19 @@ public class AdminOverviewController implements Initializable {
     private Timeline clockTimeline;
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
+    private VBox usersCard;
+    private VBox activeCalendarsCard;
+    private VBox eventsForThisMonthCard;
+
+    private int cachedTotalUsers = 0;
+    private int cachedActiveStudents = 0;
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
             startClock();
+            User.setDashboardController(this);
 
-            // Hacer el SplitPane no movible
             Platform.runLater(() -> {
                 if (splitPane != null) {
                     splitPane.getDividers().get(0).positionProperty().addListener((obs, oldPos, newPos) -> {
@@ -79,6 +87,10 @@ public class AdminOverviewController implements Initializable {
             System.err.println("Error en inicialización: " + e.getMessage());
             setStatus("Error en inicialización");
         }
+        // Configurar el Timeline para actualizar el dashboard cada 10 minutos
+        Timeline timeline = new Timeline(new KeyFrame(Duration.minutes(10), e -> refreshDashboard()));
+        timeline.setCycleCount(Timeline.INDEFINITE);
+        timeline.play();
     }
 
     private ImageView createIcon(String path) {
@@ -91,6 +103,48 @@ public class AdminOverviewController implements Initializable {
 
         return imageView;
 
+    }
+
+    public void onUserToggledWithRole(boolean wasActivated, User.Role userRole) {
+
+        Platform.runLater(() -> {
+
+            try {
+
+                if (wasActivated) {
+
+                    cachedTotalUsers++;
+
+                    if (userRole == User.Role.ALUMNO) {
+
+                        cachedActiveStudents++;
+
+                    }
+
+                } else {
+
+                    cachedTotalUsers--;
+
+                    if (userRole == User.Role.ALUMNO) {
+
+                        cachedActiveStudents--;
+
+                    }
+
+                }
+
+                updateCard(usersCard, String.valueOf(cachedTotalUsers),
+                        cachedActiveStudents + " estudiantes activos");
+
+                setStatus("Usuario " + (wasActivated ? "activado" : "desactivado") + " correctamente");
+
+            } catch (Exception e) {
+
+                setStatus("Error actualizando dashboard: " + e.getMessage());
+
+            }
+
+        });
     }
 
     @FXML
@@ -163,7 +217,6 @@ public class AdminOverviewController implements Initializable {
         summarySection.setSpacing(20);
         summarySection.setAlignment(Pos.CENTER);
 
-        // Encabezado de las tarjetas
         HBox summaryHeader = new HBox();
         summaryHeader.getStyleClass().add("section-header");
         summaryHeader.setAlignment(Pos.CENTER);
@@ -176,48 +229,57 @@ public class AdminOverviewController implements Initializable {
 
         summaryHeader.getChildren().addAll(summaryTitle, spacer1);
 
-        // Contenedor para las tarjetas
         HBox summaryCards = new HBox();
         summaryCards.setSpacing(20);
         summaryCards.setAlignment(Pos.CENTER);
         summaryCards.getStyleClass().add("summary-cards");
 
-        // Obtener datos de la base de datos
+        // Se cargan los datos a utilizar de la base de datos
         int totalUsers;
         int activeCalendars;
         int eventsThisMonth;
         int upcomingEvents;
 
         try {
-            totalUsers = User.getTotalUsersCount();
-            activeCalendars = User.getActiveCalendarsCount();
-            eventsThisMonth = User.getEventsForCurrentMonth();
-            upcomingEvents = User.getUpcomingEventsCount();
+            User.DashboardData data = User.getDashboardData();
+
+            totalUsers = User.getUsers(-1, -1, false).size();
+            activeCalendars = data.activeCalendars - 1; // Restar 1 para excluir el calendario de administración
+            eventsThisMonth = data.eventsThisMonth;
+            upcomingEvents = data.upcomingEvents;
+
+            cachedTotalUsers = totalUsers;
+            cachedActiveStudents = data.activeStudents;
+
             setStatus("Datos cargados correctamente");
         } catch (Exception e) {
             totalUsers = 0;
             activeCalendars = 0;
             eventsThisMonth = 0;
             upcomingEvents = 0;
+
+            cachedTotalUsers = 0;
+            cachedActiveStudents = 0;
+
             setStatus("Error al cargar datos: " + e.getMessage());
         }
 
-        // Crear las tres tarjetas
-        VBox usersCard = createSummaryCard(
+        // Crear tarjetas de resumen
+        usersCard = createSummaryCard(
                 "users-card",
                 "Usuarios Totales",
                 String.valueOf(totalUsers),
-                User.getActiveStudentsCount() + " estudiantes activos"
+                cachedActiveStudents + " estudiantes activos"
         );
 
-        VBox activeCalendarsCard = createSummaryCard(
+        activeCalendarsCard = createSummaryCard(
                 "activeCalendars-card",
                 "Calendarios Activos",
                 String.valueOf(activeCalendars),
                 "Calendarios disponibles"
         );
 
-        VBox eventsForThisMonthCard = createSummaryCard(
+        eventsForThisMonthCard = createSummaryCard(
                 "eventsForThisMonth-card",
                 "Eventos este mes",
                 String.valueOf(eventsThisMonth),
@@ -228,6 +290,7 @@ public class AdminOverviewController implements Initializable {
         summarySection.getChildren().addAll(summaryHeader, summaryCards);
 
         return summarySection;
+
     }
 
     private VBox createUserManagementSection() {
@@ -251,6 +314,9 @@ public class AdminOverviewController implements Initializable {
         TableView<User> userTable = new TableView<>();
         userTable.getStyleClass().add("user-table");
         userTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        userTable.setFixedCellSize(40);
+        userTable.setPrefHeight(440);
 
         // Definir columnas
         TableColumn<User, String> matriculaColumn = new TableColumn<>("Matrícula");
@@ -288,21 +354,23 @@ public class AdminOverviewController implements Initializable {
 
                 toggleButton.setOnAction(event -> {
                     User user = getTableView().getItems().get(getIndex());
-                    boolean success = user.toggleActive();
 
-                    if (success) {
-                        // Actualizar el texto del botón según el nuevo estado
-                        updateButtonText(user);
+                    // Se ejecuta en segundo plano :D
+                    CompletableFuture.runAsync(() -> {
+                        boolean success = user.toggleActive();
 
-                        // Refrescar la tabla para mostrar el nuevo estado
-                        getTableView().refresh();
-
-                        setStatus(user.isActive()
-                                ? "Usuario activado: " + user.getFullName()
-                                : "Usuario desactivado: " + user.getFullName());
-                    } else {
-                        setStatus("Error al cambiar estado del usuario: " + user.getFullName());
-                    }
+                        Platform.runLater(() -> {
+                            if (success) {
+                                updateButtonText(user);
+                                getTableView().refresh();
+                                setStatus(user.isActive()
+                                        ? "Usuario activado: " + user.getFullName()
+                                        : "Usuario desactivado: " + user.getFullName());
+                            } else {
+                                setStatus("Error al cambiar estado del usuario: " + user.getFullName());
+                            }
+                        });
+                    });
                 });
             }
 
@@ -341,7 +409,7 @@ public class AdminOverviewController implements Initializable {
         // Variables para la paginación
         final int itemsPerPage = 10;
         final IntegerProperty currentPageIndex = new SimpleIntegerProperty(0);
-        final List<User> masterData = User.getAllUsers();
+        final List<User> masterData = User.getUsers(0, 100, false);
 
         // Función para actualizar los datos mostrados
         Runnable updatePageData = () -> {
@@ -420,14 +488,42 @@ public class AdminOverviewController implements Initializable {
 
         calendarHeader.getChildren().addAll(calendarTitle, spacer3);
 
-        // Contenido de calendarios
+        // Contenedor de la tabla de calendarios
         VBox calendarContent = new VBox();
         calendarContent.getStyleClass().add("table-container");
         calendarContent.setAlignment(Pos.CENTER);
 
-        Label calendarPlaceholder = new Label("Aquí se mostrarán los calendarios disponibles");
-        calendarPlaceholder.setStyle("-fx-font-size: 16px; -fx-padding: 40px;");
-        calendarContent.getChildren().add(calendarPlaceholder);
+        // Tabla de administración de calendarios
+        TableView<User> calendarTable = new TableView<>();
+        calendarTable.getStyleClass().add("data-table");
+        calendarTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        // Columnnas con datos de los calendarios xd
+        TableColumn<User, String> idColumn = new TableColumn<>("Calendar ID");
+        idColumn.setCellValueFactory(new PropertyValueFactory<>("userId"));
+
+
+        TableColumn<User, String> nameColumn = new TableColumn<>("Calendar Name");
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("fullName"));
+
+
+        TableColumn<User, String> statusColumn = new TableColumn<>("Estado");
+        statusColumn.setCellValueFactory(cellData -> {
+            User user = cellData.getValue();
+            return new SimpleStringProperty(user.isActive() ? "Activo" : "Inactivo");
+        });
+
+        calendarTable.getColumns().addAll(idColumn, nameColumn, statusColumn);
+
+        // 🔥 CARGAR DATOS DE USUARIOS EXISTENTES
+        try {
+            List<User> users = User.getAllUsers();
+            calendarTable.getItems().addAll(users);
+        } catch (Exception e) {
+            System.err.println("Error cargando datos: " + e.getMessage());
+        }
+
+        calendarContent.getChildren().add(calendarTable);
 
         calendarManagementSection.getChildren().addAll(calendarHeader, calendarContent);
         return calendarManagementSection;
@@ -507,6 +603,62 @@ public class AdminOverviewController implements Initializable {
         return card;
     }
 
+    private void updateCard(VBox card, String newValue, String newSubtitle) {
+
+        if (card != null && card.getChildren().size() >= 3) {
+
+            Label valueLabel = (Label) card.getChildren().get(1);
+            Label subtitleLabel = (Label) card.getChildren().get(2);
+
+            Platform.runLater(() -> {
+
+                valueLabel.setText(newValue);
+                subtitleLabel.setText(newSubtitle);
+
+            });
+
+        }
+
+    }
+
+    public void refreshDashboard() {
+
+        CompletableFuture.runAsync(() -> {
+
+            try {
+
+                User.DashboardData data = User.getDashboardData();
+
+                int totalUsers = data.totalUsers - 1;
+                int activeCalendars = data.activeCalendars;
+                int eventsThisMonth = data.eventsThisMonth;
+                int upcomingEvents = data.upcomingEvents;
+                int activeStudents = data.activeStudents;
+
+                cachedTotalUsers = totalUsers;
+                cachedActiveStudents = activeStudents;
+
+                Platform.runLater(() -> {
+
+                    updateCard(usersCard, String.valueOf(totalUsers),
+                            activeStudents + " estudiantes activos");
+                    updateCard(activeCalendarsCard, String.valueOf(activeCalendars),
+                            "Calendarios disponibles");
+                    updateCard(eventsForThisMonthCard, String.valueOf(eventsThisMonth),
+                            upcomingEvents + " eventos próximos");
+
+                    setStatus("Dashboard actualizado");
+
+                });
+
+            } catch (Exception e) {
+
+                Platform.runLater(() -> setStatus("Error actualizando dashboard: " + e.getMessage()));
+
+            }
+        });
+    }
+
     private void returnToLogin() {
         try {
             System.out.println("Regresando al login...");
@@ -547,5 +699,8 @@ public class AdminOverviewController implements Initializable {
         if (clockTimeline != null) {
             clockTimeline.stop();
         }
+
+        User.setDashboardController(null);
+
     }
 }

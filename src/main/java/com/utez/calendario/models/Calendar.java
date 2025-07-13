@@ -1,5 +1,12 @@
 package com.utez.calendario.models;
 
+import java.util.List;
+import java.util.ArrayList;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 
 /**
@@ -15,6 +22,12 @@ public class Calendar {
     private LocalDateTime createdDate;
     private LocalDateTime modifiedDate;
 
+    private static Connection getConnection() throws SQLException {
+
+        return com.utez.calendario.config.DatabaseConfig.getConnection();
+
+    }
+
     // Constructores
     public Calendar() {}
 
@@ -27,6 +40,8 @@ public class Calendar {
         this.active = 'Y';
         this.createdDate = LocalDateTime.now();
     }
+
+    // Funciones para el administrador de calendarios (pronto xd)
 
     // Getters y Setters
     public String getCalendarId() {
