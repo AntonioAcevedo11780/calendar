@@ -1,5 +1,7 @@
 package com.utez.calendario;
 
+import com.utez.calendario.config.DatabaseConfig;
+import com.utez.calendario.services.EventService;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
@@ -31,6 +33,15 @@ public class MainApp extends Application {
         primaryStage.setMinHeight(600);
         primaryStage.show();
         primaryStage.centerOnScreen();
+
+        // Agregar handler para cerrar correctamente los recursos
+        primaryStage.setOnCloseRequest(event -> {
+            // Cerrar el pool de conexiones
+            DatabaseConfig.closeDataSource();
+            // Apagar los servicios con ExecutorService
+            EventService.getInstance().shutdown();
+            System.out.println("Cerrando recursos de la aplicación...");
+        });
     }
 
     private void loadInriaSansFonts() {

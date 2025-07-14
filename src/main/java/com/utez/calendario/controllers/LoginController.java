@@ -2,6 +2,7 @@ package com.utez.calendario.controllers;
 
 import com.utez.calendario.services.AuthService;
 import com.utez.calendario.models.User;
+import com.utez.calendario.services.EventService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -212,6 +213,16 @@ public class LoginController implements Initializable {
             System.out.println("Rol: " + user.getRole().getDisplayName());
             System.out.println("Hora login: " + LocalDateTime.now());
             System.out.println("----------------------\n");
+
+            // Inicializar los calendarios para el usuario
+            EventService.getInstance().initializeUserCalendarsAsync(user.getUserId())
+                    .thenRun(() -> {
+                        System.out.println("✓ Calendarios inicializados correctamente para: " + user.getUserId());
+                    })
+                    .exceptionally(ex -> {
+                        System.err.println("✗ Error al inicializar calendarios: " + ex.getMessage());
+                        return null;
+                    });
         }
         clearFields();
 
