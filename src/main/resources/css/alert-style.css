@@ -1,0 +1,13 @@
+.dialog-pane {
+    -fx-font-size: 14px;
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-background-color: #fff3cd;
+    -fx-border-color: #ffa000;
+    -fx-border-width: 2;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+}
+
+.dialog-pane .content.label {
+    -fx-text-fill: #333;
+}
