@@ -23,7 +23,7 @@
         <!-- Lista de eventos (lado izquierdo) -->
         <VBox fx:id="eventListContainer" spacing="5" prefWidth="250">
             <Label text="📋 Eventos del día:" styleClass="section-title" />
-            <ListView fx:id="eventsListView" VBox.vgrow="ALWAYS" />
+            <ListView fx:id="eventListView" VBox.vgrow="ALWAYS" />
         </VBox>
 
         <!-- Formulario (lado derecho) -->

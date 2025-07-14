@@ -8,73 +8,36 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.geometry.Pos;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.AnchorPane;
 
 import java.net.URL;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.function.Consumer;
 
 public class EventDialogController implements Initializable {
 
-    @FXML
-    private Label modeLabel;
-
-    @FXML
-    private TextField titleField;
-
-    @FXML
-    private TextArea descriptionArea;
-
-    @FXML
-    private TextField locationField;
-
-    @FXML
-    private ComboBox<String> calendarComboBox;
-
-    @FXML
-    private DatePicker datePicker;
-
-    @FXML
-    private TextField startTimeField;
-
-    @FXML
-    private TextField endTimeField;
-
-    @FXML
-    private CheckBox allDayCheckBox;
-
-    @FXML
-    private Button saveButton;
-
-    @FXML
-    private Button updateButton;
-
-    @FXML
-    private Button deleteButton;
-
-    @FXML
-    private Button cancelButton;
-
-    @FXML
-    private VBox eventFormContainer;
-
-    @FXML
-    private VBox eventListContainer;
-
-    @FXML
-    private ListView<Event> eventListView;
+    @FXML private Label modeLabel;
+    @FXML private TextField titleField;
+    @FXML private TextArea descriptionArea;
+    @FXML private TextField locationField;
+    @FXML private ComboBox<String> calendarComboBox;
+    @FXML private DatePicker datePicker;
+    @FXML private TextField startTimeField;
+    @FXML private TextField endTimeField;
+    @FXML private CheckBox allDayCheckBox;
+    @FXML private Button saveButton;
+    @FXML private Button updateButton;
+    @FXML private Button deleteButton;
+    @FXML private Button cancelButton;
+    @FXML private VBox eventFormContainer;
+    @FXML private VBox eventListContainer;
+    @FXML private ListView<Event> eventListView;
 
     private EventService eventService;
     private AuthService authService;
@@ -83,7 +46,6 @@ public class EventDialogController implements Initializable {
     private LocalDate selectedDate;
     private Map<String, Event> eventsMap;
     private Runnable onEventChanged;
-    private ProgressIndicator loadingIndicator;
     private boolean calendarInitialized = false;
 
     @Override
@@ -91,27 +53,6 @@ public class EventDialogController implements Initializable {
         eventService = EventService.getInstance();
         authService = AuthService.getInstance();
         eventsMap = new HashMap<>();
-
-        // Añadir indicador de carga si no existe
-        if (loadingIndicator == null) {
-            loadingIndicator = new ProgressIndicator();
-            loadingIndicator.setVisible(false);
-            loadingIndicator.setMaxSize(50, 50);
-
-            // Aplicar estilos CSS para centrar
-            loadingIndicator.setStyle("-fx-translate-x: 50%; -fx-translate-y: 50%; -fx-background-color: rgba(255, 255, 255, 0.7); -fx-padding: 10px;");
-
-            if (eventFormContainer != null) {
-                // Usar un AnchorPane para posicionar el indicador
-                AnchorPane anchorPane = new AnchorPane(loadingIndicator);
-                AnchorPane.setTopAnchor(loadingIndicator, 0.0);
-                AnchorPane.setRightAnchor(loadingIndicator, 0.0);
-                AnchorPane.setBottomAnchor(loadingIndicator, 0.0);
-                AnchorPane.setLeftAnchor(loadingIndicator, 0.0);
-
-                eventFormContainer.getChildren().add(anchorPane);
-            }
-        }
 
         // Inicializar los calendarios del usuario para evitar problemas de FK
         String userId = authService.getCurrentUser().getUserId();
@@ -151,7 +92,7 @@ public class EventDialogController implements Initializable {
         endTimeField.setText("09:00");
     }
 
-    public void initializeForView(LocalDate date, Runnable onEventChanged) {
+    public void initializeForRead(LocalDate date, Runnable onEventChanged) {
         this.mode = "VIEW";
         this.selectedDate = date;
         this.onEventChanged = onEventChanged;
@@ -307,6 +248,7 @@ public class EventDialogController implements Initializable {
         // Configurar fecha y hora
         datePicker.setValue(event.getStartDate().toLocalDate());
 
+        // Usa el método isAllDay() que convierte char a boolean
         boolean isAllDay = event.isAllDay();
         allDayCheckBox.setSelected(isAllDay);
 
@@ -373,7 +315,9 @@ public class EventDialogController implements Initializable {
         // Configurar fecha y hora
         LocalDate date = datePicker.getValue();
         boolean isAllDay = allDayCheckBox.isSelected();
-        event.setAllDay(isAllDay);
+
+        // CORRECCIÓN: Convierte boolean a char 'Y'/'N'
+        event.setAllDay(isAllDay ? 'Y' : 'N');
 
         if (isAllDay) {
             event.setStartDate(LocalDateTime.of(date, LocalTime.MIN));
@@ -403,7 +347,9 @@ public class EventDialogController implements Initializable {
         // Configurar fecha y hora
         LocalDate date = datePicker.getValue();
         boolean isAllDay = allDayCheckBox.isSelected();
-        event.setAllDay(isAllDay);
+
+        // CORRECCIÓN: Convierte boolean a char 'Y'/'N'
+        event.setAllDay(isAllDay ? 'Y' : 'N');
 
         if (isAllDay) {
             event.setStartDate(LocalDateTime.of(date, LocalTime.MIN));
