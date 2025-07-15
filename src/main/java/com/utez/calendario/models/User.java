@@ -1,9 +1,12 @@
 package com.utez.calendario.models;
+import com.utez.calendario.controllers.AdminOverviewController;
+
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.concurrent.CompletableFuture;
 
 public class User {
     private String userId;
@@ -18,156 +21,195 @@ public class User {
     private LocalDateTime lastLogin;
 
     private static Connection getConnection() throws SQLException {
-        // Ajusta esto según tu configuración actual de conexión
-        String url = "jdbc:mysql://localhost:3306/calendar";
-        String user = "root";
-        String password = "";
-        return DriverManager.getConnection(url, user, password);
+
+        return com.utez.calendario.config.DatabaseConfig.getConnection();
+
     }
 
-    /**
-     * Cuenta el total de usuarios registrados
-     */
-    public static int getTotalUsersCount() {
-        int count = 0;
-        String sql = "SELECT COUNT(*) FROM users";
+    private static AdminOverviewController dashboardController;
+
+    // Datos para la consulta
+    public static class DashboardData {
+        public int totalUsers;
+        public int activeStudents;
+        public int eventsThisMonth;
+        public int upcomingEvents;
+        public int activeCalendars;
+    }
+
+    // Una sola consulta para obtener datos del dashboard
+    public static DashboardData getDashboardData() {
+        DashboardData data = new DashboardData();
+
+        // ✅ Consulta optimizada usando las tablas que SÍ existen
+        String sql = """
+        SELECT 
+                (SELECT COUNT(*) FROM users WHERE role != 'admin') as total_users,
+                (SELECT COUNT(*) FROM users WHERE role = 'alumno' AND active = 'Y') as active_students,
+                (SELECT COUNT(*) FROM EVENTS WHERE ACTIVE = 'Y' 
+                 AND EXTRACT(MONTH FROM START_DATE) = EXTRACT(MONTH FROM SYSDATE) 
+                 AND EXTRACT(YEAR FROM START_DATE) = EXTRACT(YEAR FROM SYSDATE)) as events_month,
+                (SELECT COUNT(*) FROM EVENTS WHERE ACTIVE = 'Y' 
+                 AND START_DATE > SYSDATE) as upcoming_events,
+                (SELECT COUNT(*) FROM CALENDARS WHERE ACTIVE = 'Y') as active_calendars
+            FROM DUAL
+        """;
 
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
             if (rs.next()) {
-                count = rs.getInt(1);
+                data.totalUsers = rs.getInt("total_users");
+                data.activeStudents = rs.getInt("active_students");
+                data.eventsThisMonth = rs.getInt("events_month");
+                data.upcomingEvents = rs.getInt("upcoming_events");
+                data.activeCalendars = rs.getInt("active_calendars");
             }
         } catch (SQLException e) {
-            System.err.println("Error al contar usuarios: " + e.getMessage());
+            System.err.println("Error al obtener datos del dashboard: " + e.getMessage());
         }
 
-        return count;
+        return data;
     }
 
-    /*
-     * Cuenta estudiantes activos
-     */
-    public static int getActiveStudentsCount() {
-        int count = 0;
-        String sql = "SELECT COUNT(*) FROM users WHERE role = 'alumno' AND active = 'Y'";
-
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            if (rs.next()) {
-                count = rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            System.err.println("Error al contar estudiantes activos: " + e.getMessage());
-        }
-
-        return count;
+    public static DashboardData getDashboardDataOptimized() {
+        // ✅ Simplemente usar el método existente mejorado
+        return getDashboardData();
     }
 
-    /**
-     * Cuenta eventos para el mes actual
-     */
-    public static int getEventsForCurrentMonth() {
-        int count = 0;
-        String sql = "SELECT COUNT(*) FROM events WHERE MONTH(START_DATE) = MONTH(CURRENT_DATE()) " +
-                "AND YEAR(START_DATE) = YEAR(CURRENT_DATE())";
-
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            if (rs.next()) {
-                count = rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            System.err.println("Error al contar eventos del mes: " + e.getMessage());
-        }
-
-        return count;
-    }
-
-    /**
-     * Cuenta eventos próximos (en los siguientes 7 días)
-     */
-    public static int getUpcomingEventsCount() {
-        int count = 0;
-        String sql = "SELECT COUNT(*) FROM events WHERE START_DATE BETWEEN CURRENT_DATE() " +
-                "AND DATE_ADD(CURRENT_DATE(), INTERVAL 7 DAY)";
-
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            if (rs.next()) {
-                count = rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            System.err.println("Error al contar eventos próximos: " + e.getMessage());
-        }
-
-        return count;
-    }
-
-    /**
-     * Cuenta calendarios activos
-     */
-    public static int getActiveCalendarsCount() {
-        int count = 0;
-        String sql = "SELECT COUNT(*) FROM calendars WHERE active = 'Y'";
-
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            if (rs.next()) {
-                count = rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            System.err.println("Error al contar calendarios activos: " + e.getMessage());
-        }
-
-        return count;
-    }
-
-    public static List<User> getAllUsers() {
+    public static List<User> getUsers(int page, int pageSize, boolean includeAdmins) {
         List<User> users = new ArrayList<>();
-        String sql = "SELECT USER_ID, MATRICULA, EMAIL, FIRST_NAME, LAST_NAME, ROLE, ACTIVE, CREATED_DATE, LAST_LOGIN FROM users";
+        int offset = page * pageSize;
+
+        String filterClause = includeAdmins ? "" : "WHERE u.role != 'admin'";
+        String limitClause = (page >= 0 && pageSize > 0) ?
+                "WHERE rn BETWEEN ? AND ?" : "WHERE ROWNUM <= 1000";
+
+        String sql = String.format("""
+            SELECT * FROM (
+                SELECT u.*, ROW_NUMBER() OVER (ORDER BY CREATED_DATE DESC) as rn
+                FROM users u
+                %s
+            ) %s
+            """, filterClause, limitClause);
 
         try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            while (rs.next()) {
-                User user = new User();
-                user.setMatricula(rs.getString("MATRICULA"));
-                user.setEmail(rs.getString("EMAIL"));
-                user.setFirstName(rs.getString("FIRST_NAME"));
-                user.setLastName(rs.getString("LAST_NAME"));
-                user.setRole(Role.fromString(rs.getString("ROLE")));
-                user.setActive(rs.getString("ACTIVE").charAt(0));
+            if (page >= 0 && pageSize > 0) {
 
-                Timestamp createdDate = rs.getTimestamp("CREATED_DATE");
-                if (createdDate != null) {
-                    user.setCreatedDate(createdDate.toLocalDateTime());
+                stmt.setInt(1, offset + 1);
+                stmt.setInt(2, offset + pageSize);
+
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    User user = mapResultSetToUser(rs);
+                    users.add(user);
                 }
-
-                Timestamp lastLogin = rs.getTimestamp("LAST_LOGIN");
-                if (lastLogin != null) {
-                    user.setLastLogin(lastLogin.toLocalDateTime());
-                }
-
-                users.add(user);
             }
         } catch (SQLException e) {
             System.err.println("Error al obtener usuarios: " + e.getMessage());
         }
 
         return users;
+
     }
 
+    // Helpers
+    public static List<User> getAllUsers() {
+        return getUsers(-1, -1, true);  // Sin paginación, con admins
+    }
+
+    public static List<User> getUsersPaginated(int page, int pageSize) {
+        return getUsers(page, pageSize, false);  // Con paginación, sin admins
+    }
+
+    public static void setDashboardController(AdminOverviewController controller) {
+        dashboardController = controller;
+    }
+
+    private static User mapResultSetToUser(ResultSet rs) throws SQLException {
+
+        User user = new User();
+
+        // Mapear campos básicos
+        user.setUserId(rs.getString("USER_ID"));
+        user.setMatricula(rs.getString("MATRICULA"));
+        user.setEmail(rs.getString("EMAIL"));
+        user.setFirstName(rs.getString("FIRST_NAME"));
+        user.setLastName(rs.getString("LAST_NAME"));
+        user.setRole(Role.fromString(rs.getString("ROLE")));
+        user.setActive(rs.getString("ACTIVE").charAt(0));
+
+        // Mapear fechas con verificacion de null
+        Timestamp createdDate = rs.getTimestamp("CREATED_DATE");
+        if (createdDate != null) {
+            user.setCreatedDate(createdDate.toLocalDateTime());
+        }
+
+        Timestamp lastLogin = rs.getTimestamp("LAST_LOGIN");
+        if (lastLogin != null) {
+            user.setLastLogin(lastLogin.toLocalDateTime());
+        }
+
+        return user;
+    }
+
+    public boolean toggleActive() {
+        char oldStatus = this.isActive() ? 'Y' : 'N';
+        char newStatus = this.isActive() ? 'N' : 'Y';
+
+        // Consulta optimizada para cambiar el estado del usuario
+        String sql = "UPDATE users SET ACTIVE = ? WHERE USER_ID = ?";
+
+        try (Connection conn = getConnection()) {
+
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, String.valueOf(newStatus));
+                stmt.setString(2, this.getUserId());
+
+                int rowsAffected = stmt.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    conn.commit();
+                    this.setActive(newStatus);
+
+                    // Actualiza el dashboard en segundo plano
+                    if (dashboardController != null) {
+                        boolean wasActivated = (oldStatus == 'N' && newStatus == 'Y');
+
+                        // La misma logica de ejecutar los threaads enn segundo planno
+                        CompletableFuture.runAsync(() -> {
+                            try {
+                                dashboardController.onUserToggledWithRole(wasActivated, this.getRole());
+                            } catch (Exception e) {
+                                System.err.println("Error actualizando dashboard: " + e.getMessage());
+                            }
+                        });
+                    }
+
+                    return true;
+                } else {
+
+                    conn.rollback();
+                    return false;
+
+                }
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al cambiar estado del usuario: " + e.getMessage());
+        }
+
+        return false;
+    }
     // Enum para los roles UTEZ
     public enum Role {
         ALUMNO("alumno"),
@@ -357,3 +399,5 @@ public class User {
         return userId != null ? userId.hashCode() : 0;
     }
 }
+
+
