@@ -1,0 +1,424 @@
+/* ==========================================================================
+   CALENDAR-WEEK VIEW - Vista de calendario semanal
+   ========================================================================== */
+
+/* ========== CONTENEDOR PRINCIPAL ========== */
+.main-grid {
+    -fx-background-color: white;
+    -fx-padding: 0;
+    -fx-spacing: 0;
+}
+
+/* ========== ÁREA DEL CALENDARIO ========== */
+.calendar-area {
+    -fx-background-color: white;
+    -fx-padding: 0;
+    -fx-spacing: 0;
+    -fx-max-width: Double.MAX_VALUE;
+    -fx-max-height: Double.MAX_VALUE;
+}
+
+/* ScrollPane del calendario*/
+.week-scrollpane {
+    -fx-background-color: white;
+    -fx-padding: 10;
+    -fx-fit-to-width: true;
+    -fx-fit-to-height: true;
+    -fx-hbar-policy: as-needed; /* Permitir scroll horizontal si es necesario */
+    -fx-vbar-policy: as-needed;
+}
+
+.week-scrollpane .viewport {
+    -fx-background-color: white;
+}
+
+.week-scrollpane .scroll-bar:horizontal {
+    -fx-background-color: #f5f5f5;
+    -fx-border-color: transparent;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+}
+
+.week-scrollpane .scroll-bar:vertical {
+    -fx-background-color: #f5f5f5;
+    -fx-border-color: transparent;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+}
+
+.week-scrollpane .scroll-bar .track {
+    -fx-background-color: #f5f5f5;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+}
+
+.week-scrollpane .scroll-bar .thumb {
+    -fx-background-color: #c1c1c1;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+}
+
+/* ========== GRID PRINCIPAL DEL CALENDARIO  ========== */
+.main-calendar-grid {
+    -fx-background-color: white;
+    -fx-border-color: #dadce0;
+    -fx-border-width: 1 0 0 1;
+    -fx-grid-lines-visible: false;
+    -fx-hgap: 0;
+    -fx-vgap: 0;
+    -fx-padding: 0;
+    -fx-min-width: 1000; /* Ancho mínimo más grande para evitar compresión */
+    -fx-pref-width: Region.USE_COMPUTED_SIZE;
+    -fx-max-width: Double.MAX_VALUE;
+}
+
+/* ========== CELDA DE ESQUINA ========= */
+.corner-cell {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #dadce0;
+    -fx-border-width: 0 1 1 0;
+    -fx-min-height: 130;
+    -fx-pref-height: 130;
+}
+
+/* ========== ENCABEZADOS DE DÍAS -  ========== */
+.day-header {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #dadce0;
+    -fx-border-width: 0 1 1 0;
+    -fx-padding: 10 8 10 8;
+    -fx-alignment: center;
+    -fx-spacing: 6;
+    -fx-min-height: 60; /* Altura incrementada */
+    -fx-pref-height: 60;
+    -fx-min-width: 130; /* Ancho mínimo más grande para títulos completos */
+    -fx-pref-width: Region.USE_COMPUTED_SIZE;
+    -fx-max-width: Double.MAX_VALUE;
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+}
+
+.day-header-name {
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #5f6368;
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+    -fx-wrap-text: false;
+    -fx-text-overrun: none; /* No cortar texto */
+}
+
+.day-header-number {
+    -fx-font-size: 26px;
+    -fx-font-weight: 400;
+    -fx-text-fill: #3c4043;
+    -fx-min-width: 40;
+    -fx-min-height: 40;
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+}
+
+.day-header-today {
+    -fx-background-color: #1a73e8;
+    -fx-text-fill: white;
+    -fx-background-radius: 20;
+    -fx-font-weight: 500;
+}
+
+/* ========== ETIQUETAS DE HORA - MEJORADAS ========== */
+.hour-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #70757a;
+    -fx-padding: 0 15 0 0;
+    -fx-alignment: center-right;
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #dadce0;
+    -fx-border-width: 0 1 1 0;
+    -fx-min-height: 60;
+    -fx-pref-height: 60;
+    -fx-min-width: 90;
+    -fx-pref-width: 90;
+    -fx-max-width: 90;
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+}
+
+/* ========== CELDAS DE HORAS - MEJORADAS ========== */
+.hour-cell {
+    -fx-background-color: white;
+    -fx-border-color: #dadce0;
+    -fx-border-width: 0 1 1 0;
+    -fx-padding: 4;
+    -fx-spacing: 2;
+    -fx-alignment: top-left;
+    -fx-min-height: 60;
+    -fx-pref-height: 60;
+    -fx-min-width: 130; /* Ancho mínimo más grande */
+    -fx-pref-width: Region.USE_COMPUTED_SIZE;
+    -fx-max-width: Double.MAX_VALUE;
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+}
+
+.hour-cell-hover {
+    -fx-background-color: #f1f3f4;
+}
+
+.hour-cell-selected {
+    -fx-background-color: #e8f0fe;
+    -fx-border-color: #1a73e8;
+    -fx-border-width: 0 1 1 1;
+}
+
+/* ========== EVENTOS - MEJORADOS ========== */
+.event-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: white;
+    -fx-padding: 4 8;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 2, 0, 0, 1);
+    -fx-max-width: Double.MAX_VALUE;
+    -fx-wrap-text: true;
+    -fx-text-overrun: ellipsis;
+}
+
+.event-blue {
+    -fx-background-color: #1976d2;
+}
+
+.event-red {
+    -fx-background-color: #e53935;
+}
+
+.event-green {
+    -fx-background-color: #43a047;
+}
+
+.event-orange {
+    -fx-background-color: #fb8c00;
+}
+
+.event-purple {
+    -fx-background-color: #8e24aa;
+}
+
+.event-default {
+    -fx-background-color: #757575;
+}
+
+.event-label:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 4, 0, 0, 2);
+    -fx-scale-x: 1.02;
+    -fx-scale-y: 1.02;
+}
+
+/* ========== LÍNEA DE HORA ACTUAL ========== */
+.current-time-line {
+    -fx-background-color: #ea4335;
+    -fx-min-height: 2;
+    -fx-pref-height: 2;
+    -fx-max-height: 2;
+    -fx-effect: dropshadow(gaussian, rgba(234,67,53,0.5), 2, 0, 0, 0);
+}
+
+/* ========== RESPONSIVE - MEJORADO ========== */
+@media screen and (min-width: 1600px) {
+    .day-header {
+        -fx-min-width: 150;
+    }
+
+    .hour-cell {
+        -fx-min-width: 150;
+    }
+
+    .day-header-name {
+        -fx-font-size: 13px;
+    }
+
+    .day-header-number {
+        -fx-font-size: 28px;
+    }
+}
+
+@media screen and (max-width: 1400px) {
+    .day-header {
+        -fx-min-width: 115;
+    }
+
+    .hour-cell {
+        -fx-min-width: 115;
+    }
+
+    .corner-cell {
+        -fx-min-width: 80;
+        -fx-pref-width: 80;
+        -fx-max-width: 80;
+    }
+
+    .hour-label {
+        -fx-min-width: 80;
+        -fx-pref-width: 80;
+        -fx-max-width: 80;
+    }
+}
+
+@media screen and (max-width: 1200px) {
+    .main-calendar-grid {
+        -fx-min-width: 900;
+    }
+
+    .day-header {
+        -fx-min-width: 100;
+        -fx-padding: 8 6 8 6;
+    }
+
+    .day-header-name {
+        -fx-font-size: 10px;
+    }
+
+    .day-header-number {
+        -fx-font-size: 22px;
+        -fx-min-width: 35;
+        -fx-min-height: 35;
+    }
+
+    .hour-cell {
+        -fx-min-width: 100;
+    }
+
+    .corner-cell {
+        -fx-min-width: 70;
+        -fx-pref-width: 70;
+        -fx-max-width: 70;
+    }
+
+    .hour-label {
+        -fx-font-size: 10px;
+        -fx-min-width: 70;
+        -fx-pref-width: 70;
+        -fx-max-width: 70;
+    }
+
+    .event-label {
+        -fx-font-size: 10px;
+        -fx-padding: 3 6;
+    }
+}
+
+@media screen and (max-width: 900px) {
+    .main-calendar-grid {
+        -fx-min-width: 800;
+    }
+
+    .day-header {
+        -fx-min-width: 85;
+        -fx-min-height: 50;
+        -fx-pref-height: 50;
+    }
+
+    .day-header-name {
+        -fx-font-size: 9px;
+    }
+
+    .day-header-number {
+        -fx-font-size: 20px;
+        -fx-min-width: 30;
+        -fx-min-height: 30;
+    }
+
+    .hour-cell {
+        -fx-min-width: 85;
+        -fx-min-height: 50;
+        -fx-pref-height: 50;
+    }
+
+    .corner-cell {
+        -fx-min-width: 60;
+        -fx-pref-width: 60;
+        -fx-max-width: 60;
+        -fx-min-height: 50;
+        -fx-pref-height: 50;
+    }
+
+    .hour-label {
+        -fx-font-size: 9px;
+        -fx-min-width: 60;
+        -fx-pref-width: 60;
+        -fx-max-width: 60;
+        -fx-min-height: 50;
+        -fx-pref-height: 50;
+    }
+}
+
+/* ========== MODO PANTALLA PEQUEÑA ========== */
+@media screen and (max-width: 768px) {
+    .main-calendar-grid {
+        -fx-min-width: 700; /* Forzar scroll horizontal en pantallas pequeñas */
+    }
+
+    .day-header {
+        -fx-min-width: 75;
+        -fx-padding: 6 4 6 4;
+    }
+
+    .day-header-name {
+        -fx-font-size: 8px;
+    }
+
+    .day-header-number {
+        -fx-font-size: 18px;
+        -fx-min-width: 28;
+        -fx-min-height: 28;
+    }
+
+    .hour-cell {
+        -fx-min-width: 75;
+    }
+
+    .event-label {
+        -fx-font-size: 9px;
+        -fx-padding: 2 4;
+    }
+}
+
+/* ========== EFECTOS Y ANIMACIONES ========== */
+.day-header:hover {
+    -fx-background-color: #e8eaed;
+}
+
+.hour-cell:hover {
+    -fx-cursor: crosshair;
+}
+
+/* ========== TOOLTIPS ========== */
+.tooltip {
+    -fx-background-color: #2c2c2c;
+    -fx-text-fill: white;
+    -fx-font-size: 11px;
+    -fx-padding: 6 8;
+    -fx-background-radius: 4;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 4, 0, 0, 2);
+}
+
+/*logout */
+/* Botón de cierre de sesión */
+.profile-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #e53935; /* Color rojo para indicar acción de cierre */
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 14px 15px;
+    -fx-cursor: hand;
+    -fx-graphic-text-gap: 12px;
+    -fx-font-family: -modern-font-family;
+    -fx-font-size: 15px;
+    -fx-font-weight: 500;
+    -fx-letter-spacing: -0.1px;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+}
+
+.profile-button:hover {
+    -fx-text-fill: #c62828; /* Rojo más oscuro al pasar el mouse */
+    -fx-font-weight: bold;
+}

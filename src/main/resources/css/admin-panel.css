@@ -1,6 +1,6 @@
 /* Estilos generales */
 .root {
-    -fx-font-family: 'Inter', 'Segoe UI', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+    -fx-font-family: "Inria Sans", 'Inter', 'Segoe UI', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
     -fx-font-size: 13px;
     -fx-background-color: #f4f6f9;
 }
@@ -30,7 +30,7 @@
     -accent-blue: #1a73e8;
 
     /* Tipografía*/
-    -modern-font-family: 'Inter', 'Segoe UI', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+    -modern-font-family: "Inria Sans", 'Inter', 'Segoe UI', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* Header */
@@ -445,4 +445,41 @@
 .table-container Label,
 .chart-container Label {
     -fx-alignment: CENTER;
+}
+
+.pagination-bar {
+    -fx-padding: 10px;
+    -fx-background-color: #f5f5f5;
+    -fx-border-color: #ddd;
+    -fx-border-width: 1px 0 0 0;
+}
+
+.pagination-button {
+    -fx-padding: 5px 15px;
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+    -fx-cursor: hand;
+}
+
+.pagination-button:disabled {
+    -fx-opacity: 0.5;
+}
+
+.deactivate-button {
+    -fx-background-color: #f44336;
+    -fx-text-fill: white;
+}
+
+.activate-button {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+}
+
+.icon-button {
+    -fx-background-color: transparent;
+    -fx-padding: 5px;
+    -fx-content-display: graphic-only;
+}
+.icon-button:hover {
+    -fx-background-color: #e0e0e0;
 }

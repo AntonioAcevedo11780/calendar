@@ -67,6 +67,57 @@ public class AuthService {
         return false;
     }
 
+    /**
+     * Verifica únicamente las credenciales sin importar el estado de activación
+     */
+    public boolean authenticateOnly(String email, String password) {
+        String sql = "SELECT COUNT(*) FROM USERS WHERE EMAIL = ? AND PASSWORD = ? AND ACTIVE = 'Y'";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, email);
+            pstmt.setString(2, password);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+
+            return false;
+        } catch (SQLException e) {
+            System.err.println("Error al verificar credenciales: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Busca un usuario por su email para verificar su estado
+     */
+    public User findUserByEmail(String email) {
+        String sql = "SELECT * FROM USERS WHERE EMAIL = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, email);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                User user = new User();
+                user.setUserId(rs.getString("USER_ID"));
+                user.setMatricula(rs.getString("MATRICULA"));
+                user.setEmail(rs.getString("EMAIL"));
+                user.setFirstName(rs.getString("FIRST_NAME"));
+                user.setLastName(rs.getString("LAST_NAME"));
+                user.setRole(User.Role.fromString(rs.getString("ROLE")));
+                user.setActive(rs.getString("ACTIVE").charAt(0));
+                return user;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al buscar usuario por email: " + e.getMessage());
+        }
+        return null;
+    }
+
     private void updateLastLogin(String userId) {
         String sql = "UPDATE USERS SET LAST_LOGIN = ? WHERE USER_ID = ?";
         try (Connection conn = DatabaseConfig.getConnection();

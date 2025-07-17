@@ -1,29 +1,17 @@
 package com.utez.calendario.controllers;
 
 import com.utez.calendario.models.Calendar;
-import com.utez.calendario.models.Event;
 import com.utez.calendario.services.AuthService;
 import com.utez.calendario.models.User;
 
-import javafx.beans.property.*;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.control.*;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.stage.Modality;
 import javafx.stage.Screen;
-import javafx.stage.Stage;
-import javafx.stage.Window;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.RowConstraints;
-import javafx.geometry.HPos;
-import javafx.geometry.VPos;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SplitPane;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -32,45 +20,54 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
+
+import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.geometry.Pos;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+
+import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+
+import java.util.List;
 
 import java.net.URL;
 import java.time.LocalTime;
-import java.time.LocalDate;
-
-import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.time.format.TextStyle;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Locale;
 import java.util.ResourceBundle;
+// Me corrooooo
 import java.util.concurrent.CompletableFuture;
-
 
 public class AdminOverviewController implements Initializable {
 
-    @FXML private StackPane contentArea;
-    @FXML private Label statusLabel;
-    @FXML private Label clockLabel;
-    @FXML private SplitPane splitPane;
+    @FXML
+    private StackPane contentArea;
+    @FXML
+    private Label statusLabel;
+    @FXML
+    private Label clockLabel;
+    @FXML
+    private SplitPane splitPane;
 
     private Timeline clockTimeline;
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-    private VBox usersCard, activeCalendarsCard, eventsForThisMonthCard;
-    private int cachedTotalUsers = 0, cachedActiveStudents = 0;
+    private VBox usersCard;
+    private VBox activeCalendarsCard;
+    private VBox eventsForThisMonthCard;
+
+    private int cachedTotalUsers = 0;
+    private int cachedActiveStudents = 0;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -90,34 +87,50 @@ public class AdminOverviewController implements Initializable {
             System.err.println("Error en inicialización: " + e.getMessage());
             setStatus("Error en inicialización");
         }
-
-        Timeline refreshTimeline = new Timeline(new KeyFrame(Duration.minutes(10), e -> refreshDashboard()));
-        refreshTimeline.setCycleCount(Timeline.INDEFINITE);
-        refreshTimeline.play();
+        // Configurar el Timeline para actualizar el dashboard cada 10 minutos
+        Timeline timeline = new Timeline(new KeyFrame(Duration.minutes(10), e -> refreshDashboard()));
+        timeline.setCycleCount(Timeline.INDEFINITE);
+        timeline.play();
     }
 
-    // ✅ MÉTODOS UTILITARIOS OPTIMIZADOS
     private ImageView createIcon(String path) {
-        ImageView icon = new ImageView(new Image(getClass().getResourceAsStream(path)));
-        icon.setFitHeight(30);
-        icon.setFitWidth(30);
-        icon.setPreserveRatio(true);
-        return icon;
+
+        ImageView imageView = new ImageView(new Image(getClass().getResourceAsStream(path)));
+
+        imageView.setFitHeight(30);
+        imageView.setFitWidth(30);
+        imageView.setPreserveRatio(true);
+
+        return imageView;
+
     }
 
-    private void setStatus(String message) {
-        if (statusLabel != null) {
-            Platform.runLater(() -> statusLabel.setText(message));
-        }
-    }
-
-    // ✅ EVENTOS DEL SISTEMA
     public void onUserToggledWithRole(boolean wasActivated, User.Role userRole) {
+
         Platform.runLater(() -> {
+
             try {
-                cachedTotalUsers += wasActivated ? 1 : -1;
-                if (userRole == User.Role.ALUMNO) {
-                    cachedActiveStudents += wasActivated ? 1 : -1;
+
+                if (wasActivated) {
+
+                    cachedTotalUsers++;
+
+                    if (userRole == User.Role.ALUMNO) {
+
+                        cachedActiveStudents++;
+
+                    }
+
+                } else {
+
+                    cachedTotalUsers--;
+
+                    if (userRole == User.Role.ALUMNO) {
+
+                        cachedActiveStudents--;
+
+                    }
+
                 }
 
                 updateCard(usersCard, String.valueOf(cachedTotalUsers),
@@ -126,8 +139,11 @@ public class AdminOverviewController implements Initializable {
                 setStatus("Usuario " + (wasActivated ? "activado" : "desactivado") + " correctamente");
 
             } catch (Exception e) {
+
                 setStatus("Error actualizando dashboard: " + e.getMessage());
+
             }
+
         });
     }
 
@@ -135,7 +151,12 @@ public class AdminOverviewController implements Initializable {
     private void handleLogout() {
         try {
             setStatus("Cerrando sesión...");
-            if (clockTimeline != null) clockTimeline.stop();
+
+            // Detener el reloj antes de cerrar sesión
+            if (clockTimeline != null) {
+                clockTimeline.stop();
+            }
+
             AuthService.getInstance().logout();
             Platform.runLater(this::returnToLogin);
         } catch (Exception e) {
@@ -149,22 +170,39 @@ public class AdminOverviewController implements Initializable {
         try {
             contentArea.getChildren().clear();
 
+            // Crear ScrollPane para permitir desplazamiento
             ScrollPane scrollPane = new ScrollPane();
             scrollPane.setFitToWidth(true);
             scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
             scrollPane.getStyleClass().add("dashboard-scroll");
 
-            VBox mainContainer = new VBox(30);
+            // Contenedor principal para todas las secciones
+            VBox mainContainer = new VBox();
+            mainContainer.setSpacing(30);
             mainContainer.setAlignment(Pos.TOP_CENTER);
             mainContainer.getStyleClass().add("dashboard-container");
 
+            // ---------- SECCIÓN 1: TARJETAS RESUMEN ----------
+            VBox summarySection = createSummarySection();
+
+            // ---------- SECCIÓN 2: ADMINISTRACIÓN DE USUARIOS ----------
+            VBox userManagementSection = createUserManagementSection();
+
+            // ---------- SECCIÓN 3: ADMINISTRACIÓN DE CALENDARIOS ----------
+            VBox calendarManagementSection = createCalendarManagementSection();
+
+            // ---------- SECCIÓN 4: ESTADÍSTICAS ----------
+            VBox statisticsSection = createStatisticsSection();
+
+            // Añadir todas las secciones al contenedor principal
             mainContainer.getChildren().addAll(
-                    createSummarySection(),
-                    createUserManagementSection(),
-                    createCalendarManagementSection(),
-                    createStatisticsSection()
+                    summarySection,
+                    userManagementSection,
+                    calendarManagementSection,
+                    statisticsSection
             );
 
+            // Configurar el ScrollPane con el contenedor principal
             scrollPane.setContent(mainContainer);
             contentArea.getChildren().add(scrollPane);
 
@@ -174,72 +212,379 @@ public class AdminOverviewController implements Initializable {
         }
     }
 
-    // ✅ SECCIÓN RESUMEN OPTIMIZADA
     private VBox createSummarySection() {
-        VBox summarySection = new VBox(20);
+        VBox summarySection = new VBox();
+        summarySection.setSpacing(20);
         summarySection.setAlignment(Pos.CENTER);
+
+        HBox summaryHeader = new HBox();
+        summaryHeader.getStyleClass().add("section-header");
+        summaryHeader.setAlignment(Pos.CENTER);
 
         Label summaryTitle = new Label("Vista General");
         summaryTitle.getStyleClass().add("section-title");
 
-        HBox summaryCards = new HBox(20);
+        Region spacer1 = new Region();
+        HBox.setHgrow(spacer1, Priority.ALWAYS);
+
+        summaryHeader.getChildren().addAll(summaryTitle, spacer1);
+
+        HBox summaryCards = new HBox();
+        summaryCards.setSpacing(20);
         summaryCards.setAlignment(Pos.CENTER);
         summaryCards.getStyleClass().add("summary-cards");
 
-        // Cargar datos de forma eficiente
-        int[] counts = loadDashboardCounts();
+        // Se cargan los datos a utilizar de la base de datos
+        int totalUsers;
+        int activeCalendars;
+        int eventsThisMonth;
+        int upcomingEvents;
 
-        usersCard = createSummaryCard("users-card", "Usuarios Totales",
-                String.valueOf(counts[0]), counts[3] + " estudiantes activos");
-
-        activeCalendarsCard = createSummaryCard("activeCalendars-card", "Calendarios Activos",
-                String.valueOf(counts[1]), "Calendarios disponibles");
-
-        eventsForThisMonthCard = createSummaryCard("eventsForThisMonth-card", "Eventos este mes",
-                String.valueOf(counts[2]), counts[4] + " eventos próximos");
-
-        summaryCards.getChildren().addAll(usersCard, activeCalendarsCard, eventsForThisMonthCard);
-        summarySection.getChildren().addAll(createSectionHeader("Vista General"), summaryCards);
-
-        return summarySection;
-    }
-
-    private int[] loadDashboardCounts() {
         try {
-            // ✅ USAR el método optimizado que creamos
-            User.DashboardData data = User.getDashboardData(); // Ya está optimizado
-            cachedTotalUsers = data.totalUsers; // ✅ Cambiar esta línea
+            User.DashboardData data = User.getDashboardData();
+
+            totalUsers = User.getUsers(-1, -1, false).size();
+            activeCalendars = data.activeCalendars - 1; // Restar 1 para excluir el calendario de administración
+            eventsThisMonth = data.eventsThisMonth;
+            upcomingEvents = data.upcomingEvents;
+
+            cachedTotalUsers = totalUsers;
             cachedActiveStudents = data.activeStudents;
 
             setStatus("Datos cargados correctamente");
-            return new int[]{
-                    data.totalUsers,        // ✅ Cambiar esta línea
-                    data.activeCalendars,   // ✅ Quitar el -1
-                    data.eventsThisMonth,
-                    data.activeStudents,
-                    data.upcomingEvents
-            };
         } catch (Exception e) {
+            totalUsers = 0;
+            activeCalendars = 0;
+            eventsThisMonth = 0;
+            upcomingEvents = 0;
+
+            cachedTotalUsers = 0;
+            cachedActiveStudents = 0;
+
             setStatus("Error al cargar datos: " + e.getMessage());
-            return new int[]{0, 0, 0, 0, 0};
+        }
+
+        // Crear tarjetas de resumen
+        usersCard = createSummaryCard(
+                "users-card",
+                "Usuarios Totales",
+                String.valueOf(totalUsers),
+                cachedActiveStudents + " estudiantes activos"
+        );
+
+        activeCalendarsCard = createSummaryCard(
+                "activeCalendars-card",
+                "Calendarios Activos",
+                String.valueOf(activeCalendars),
+                "Calendarios disponibles"
+        );
+
+        eventsForThisMonthCard = createSummaryCard(
+                "eventsForThisMonth-card",
+                "Eventos este mes",
+                String.valueOf(eventsThisMonth),
+                upcomingEvents + " eventos próximos"
+        );
+
+        summaryCards.getChildren().addAll(usersCard, activeCalendarsCard, eventsForThisMonthCard);
+        summarySection.getChildren().addAll(summaryHeader, summaryCards);
+
+        return summarySection;
+
+    }
+
+    private VBox createUserManagementSection() {
+        VBox userManagementSection = new VBox();
+        userManagementSection.setSpacing(20);
+        userManagementSection.setAlignment(Pos.CENTER);
+
+        HBox userHeader = new HBox();
+        userHeader.getStyleClass().add("section-header");
+        userHeader.setAlignment(Pos.CENTER);
+
+        Label userTitle = new Label("Administración de Usuarios");
+        userTitle.getStyleClass().add("section-title");
+
+        Region spacer2 = new Region();
+        HBox.setHgrow(spacer2, Priority.ALWAYS);
+
+        userHeader.getChildren().addAll(userTitle, spacer2);
+
+        // Crear tabla de usuarios
+        TableView<User> userTable = new TableView<>();
+        userTable.getStyleClass().add("user-table");
+        userTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        userTable.setFixedCellSize(40);
+        userTable.setPrefHeight(440);
+
+        // Definir columnas
+        TableColumn<User, String> matriculaColumn = new TableColumn<>("Matrícula");
+        matriculaColumn.setCellValueFactory(new PropertyValueFactory<>("matricula"));
+
+        TableColumn<User, String> nameColumn = new TableColumn<>("Nombre");
+        nameColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getFullName()));
+
+        TableColumn<User, String> emailColumn = new TableColumn<>("Email");
+        emailColumn.setCellValueFactory(new PropertyValueFactory<>("email"));
+
+        TableColumn<User, String> roleColumn = new TableColumn<>("Rol");
+        roleColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getRole().getDisplayName()));
+
+        TableColumn<User, Boolean> activeColumn = new TableColumn<>("Activo");
+        activeColumn.setCellValueFactory(cellData ->
+                new SimpleBooleanProperty(cellData.getValue().isActive()));
+        activeColumn.setCellFactory(col -> new TableCell<User, Boolean>() {
+            @Override
+            protected void updateItem(Boolean item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : (item ? "Sí" : "No"));
+            }
+        });
+
+        TableColumn<User, Void> actionsColumn = new TableColumn<>("Acciones");
+        actionsColumn.setCellFactory(col -> new TableCell<User, Void>() {
+            private final Button toggleButton = new Button();
+            private final HBox pane = new HBox(5, toggleButton);
+
+            {
+                pane.setAlignment(Pos.CENTER);
+
+                toggleButton.setOnAction(event -> {
+                    User user = getTableView().getItems().get(getIndex());
+
+                    // Se ejecuta en segundo plano :D
+                    CompletableFuture.runAsync(() -> {
+                        boolean success = user.toggleActive();
+
+                        Platform.runLater(() -> {
+                            if (success) {
+                                updateButtonText(user);
+                                getTableView().refresh();
+                                setStatus(user.isActive()
+                                        ? "Usuario activado: " + user.getFullName()
+                                        : "Usuario desactivado: " + user.getFullName());
+                            } else {
+                                setStatus("Error al cambiar estado del usuario: " + user.getFullName());
+                            }
+                        });
+                    });
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    User user = getTableView().getItems().get(getIndex());
+                    updateButtonText(user);
+                    setGraphic(pane);
+                }
+            }
+
+            private void updateButtonText(User user) {
+                if (user.isActive()) {
+                    toggleButton.setText("Desactivar");
+                    toggleButton.getStyleClass().remove("activate-button");
+                    toggleButton.getStyleClass().add("deactivate-button");
+                } else {
+                    toggleButton.setText("Activar");
+                    toggleButton.getStyleClass().remove("deactivate-button");
+                    toggleButton.getStyleClass().add("activate-button");
+                }
+            }
+        });
+
+        // Añadir columnas a la tabla
+        userTable.getColumns().addAll(
+                matriculaColumn, nameColumn, emailColumn,
+                roleColumn, activeColumn, actionsColumn
+        );
+
+        // Variables para la paginación
+        final int itemsPerPage = 10;
+        final IntegerProperty currentPageIndex = new SimpleIntegerProperty(0);
+        final List<User> masterData = User.getUsers(0, 100, false);
+
+        // Función para actualizar los datos mostrados
+        Runnable updatePageData = () -> {
+            int startIndex = currentPageIndex.get() * itemsPerPage;
+            int endIndex = Math.min(startIndex + itemsPerPage, masterData.size());
+
+            userTable.getItems().clear();
+            userTable.getItems().addAll(masterData.subList(startIndex, endIndex));
+
+            setStatus("Mostrando usuarios " + (startIndex + 1) + " a " + endIndex +
+                    " de " + masterData.size());
+        };
+
+        // Crear botones de navegación
+        Button prevButton = new Button();
+        prevButton.getStyleClass().addAll("pagination-button", "icon-button");
+        prevButton.setGraphic(createIcon("/images/arrow-left.png"));
+        prevButton.setDisable(true);
+        prevButton.setOnAction(e -> {
+            currentPageIndex.set(currentPageIndex.get() - 1);
+            updatePageData.run();
+        });
+
+        Button nextButton = new Button();
+        nextButton.getStyleClass().addAll("pagination-button", "icon-button");
+        nextButton.setGraphic(createIcon("/images/arrow-right.png"));
+        nextButton.setOnAction(e -> {
+            currentPageIndex.set(currentPageIndex.get() + 1);
+            updatePageData.run();
+        });
+
+        Label pageInfoLabel = new Label();
+
+        // Listener para actualizar estado de botones
+        currentPageIndex.addListener((obs, oldVal, newVal) -> {
+            int pageIndex = newVal.intValue();
+            prevButton.setDisable(pageIndex == 0);
+            nextButton.setDisable((pageIndex + 1) * itemsPerPage >= masterData.size());
+            pageInfoLabel.setText("Página " + (pageIndex + 1) + " de " +
+                    ((masterData.size() - 1) / itemsPerPage + 1));
+        });
+
+        // Barra de paginación
+        HBox paginationBar = new HBox(10);
+        paginationBar.setAlignment(Pos.CENTER);
+        paginationBar.getStyleClass().add("pagination-bar");
+        paginationBar.getChildren().addAll(prevButton, pageInfoLabel, nextButton);
+
+        // Inicializar con la primera página
+        updatePageData.run();
+        pageInfoLabel.setText("Página 1 de " + ((masterData.size() - 1) / itemsPerPage + 1));
+
+        // Contenedor para la tabla y la paginación
+        VBox userContent = new VBox(10);
+        userContent.getStyleClass().add("table-container");
+        userContent.getChildren().addAll(userTable, paginationBar);
+
+        userManagementSection.getChildren().addAll(userHeader, userContent);
+        return userManagementSection;
+    }
+
+    private VBox createCalendarManagementSection() {
+        VBox calendarManagementSection = new VBox();
+        calendarManagementSection.setSpacing(20);
+        calendarManagementSection.setAlignment(Pos.CENTER);
+
+        HBox calendarHeader = new HBox();
+        calendarHeader.getStyleClass().add("section-header");
+        calendarHeader.setAlignment(Pos.CENTER);
+
+        Label calendarTitle = new Label("Administración de Calendarios");
+        calendarTitle.getStyleClass().add("section-title");
+
+        Region spacer3 = new Region();
+        HBox.setHgrow(spacer3, Priority.ALWAYS);
+
+        calendarHeader.getChildren().addAll(calendarTitle, spacer3);
+
+        // Contenedor de la tabla de calendarios
+        VBox calendarContent = new VBox();
+        calendarContent.getStyleClass().add("table-container");
+        calendarContent.setAlignment(Pos.CENTER);
+
+        // Tabla de administración de calendarios
+        TableView<User> calendarTable = new TableView<>();
+        calendarTable.getStyleClass().add("data-table");
+        calendarTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        // Columnnas con datos de los calendarios xd
+        TableColumn<User, String> idColumn = new TableColumn<>("Calendar ID");
+        idColumn.setCellValueFactory(new PropertyValueFactory<>("userId"));
+
+
+        TableColumn<User, String> nameColumn = new TableColumn<>("Calendar Name");
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("fullName"));
+
+
+        TableColumn<User, String> statusColumn = new TableColumn<>("Estado");
+        statusColumn.setCellValueFactory(cellData -> {
+            User user = cellData.getValue();
+            return new SimpleStringProperty(user.isActive() ? "Activo" : "Inactivo");
+        });
+
+        calendarTable.getColumns().addAll(idColumn, nameColumn, statusColumn);
+
+        // 🔥 CARGAR DATOS DE USUARIOS EXISTENTES
+        try {
+            List<User> users = User.getAllUsers();
+            calendarTable.getItems().addAll(users);
+        } catch (Exception e) {
+            System.err.println("Error cargando datos: " + e.getMessage());
+        }
+
+        calendarContent.getChildren().add(calendarTable);
+
+        calendarManagementSection.getChildren().addAll(calendarHeader, calendarContent);
+        return calendarManagementSection;
+    }
+
+    private VBox createStatisticsSection() {
+        VBox statisticsSection = new VBox();
+        statisticsSection.setSpacing(20);
+        statisticsSection.setAlignment(Pos.CENTER);
+
+        HBox statisticsHeader = new HBox();
+        statisticsHeader.getStyleClass().add("section-header");
+        statisticsHeader.setAlignment(Pos.CENTER);
+
+        Label statisticsTitle = new Label("Estadísticas");
+        statisticsTitle.getStyleClass().add("section-title");
+
+        Region spacer4 = new Region();
+        HBox.setHgrow(spacer4, Priority.ALWAYS);
+
+        statisticsHeader.getChildren().addAll(statisticsTitle, spacer4);
+
+        // Contenido de estadísticas
+        VBox statisticsContent = new VBox();
+        statisticsContent.getStyleClass().add("chart-container");
+        statisticsContent.setAlignment(Pos.CENTER);
+
+        Label statsPlaceholder = new Label("Aquí se mostrarán las estadísticas del sistema");
+        statsPlaceholder.setStyle("-fx-font-size: 16px; -fx-padding: 40px;");
+        statisticsContent.getChildren().add(statsPlaceholder);
+
+        statisticsSection.getChildren().addAll(statisticsHeader, statisticsContent);
+        return statisticsSection;
+    }
+
+    private void setStatus(String message) {
+        if (statusLabel != null) {
+            Platform.runLater(() -> statusLabel.setText(message));
         }
     }
 
-    private HBox createSectionHeader(String title) {
-        HBox header = new HBox();
-        header.getStyleClass().add("section-header");
-        header.setAlignment(Pos.CENTER);
+    private void startClock() {
+        if (clockTimeline != null) {
+            clockTimeline.stop();
+        }
 
-        Label titleLabel = new Label(title);
-        titleLabel.getStyleClass().add("section-title");
-
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        header.getChildren().addAll(titleLabel, spacer);
-        return header;
+        clockTimeline = new Timeline(
+                new KeyFrame(Duration.seconds(0), e -> updateClock()),
+                new KeyFrame(Duration.seconds(1))
+        );
+        clockTimeline.setCycleCount(Timeline.INDEFINITE);
+        clockTimeline.play();
     }
 
+    private void updateClock() {
+        if (clockLabel != null) {
+            Platform.runLater(() -> clockLabel.setText(LocalTime.now().format(timeFormatter)));
+        }
+    }
+
+    // Crea una tarjeta de resumen con los datos proporcionados
     private VBox createSummaryCard(String styleClass, String title, String value, String subtitle) {
         VBox card = new VBox();
         card.setAlignment(Pos.CENTER);
@@ -259,678 +604,77 @@ public class AdminOverviewController implements Initializable {
     }
 
     private void updateCard(VBox card, String newValue, String newSubtitle) {
+
         if (card != null && card.getChildren().size() >= 3) {
+
             Label valueLabel = (Label) card.getChildren().get(1);
             Label subtitleLabel = (Label) card.getChildren().get(2);
 
             Platform.runLater(() -> {
+
                 valueLabel.setText(newValue);
                 subtitleLabel.setText(newSubtitle);
+
             });
-        }
-    }
 
-    // ✅ SECCIÓN USUARIOS OPTIMIZADA
-    private VBox createUserManagementSection() {
-        VBox userSection = new VBox(20);
-        userSection.setAlignment(Pos.CENTER);
-
-        TableView<User> userTable = createOptimizedUserTable();
-        HBox paginationBar = createUserPagination(userTable);
-
-        VBox userContent = new VBox(10);
-        userContent.getStyleClass().add("table-container");
-        userContent.getChildren().addAll(userTable, paginationBar);
-
-        userSection.getChildren().addAll(createSectionHeader("Administración de Usuarios"), userContent);
-        return userSection;
-    }
-
-    private TableView<User> createOptimizedUserTable() {
-        TableView<User> table = new TableView<>();
-        table.getStyleClass().add("user-table");
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setFixedCellSize(40);
-        table.setPrefHeight(440);
-
-        // Crear columnas de forma eficiente
-        TableColumn<User, String>[] columns = new TableColumn[]{
-                createColumn("Matrícula", "matricula"),
-                createColumn("Email", "email")
-        };
-
-        TableColumn<User, String> nameColumn = new TableColumn<>("Nombre");
-        nameColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getFullName()));
-
-        TableColumn<User, String> roleColumn = new TableColumn<>("Rol");
-        roleColumn.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getRole().getDisplayName()));
-
-        TableColumn<User, Boolean> activeColumn = new TableColumn<>("Activo");
-        activeColumn.setCellValueFactory(cellData -> new SimpleBooleanProperty(cellData.getValue().isActive()));
-        activeColumn.setCellFactory(col -> new TableCell<User, Boolean>() {
-            @Override
-            protected void updateItem(Boolean item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty ? null : (item ? "Sí" : "No"));
-            }
-        });
-
-        TableColumn<User, Void> actionsColumn = new TableColumn<>("Acciones");
-        actionsColumn.setCellFactory(col -> createUserActionCell());
-
-        table.getColumns().addAll(List.of(columns[0], nameColumn, columns[1], roleColumn, activeColumn, actionsColumn));
-        return table;
-    }
-
-    private TableColumn<User, String> createColumn(String title, String property) {
-        TableColumn<User, String> column = new TableColumn<>(title);
-        column.setCellValueFactory(new PropertyValueFactory<>(property));
-        return column;
-    }
-
-    private TableCell<User, Void> createUserActionCell() {
-        return new TableCell<User, Void>() {
-            private final Button toggleButton = new Button();
-            private final HBox pane = new HBox(5, toggleButton);
-
-            {
-                pane.setAlignment(Pos.CENTER);
-                toggleButton.setOnAction(event -> {
-                    User user = getTableView().getItems().get(getIndex());
-                    CompletableFuture.runAsync(() -> {
-                        boolean success = user.toggleActive();
-                        Platform.runLater(() -> {
-                            if (success) {
-                                updateButtonStyle(user);
-                                getTableView().refresh();
-                                setStatus((user.isActive() ? "Usuario activado: " : "Usuario desactivado: ") + user.getFullName());
-                            } else {
-                                setStatus("Error al cambiar estado del usuario: " + user.getFullName());
-                            }
-                        });
-                    });
-                });
-            }
-
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    updateButtonStyle(getTableView().getItems().get(getIndex()));
-                    setGraphic(pane);
-                }
-            }
-
-            private void updateButtonStyle(User user) {
-                toggleButton.setText(user.isActive() ? "Desactivar" : "Activar");
-                toggleButton.getStyleClass().setAll(user.isActive() ? "deactivate-button" : "activate-button");
-            }
-        };
-    }
-
-    private HBox createUserPagination(TableView<User> userTable) {
-        final int itemsPerPage = 10;
-        final IntegerProperty currentPageIndex = new SimpleIntegerProperty(0);
-        final List<User> masterData = User.getUsers(0, 100, false);
-
-        Runnable updatePageData = () -> {
-            int startIndex = currentPageIndex.get() * itemsPerPage;
-            int endIndex = Math.min(startIndex + itemsPerPage, masterData.size());
-            userTable.getItems().setAll(masterData.subList(startIndex, endIndex));
-            setStatus("Mostrando usuarios " + (startIndex + 1) + " a " + endIndex + " de " + masterData.size());
-        };
-
-        Button[] navButtons = {
-                createPaginationButton("◀", "/images/arrow-left.png", e -> {
-                    currentPageIndex.set(currentPageIndex.get() - 1);
-                    updatePageData.run();
-                }),
-                createPaginationButton("▶", "/images/arrow-right.png", e -> {
-                    currentPageIndex.set(currentPageIndex.get() + 1);
-                    updatePageData.run();
-                })
-        };
-
-        Label pageInfoLabel = new Label();
-
-        currentPageIndex.addListener((obs, oldVal, newVal) -> {
-            int pageIndex = newVal.intValue();
-            navButtons[0].setDisable(pageIndex == 0);
-            navButtons[1].setDisable((pageIndex + 1) * itemsPerPage >= masterData.size());
-            pageInfoLabel.setText("Página " + (pageIndex + 1) + " de " + ((masterData.size() - 1) / itemsPerPage + 1));
-        });
-
-        updatePageData.run();
-        pageInfoLabel.setText("Página 1 de " + ((masterData.size() - 1) / itemsPerPage + 1));
-
-        HBox paginationBar = new HBox(10, navButtons[0], pageInfoLabel, navButtons[1]);
-        paginationBar.setAlignment(Pos.CENTER);
-        paginationBar.getStyleClass().add("pagination-bar");
-
-        return paginationBar;
-    }
-
-    private Button createPaginationButton(String text, String iconPath, javafx.event.EventHandler<javafx.event.ActionEvent> action) {
-        Button button = new Button();
-        button.getStyleClass().addAll("pagination-button", "icon-button");
-        button.setGraphic(createIcon(iconPath));
-        button.setOnAction(action);
-        return button;
-    }
-
-    // ✅ SECCIÓN CALENDARIOS SÚPER OPTIMIZADA
-    private VBox createCalendarManagementSection() {
-        VBox calendarSection = new VBox(20);
-        calendarSection.setAlignment(Pos.CENTER);
-
-        VBox calendarContent = new VBox();
-        calendarContent.getStyleClass().add("table-container");
-        calendarContent.setAlignment(Pos.CENTER);
-
-        TableView<Calendar> calendarTable = createOptimizedCalendarTable();
-        loadCalendarDataAsync(calendarTable);
-
-        calendarContent.getChildren().add(calendarTable);
-        calendarSection.getChildren().addAll(createSectionHeader("Administración de Calendarios"), calendarContent);
-        return calendarSection;
-    }
-
-    // ✅ AGREGAR la columna de nombre que falta
-    private TableView<Calendar> createOptimizedCalendarTable() {
-        TableView<Calendar> table = new TableView<>();
-        table.getStyleClass().add("data-table");
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setFixedCellSize(40);
-        table.setPrefHeight(440);
-
-        TableColumn<Calendar, String> idColumn = new TableColumn<>("Calendar ID");
-        idColumn.setCellValueFactory(new PropertyValueFactory<>("calendarId"));
-        idColumn.setPrefWidth(150);
-
-        // ✅ AGREGAR esta columna que falta
-        TableColumn<Calendar, String> nameColumn = new TableColumn<>("Nombre");
-        nameColumn.setCellValueFactory(cellData -> {
-            Calendar calendar = cellData.getValue();
-            String displayName = calendar.getName() != null && !calendar.getName().isEmpty()
-                    ? calendar.getName()
-                    : "Calendario " + calendar.getCalendarId();
-            return new SimpleStringProperty(displayName);
-        });
-        nameColumn.setPrefWidth(200);
-
-        TableColumn<Calendar, Button> viewColumn = new TableColumn<>("Vista Previa");
-        viewColumn.setCellValueFactory(cellData -> {
-            Button viewButton = new Button("📅 Ver Calendario");
-            viewButton.getStyleClass().add("view-calendar-button");
-            viewButton.setOnAction(e -> openCalendarViewerWindow(cellData.getValue()));
-            return new SimpleObjectProperty<>(viewButton);
-        });
-        viewColumn.setPrefWidth(150);
-
-        TableColumn<Calendar, String> modifiedColumn = new TableColumn<>("Última Modificación");
-        modifiedColumn.setCellValueFactory(cellData -> {
-            Calendar calendar = cellData.getValue();
-            return new SimpleStringProperty(calendar.getModifiedDate() != null ?
-                    calendar.getModifiedDate().format(dateFormatter) : "N/A");
-        });
-        modifiedColumn.setPrefWidth(150);
-
-        // ✅ AGREGAR nameColumn a la tabla
-        table.getColumns().addAll(idColumn, nameColumn, viewColumn, modifiedColumn);
-        return table;
-    }
-
-    private void loadCalendarDataAsync(TableView<Calendar> calendarTable) {
-        setStatus("Cargando calendarios...");
-
-        CompletableFuture.supplyAsync(Calendar::getAllActiveCalendars)
-                .thenAcceptAsync(calendars -> Platform.runLater(() -> {
-                    calendarTable.getItems().setAll(calendars);
-                    setStatus("Calendarios cargados: " + calendars.size());
-                }))
-                .exceptionally(throwable -> {
-                    Platform.runLater(() -> setStatus("Error al cargar calendarios"));
-                    return null;
-                });
-    }
-
-    private void openCalendarViewerWindow(Calendar calendar) {
-        try {
-            System.out.println("🔄 Abriendo vista de calendario: " + calendar.getCalendarId());
-
-            Stage calendarStage = createCalendarStage(calendar);
-            VBox calendarView = createSuperOptimizedCalendarView(calendar);
-
-            // ✅ Tamaño más compacto para vista admin
-            Scene calendarScene = new Scene(calendarView, 800, 600); // ✅ Más pequeño
-
-            try {
-                String cssPath = getClass().getResource("/css/admin-overview.css").toExternalForm();
-                calendarScene.getStylesheets().add(cssPath);
-                System.out.println("✅ CSS cargado correctamente");
-            } catch (Exception cssError) {
-                System.err.println("⚠️ No se pudo cargar CSS: " + cssError.getMessage());
-            }
-
-            calendarStage.setScene(calendarScene);
-            calendarStage.show();
-
-            loadAndDisplayCalendarEvents(calendar, calendarView);
-
-            System.out.println("✅ Vista de calendario abierta correctamente");
-
-        } catch (Exception e) {
-            System.err.println("❌ Error: " + e.getMessage());
-            e.printStackTrace();
-            showAlert("Error", "No se pudo abrir la vista del calendario:\n" + e.getMessage(), Alert.AlertType.ERROR);
-        }
-    }
-
-    private Stage createCalendarStage(Calendar calendar) {
-        Stage stage = new Stage();
-        stage.setTitle("UTEZ Calendar - Vista: " + calendar.getDisplayName());
-        stage.initModality(Modality.NONE);
-
-        Stage currentStage = getCurrentStage();
-        if (currentStage != null) {
-            stage.initOwner(currentStage);
-            stage.setX(currentStage.getX() + 50);
-            stage.setY(currentStage.getY() + 50);
         }
 
-        stage.setResizable(true);
-        stage.setMinWidth(700); // ✅ Más pequeño
-        stage.setMinHeight(500); // ✅ Más pequeño
-        return stage;
-    }
-
-    private VBox createSuperOptimizedCalendarView(Calendar calendar) {
-        VBox calendarView = new VBox(10); // ✅ Espaciado más compacto
-        calendarView.getStyleClass().add("calendar-area"); // ✅ Usar clase CSS correcta
-
-        calendarView.getChildren().addAll(
-                createCalendarHeader(calendar),
-                createReadOnlyInfoBox(),
-                createOptimizedCalendarGrid(),
-                createCalendarStatusBar()
-        );
-
-        VBox.setVgrow(calendarView.getChildren().get(2), Priority.ALWAYS);
-        return calendarView;
-    }
-
-    // ✅ USAR getDisplayName() del modelo Calendar
-    private HBox createCalendarHeader(Calendar calendar) {
-        HBox header = new HBox(20);
-        header.getStyleClass().add("calendar-header");
-        header.setAlignment(Pos.CENTER);
-
-        Button[] navButtons = {
-                createNavButton("◀", true),
-                createNavButton("▶", true)
-        };
-
-        VBox titleBox = new VBox();
-        titleBox.setAlignment(Pos.CENTER);
-
-        Label monthYearLabel = new Label();
-        monthYearLabel.getStyleClass().add("month-year-label");
-        monthYearLabel.setId("monthYearLabel");
-
-        // ✅ CAMBIAR esta línea
-        Label calendarNameLabel = new Label(calendar.getDisplayName());
-        calendarNameLabel.getStyleClass().add("calendar-name-label");
-
-        titleBox.getChildren().addAll(monthYearLabel, calendarNameLabel);
-        header.getChildren().addAll(navButtons[0], titleBox, navButtons[1]);
-
-        return header;
-    }
-
-    private Button createNavButton(String text, boolean disabled) {
-        Button button = new Button(text);
-        button.getStyleClass().add("nav-button");
-        button.setDisable(disabled);
-        return button;
-    }
-
-    private HBox createReadOnlyInfoBox() {
-        HBox infoBox = new HBox();
-        infoBox.getStyleClass().add("calendar-info");
-        infoBox.setAlignment(Pos.CENTER);
-
-        Label infoLabel = new Label("👁️ VISTA DE SOLO LECTURA - El administrador no puede modificar eventos");
-        infoLabel.getStyleClass().add("readonly-info");
-
-        infoBox.getChildren().add(infoLabel);
-        return infoBox;
-    }
-
-    private GridPane createOptimizedCalendarGrid() {
-        GridPane grid = new GridPane();
-        grid.getStyleClass().add("main-calendar-grid");
-        grid.setId("calendarGrid");
-
-        // Configurar constraints optimizadamente
-        for (int i = 0; i < 7; i++) {
-            ColumnConstraints col = new ColumnConstraints();
-            col.setPercentWidth(100.0 / 7);
-            col.setHalignment(HPos.CENTER);
-            col.setHgrow(Priority.ALWAYS);
-            col.setFillWidth(true);
-            grid.getColumnConstraints().add(col);
-        }
-
-        for (int i = 0; i < 6; i++) {
-            RowConstraints row = new RowConstraints();
-            row.setMinHeight(70); // ✅ Altura más pequeña para vista admin
-            row.setVgrow(Priority.ALWAYS);
-            row.setFillHeight(true);
-            row.setValignment(VPos.TOP);
-            grid.getRowConstraints().add(row);
-        }
-
-        return grid;
-    }
-
-    private HBox createCalendarStatusBar() {
-        HBox statusBar = new HBox();
-        statusBar.getStyleClass().add("status-bar");
-        statusBar.setAlignment(Pos.CENTER_LEFT);
-
-        Label statusLabel = new Label("Cargando eventos...");
-        statusLabel.getStyleClass().add("status-label");
-        statusLabel.setId("statusLabel");
-
-        statusBar.getChildren().add(statusLabel);
-        return statusBar;
-    }
-
-    // ✅ CARGA ULTRA OPTIMIZADA DE EVENTOS
-    private void loadAndDisplayCalendarEvents(Calendar calendar, VBox calendarView) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                // ✅ USAR el método del modelo Calendar
-                List<Event> events = calendar.getCurrentMonthEvents();
-
-                Map<LocalDate, List<Event>> eventsByDate = new HashMap<>();
-                for (Event event : events) {
-                    LocalDate eventDate = event.getStartDate().toLocalDate();
-                    eventsByDate.computeIfAbsent(eventDate, k -> new ArrayList<>()).add(event);
-                }
-
-                Platform.runLater(() -> {
-                    updateOptimizedCalendarView(calendarView, YearMonth.now(), eventsByDate);
-                    updateCalendarStatusLabel(calendarView, "Eventos cargados: " + events.size());
-                });
-
-            } catch (Exception e) {
-                Platform.runLater(() -> updateCalendarStatusLabel(calendarView, "Error cargando eventos: " + e.getMessage()));
-            }
-        });
-    }
-
-    private void updateOptimizedCalendarView(VBox calendarView, YearMonth yearMonth, Map<LocalDate, List<Event>> eventsByDate) {
-        Label monthYearLabel = (Label) calendarView.lookup("#monthYearLabel");
-        if (monthYearLabel != null) {
-            Locale spanishLocale = Locale.of("es", "ES");
-            String monthName = yearMonth.getMonth().getDisplayName(TextStyle.FULL, spanishLocale);
-            monthYearLabel.setText(monthName.toUpperCase() + " " + yearMonth.getYear());
-        }
-
-        GridPane calendarGrid = (GridPane) calendarView.lookup("#calendarGrid");
-        if (calendarGrid != null) {
-            populateCalendarGridOptimized(calendarGrid, yearMonth, eventsByDate); // ✅ Ya actualizado
-        }
-    }
-    private void populateCalendarGridOptimized(GridPane grid, YearMonth yearMonth, Map<LocalDate, List<Event>> eventsByDate) {
-        grid.getChildren().clear();
-
-        LocalDate firstOfMonth = yearMonth.atDay(1);
-        int dayOfWeek = firstOfMonth.getDayOfWeek().getValue() % 7;
-        LocalDate startDate = firstOfMonth.minusDays(dayOfWeek);
-
-        String[] dayNames = {"DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"};
-
-        // ✅ AGREGAR headers integrados en la primera fila
-        for (int col = 0; col < 7; col++) {
-            Label dayHeader = new Label(dayNames[col]);
-            dayHeader.getStyleClass().add("day-header-integrated"); // ✅ Usar clase CSS correcta
-            dayHeader.setMaxWidth(Double.MAX_VALUE);
-            dayHeader.setAlignment(Pos.CENTER);
-            grid.add(dayHeader, col, 0);
-        }
-
-        // ✅ AGREGAR celdas de días empezando en fila 1
-        for (int row = 1; row < 7; row++) { // Empezar en fila 1
-            for (int col = 0; col < 7; col++) {
-                LocalDate cellDate = startDate.plusDays((row - 1) * 7 + col);
-                VBox cellContainer = createCompactCalendarCell(cellDate, yearMonth, eventsByDate);
-                grid.add(cellContainer, col, row);
-            }
-        }
-    }
-
-    private VBox createCompactCalendarCell(LocalDate date, YearMonth yearMonth, Map<LocalDate, List<Event>> eventsByDate) {
-        VBox cell = new VBox(2); // ✅ Espaciado más pequeño
-        cell.setAlignment(Pos.TOP_CENTER);
-        cell.getStyleClass().add("calendar-cell");
-        cell.setMaxWidth(Double.MAX_VALUE);
-        cell.setMaxHeight(Double.MAX_VALUE);
-
-        boolean isCurrentMonth = date.getMonth() == yearMonth.getMonth() && date.getYear() == yearMonth.getYear();
-        boolean isToday = date.equals(LocalDate.now());
-        boolean isWeekend = date.getDayOfWeek().getValue() >= 6;
-
-        // ✅ Aplicar clases CSS según estado
-        if (!isCurrentMonth) {
-            cell.getStyleClass().add("calendar-cell-other-month");
-        }
-        if (isToday) {
-            cell.getStyleClass().add("calendar-cell-today");
-        }
-        if (isWeekend && isCurrentMonth) {
-            cell.getStyleClass().add("weekend-cell");
-        }
-
-        // ✅ Número del día con clase CSS correcta
-        Label dayNumber = new Label(String.valueOf(date.getDayOfMonth()));
-        if (isToday) {
-            dayNumber.getStyleClass().add("day-number-today");
-        } else {
-            dayNumber.getStyleClass().add("day-number");
-        }
-        dayNumber.setAlignment(Pos.CENTER);
-        cell.getChildren().add(dayNumber);
-
-        // ✅ Agregar eventos con clases CSS correctas
-        List<Event> dateEvents = eventsByDate.get(date);
-        if (dateEvents != null && !dateEvents.isEmpty()) {
-            addCompactEventsToCell(cell, dateEvents);
-        }
-
-        return cell;
-    }
-
-    private void addCompactEventsToCell(VBox cell, List<Event> events) {
-        int maxEventsToShow = 2; // ✅ Menos eventos para vista compacta
-        String[] colorClasses = {"event-blue", "event-red", "event-green", "event-orange", "event-purple"};
-
-        for (int i = 0; i < Math.min(events.size(), maxEventsToShow); i++) {
-            Event event = events.get(i);
-            Label eventLabel = new Label(event.getDisplayTitle()); // ✅ Usar método del modelo
-
-            // ✅ Aplicar clases CSS correctas
-            eventLabel.getStyleClass().addAll("event-item", colorClasses[i % colorClasses.length]);
-
-            // ✅ Hacer que sea de solo lectura
-            eventLabel.setMouseTransparent(true);
-
-            cell.getChildren().add(eventLabel);
-        }
-
-        // ✅ Indicador de más eventos con clase CSS correcta
-        if (events.size() > maxEventsToShow) {
-            Label moreLabel = new Label("+" + (events.size() - maxEventsToShow) + " más");
-            moreLabel.getStyleClass().add("more-events-label");
-            moreLabel.setMouseTransparent(true);
-            cell.getChildren().add(moreLabel);
-        }
-    }
-
-    private VBox createHyperOptimizedCalendarCell(LocalDate date, String dayHeader, YearMonth yearMonth,
-                                                  Map<LocalDate, List<Event>> eventsByDate) {
-        VBox cell = new VBox(3);
-        cell.setAlignment(Pos.TOP_LEFT);
-        cell.getStyleClass().add("calendar-cell");
-        cell.setMaxWidth(Double.MAX_VALUE);
-        cell.setMaxHeight(Double.MAX_VALUE);
-
-        boolean isCurrentMonth = date.getMonth() == yearMonth.getMonth() && date.getYear() == yearMonth.getYear();
-        boolean isToday = date.equals(LocalDate.now());
-
-        if (!isCurrentMonth) cell.getStyleClass().add("calendar-cell-other-month");
-        if (isToday) cell.getStyleClass().add("calendar-cell-today");
-
-        if (dayHeader != null) {
-            Label headerLabel = new Label(dayHeader);
-            headerLabel.getStyleClass().add("day-header");
-            cell.getChildren().add(headerLabel);
-        }
-
-        Label dayNumber = new Label(String.valueOf(date.getDayOfMonth()));
-        dayNumber.getStyleClass().add("day-number");
-        if (isToday) dayNumber.getStyleClass().add("day-number-today");
-        cell.getChildren().add(dayNumber);
-
-        List<Event> dateEvents = eventsByDate.get(date);
-        if (dateEvents != null && !dateEvents.isEmpty()) {
-            addEventsToCell(cell, dateEvents);
-        }
-
-        return cell;
-    }
-
-    private void addEventsToCell(VBox cell, List<Event> events) {
-        int maxEventsToShow = 3;
-        String[] colorClasses = {"event-item-blue", "event-item-green", "event-item-purple", "event-item-orange"};
-
-        for (int i = 0; i < Math.min(events.size(), maxEventsToShow); i++) {
-            Event event = events.get(i);
-            Label eventLabel = new Label(event.getTitle());
-            eventLabel.getStyleClass().addAll("event-item", "event-readonly", colorClasses[i % 4]);
-            cell.getChildren().add(eventLabel);
-        }
-
-        if (events.size() > maxEventsToShow) {
-            Label moreLabel = new Label("+" + (events.size() - maxEventsToShow) + " más");
-            moreLabel.getStyleClass().add("more-events-label");
-            cell.getChildren().add(moreLabel);
-        }
-    }
-
-    private void updateCalendarStatusLabel(VBox calendarView, String message) {
-        Label statusLabel = (Label) calendarView.lookup("#statusLabel");
-        if (statusLabel != null) {
-            statusLabel.setText(message);
-        }
-    }
-
-    // ✅ SECCIÓN ESTADÍSTICAS
-    private VBox createStatisticsSection() {
-        VBox statsSection = new VBox(20);
-        statsSection.setAlignment(Pos.CENTER);
-
-        VBox statsContent = new VBox();
-        statsContent.getStyleClass().add("chart-container");
-        statsContent.setAlignment(Pos.CENTER);
-
-        Label statsPlaceholder = new Label("Aquí se mostrarán las estadísticas del sistema");
-        statsPlaceholder.setStyle("-fx-font-size: 16px; -fx-padding: 40px;");
-        statsContent.getChildren().add(statsPlaceholder);
-
-        statsSection.getChildren().addAll(createSectionHeader("Estadísticas"), statsContent);
-        return statsSection;
-    }
-
-    // ✅ MÉTODOS UTILITARIOS FINALES
-    private Stage getCurrentStage() {
-        try {
-            if (statusLabel != null) {
-                return (Stage) statusLabel.getScene().getWindow();
-            }
-            return Window.getWindows().stream()
-                    .filter(Window::isShowing)
-                    .filter(window -> window instanceof Stage)
-                    .map(window -> (Stage) window)
-                    .findFirst()
-                    .orElse(null);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private void showAlert(String title, String message, Alert.AlertType type) {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(type);
-            alert.setTitle(title);
-            alert.setHeaderText(null);
-            alert.setContentText(message);
-            alert.showAndWait();
-        });
     }
 
     public void refreshDashboard() {
+
         CompletableFuture.runAsync(() -> {
+
             try {
+
                 User.DashboardData data = User.getDashboardData();
-                cachedTotalUsers = data.totalUsers - 1;
-                cachedActiveStudents = data.activeStudents;
+
+                int totalUsers = data.totalUsers - 1;
+                int activeCalendars = data.activeCalendars;
+                int eventsThisMonth = data.eventsThisMonth;
+                int upcomingEvents = data.upcomingEvents;
+                int activeStudents = data.activeStudents;
+
+                cachedTotalUsers = totalUsers;
+                cachedActiveStudents = activeStudents;
 
                 Platform.runLater(() -> {
-                    updateCard(usersCard, String.valueOf(cachedTotalUsers), cachedActiveStudents + " estudiantes activos");
-                    updateCard(activeCalendarsCard, String.valueOf(data.activeCalendars), "Calendarios disponibles");
-                    updateCard(eventsForThisMonthCard, String.valueOf(data.eventsThisMonth), data.upcomingEvents + " eventos próximos");
+
+                    updateCard(usersCard, String.valueOf(totalUsers),
+                            activeStudents + " estudiantes activos");
+                    updateCard(activeCalendarsCard, String.valueOf(activeCalendars),
+                            "Calendarios disponibles");
+                    updateCard(eventsForThisMonthCard, String.valueOf(eventsThisMonth),
+                            upcomingEvents + " eventos próximos");
+
                     setStatus("Dashboard actualizado");
+
                 });
 
             } catch (Exception e) {
+
                 Platform.runLater(() -> setStatus("Error actualizando dashboard: " + e.getMessage()));
+
             }
         });
-    }
-
-    private void startClock() {
-        if (clockTimeline != null) clockTimeline.stop();
-
-        clockTimeline = new Timeline(
-                new KeyFrame(Duration.seconds(0), e -> updateClock()),
-                new KeyFrame(Duration.seconds(1))
-        );
-        clockTimeline.setCycleCount(Timeline.INDEFINITE);
-        clockTimeline.play();
-    }
-
-    private void updateClock() {
-        if (clockLabel != null) {
-            Platform.runLater(() -> clockLabel.setText(LocalTime.now().format(timeFormatter)));
-        }
     }
 
     private void returnToLogin() {
         try {
+            System.out.println("Regresando al login...");
+
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
             Parent loginRoot = loader.load();
 
             Stage stage = (Stage) contentArea.getScene().getWindow();
+
             Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
             double width = Math.min(1100, screenBounds.getWidth() * 0.95);
             double height = Math.min(700, screenBounds.getHeight() * 0.95);
 
             Scene loginScene = new Scene(loginRoot, width, height);
+
+            // CSS EXACTO DEL login
             loginScene.getStylesheets().add(getClass().getResource("/css/login.css").toExternalForm());
 
             stage.setTitle("Ithera");
@@ -942,13 +686,21 @@ public class AdminOverviewController implements Initializable {
 
             cleanup();
 
+            System.out.println("Login cargado exitosamente");
+
         } catch (Exception e) {
             System.err.println("No se pudo volver al login: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
+    // Método para limpiar recursos al cerrar
     public void cleanup() {
-        if (clockTimeline != null) clockTimeline.stop();
+        if (clockTimeline != null) {
+            clockTimeline.stop();
+        }
+
         User.setDashboardController(null);
+
     }
 }

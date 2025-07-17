@@ -2,6 +2,7 @@ package com.utez.calendario.controllers;
 
 import com.utez.calendario.services.AuthService;
 import com.utez.calendario.models.User;
+import com.utez.calendario.services.EventService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -41,7 +42,6 @@ public class LoginController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         System.out.println("=== UTEZ CALENDAR - SISTEMA DE LOGIN ===");
         System.out.println("Fecha/Hora: " + LocalDateTime.now());
-        System.out.println("Usuario Sistema: AntonioAcevedo11780");
         System.out.println("========================================");
 
         authService = AuthService.getInstance();
@@ -50,7 +50,7 @@ public class LoginController implements Initializable {
         Platform.runLater(() -> {
             configureWindow();
             emailField.requestFocus();
-            emailField.setText("admin@utez.edu.mx"); // Prellenado para pruebas
+            emailField.setText("20243ds076@utez.edu.mx"); // Prellenado para pruebas
         });
 
         createAccountLink.setOnAction(e -> handleCreateAccount());
@@ -130,8 +130,22 @@ public class LoginController implements Initializable {
                 System.out.println("Email: " + email);
                 System.out.println("Hora: " + LocalDateTime.now());
 
-                if (authService.login(email, password)) {
-                    handleSuccessfulLogin();
+                // Verificar si las credenciales son correctas pero la cuenta está desactivada
+                if (authService.authenticateOnly(email, password)) {
+                    User user = authService.findUserByEmail(email);
+                    if (user != null && !user.isActive()) {
+                        showError("Tu cuenta está desactivada, favor de contactar con un administrador.");
+                        setLoginInProgress(false);
+                        return;
+                    }
+
+                    // Si las credenciales son correctas y la cuenta está activa
+                    if (authService.login(email, password)) {
+                        handleSuccessfulLogin();
+                    } else {
+                        showError("Credenciales incorrectas. Verifica tu correo y contraseña.");
+                        setLoginInProgress(false);
+                    }
                 } else {
                     showError("Credenciales incorrectas. Verifica tu correo y contraseña.");
                     setLoginInProgress(false);
@@ -199,6 +213,16 @@ public class LoginController implements Initializable {
             System.out.println("Rol: " + user.getRole().getDisplayName());
             System.out.println("Hora login: " + LocalDateTime.now());
             System.out.println("----------------------\n");
+
+            // Inicializar los calendarios para el usuario
+            EventService.getInstance().initializeUserCalendarsAsync(user.getUserId())
+                    .thenRun(() -> {
+                        System.out.println("✓ Calendarios inicializados correctamente para: " + user.getUserId());
+                    })
+                    .exceptionally(ex -> {
+                        System.err.println("✗ Error al inicializar calendarios: " + ex.getMessage());
+                        return null;
+                    });
         }
         clearFields();
 

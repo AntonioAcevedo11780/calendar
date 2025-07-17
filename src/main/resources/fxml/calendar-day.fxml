@@ -6,14 +6,15 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 
-<BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utez.calendario.controllers.CalendarYearController" stylesheets="@styles-year.css">
+<BorderPane xmlns="http://javafx.com/javafx/11.0.1"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.utez.calendario.controllers.CalendarDayController"
+            stylesheets="@../css/styles-day.css">
 
-    <!-- Barra superior del calendario -->
+    <!-- Barra superior -->
     <top>
         <VBox styleClass="header-container">
-            <!-- Layout de 12 columnas para el header -->
             <GridPane styleClass="header-grid">
-                <!-- Configuración de las 12 columnas -->
                 <columnConstraints>
                     <ColumnConstraints percentWidth="8.33" />
                     <ColumnConstraints percentWidth="8.33" />
@@ -29,7 +30,7 @@
                     <ColumnConstraints percentWidth="8.33" />
                 </columnConstraints>
 
-                <!-- Top bar: Logo y menú - Columnas 1-3 - 25% -->
+                <!-- Logo y título -->
                 <HBox alignment="CENTER_LEFT" spacing="8" GridPane.columnIndex="0" GridPane.columnSpan="3" styleClass="header-section">
                     <ImageView fitHeight="24" fitWidth="24" preserveRatio="true">
                         <image>
@@ -39,19 +40,19 @@
                     <Label text="Calendar" styleClass="app-title" />
                 </HBox>
 
-                <!-- Top bar: Navegación - Columnas 3-5 - 25% -->
+                <!-- Navegación -->
                 <HBox alignment="CENTER_LEFT" spacing="12" GridPane.columnIndex="2" GridPane.columnSpan="3" styleClass="header-section">
                     <Label text="Hoy" styleClass="today-label" onMouseClicked="#handleTodayClick" />
-                    <Button fx:id="prevButton" text="‹" styleClass="nav-arrow" onAction="#handlePreviousYear" />
-                    <Button fx:id="nextButton" text="›" styleClass="nav-arrow" onAction="#handleNextYear" />
+                    <Button fx:id="prevButton" text="‹" styleClass="nav-arrow" onAction="#handlePreviousDay" />
+                    <Button fx:id="nextButton" text="›" styleClass="nav-arrow" onAction="#handleNextDay" />
                 </HBox>
 
-                <!-- Top bar: Título del año - Columnas 6-8 - 25% -->
-                <HBox alignment="CENTER" GridPane.columnIndex="5" GridPane.columnSpan="3" styleClass="header-section">
-                    <Label fx:id="yearLabel" text="2025" styleClass="year-title-center" />
+                <!-- Titulo de la Fecha actual -->
+                <HBox alignment="CENTER" GridPane.columnIndex="5" GridPane.columnSpan="4" styleClass="header-section">
+                    <Label fx:id="monthYearLabel" text="LUNES, 1 DE JULIO DE 2025" styleClass="month-title-center" />
                 </HBox>
 
-                <!-- Top bar: Búsqueda y cerrar - Columnas 9-12 - 25% -->
+                <!-- Búsqueda y cerrar -->
                 <HBox alignment="CENTER_RIGHT" spacing="12" GridPane.columnIndex="9" GridPane.columnSpan="3" styleClass="header-section">
                     <Button fx:id="closeButton" text="×" styleClass="close-btn" onAction="#handleCloseButton" />
                 </HBox>
@@ -59,47 +60,28 @@
         </VBox>
     </top>
 
-    <!-- Contenido principal del calendario -->
+    <!-- Contenido principal -->
     <center>
-        <GridPane styleClass="main-grid" VBox.vgrow="ALWAYS">
-            <!-- Layout principal de 12 columnas -->
-            <columnConstraints>
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-                <ColumnConstraints percentWidth="8.33" />
-            </columnConstraints>
+        <!-- Grid simplificado: sidebar + calendario -->
+        <HBox styleClass="main-grid" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
 
-            <rowConstraints>
-                <RowConstraints vgrow="ALWAYS" />
-            </rowConstraints>
-
-            <!-- Main: Sidebar - Columnas 1-2 - 16.67% -->
-            <VBox styleClass="sidebar" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.vgrow="ALWAYS">
-                <!-- BOTÓN CREAR -->
+            <!-- Sidebar - 200px fijo -->
+            <VBox styleClass="sidebar" minWidth="200" prefWidth="200" maxWidth="200">
                 <Button fx:id="createButton"
                         text="Crear"
                         styleClass="create-button"
                         alignment="CENTER"
                         onAction="#handleCreateButton" />
 
-                <!-- Opciones de vista del calendario -->
+                <!-- Opciones de vista -->
                 <VBox styleClass="view-section">
-                    <Label text="DÍA" styleClass="view-option" onMouseClicked="#handleDayView" />
+                    <Label text="DÍA" styleClass="view-option-active" onMouseClicked="#handleDayView" />
                     <Label text="SEMANA" styleClass="view-option" onMouseClicked="#handleWeekView" />
                     <Label text="MES" styleClass="view-option" onMouseClicked="#handleMonthView" />
-                    <Label text="AÑO" styleClass="view-option-active" onMouseClicked="#handleYearView" />
+                    <Label text="AÑO" styleClass="view-option" onMouseClicked="#handleYearView" />
                 </VBox>
 
-                <!-- Lista de calendarios del usuario -->
+                <!-- Lista de calendarios -->
                 <VBox styleClass="calendar-section">
                     <HBox alignment="CENTER_LEFT" spacing="6">
                         <Label text="▲" styleClass="section-arrow" />
@@ -129,22 +111,24 @@
 
                 <Button text="Cerrar Sesión" styleClass="profile-button" onAction="#handleLogout" maxWidth="Infinity" />
 
-                <!-- Espaciador para empujar contenido hacia arriba -->
+
+                <!-- Espaciador -->
                 <Region VBox.vgrow="ALWAYS" />
             </VBox>
 
-            <!-- Main: Área de calendario anual - Columnas 3-12 - 83.33% -->
-            <ScrollPane styleClass="year-scroll-pane" GridPane.columnIndex="2" GridPane.columnSpan="10" GridPane.vgrow="ALWAYS">
-                <VBox styleClass="year-calendar-container">
-                    <!-- Grid de 4x3 para los 12 meses -->
-                    <GridPane fx:id="yearGrid" styleClass="year-grid">
-                        <!-- Los mini-calendarios se crean dinámicamente -->
-                    </GridPane>
-                </VBox>
-            </ScrollPane>
-        </GridPane>
+            <!-- Área de calendario - resto del espacio -->
+            <VBox styleClass="calendar-area" HBox.hgrow="ALWAYS">
+                <ScrollPane fx:id="dayScrollPane"
+                            fitToWidth="true"
+                            fitToHeight="true"
+                            hbarPolicy="NEVER"
+                            vbarPolicy="AS_NEEDED"
+                            VBox.vgrow="ALWAYS"
+                            styleClass="day-scrollpane">
+                    <GridPane fx:id="calendarGrid" styleClass="main-calendar-grid" />
+                </ScrollPane>
+            </VBox>
+
+        </HBox>
     </center>
-
-
-
 </BorderPane>

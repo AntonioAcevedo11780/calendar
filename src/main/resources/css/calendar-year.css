@@ -138,7 +138,7 @@
 /* Título del año en el header */
 .year-title-center {
     -fx-font-size: 28px;
-    -fx-font-weight: 300;
+    -fx-font-weight: Bold;
     -fx-text-fill: #3c4043;
     -fx-alignment: center;
 }
@@ -206,4 +206,27 @@
         -fx-min-height: 16;
         -fx-max-height: 16;
     }
+
+    /*logout */
+    /* Botón de cierre de sesión */
+    .profile-button {
+        -fx-background-color: transparent;
+        -fx-text-fill: #e53935; /* Color rojo para indicar acción de cierre */
+        -fx-alignment: CENTER_LEFT;
+        -fx-padding: 14px 15px;
+        -fx-cursor: hand;
+        -fx-graphic-text-gap: 12px;
+        -fx-font-family: -modern-font-family;
+        -fx-font-size: 15px;
+        -fx-font-weight: 500;
+        -fx-letter-spacing: -0.1px;
+        -fx-background-radius: 8px;
+        -fx-border-radius: 8px;
+    }
+
+    .profile-button:hover {
+        -fx-text-fill: #c62828; /* Rojo más oscuro al pasar el mouse */
+        -fx-font-weight: bold;
+    }
+
 }

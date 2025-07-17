@@ -41,17 +41,14 @@ public class User {
     public static DashboardData getDashboardData() {
         DashboardData data = new DashboardData();
 
-        // ✅ Consulta optimizada usando las tablas que SÍ existen
+        // Consulta usando solo la tabla users que SÍ existe
         String sql = """
         SELECT 
                 (SELECT COUNT(*) FROM users WHERE role != 'admin') as total_users,
                 (SELECT COUNT(*) FROM users WHERE role = 'alumno' AND active = 'Y') as active_students,
-                (SELECT COUNT(*) FROM EVENTS WHERE ACTIVE = 'Y' 
-                 AND EXTRACT(MONTH FROM START_DATE) = EXTRACT(MONTH FROM SYSDATE) 
-                 AND EXTRACT(YEAR FROM START_DATE) = EXTRACT(YEAR FROM SYSDATE)) as events_month,
-                (SELECT COUNT(*) FROM EVENTS WHERE ACTIVE = 'Y' 
-                 AND START_DATE > SYSDATE) as upcoming_events,
-                (SELECT COUNT(*) FROM CALENDARS WHERE ACTIVE = 'Y') as active_calendars
+                0 as events_month,
+                0 as upcoming_events,
+                (SELECT COUNT(DISTINCT USER_ID) FROM users WHERE active = 'Y') as active_calendars
             FROM DUAL
         """;
 
@@ -71,11 +68,6 @@ public class User {
         }
 
         return data;
-    }
-
-    public static DashboardData getDashboardDataOptimized() {
-        // ✅ Simplemente usar el método existente mejorado
-        return getDashboardData();
     }
 
     public static List<User> getUsers(int page, int pageSize, boolean includeAdmins) {
@@ -399,5 +391,3 @@ public class User {
         return userId != null ? userId.hashCode() : 0;
     }
 }
-
-

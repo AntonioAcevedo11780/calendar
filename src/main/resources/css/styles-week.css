@@ -1,0 +1,11 @@
+/* ==========================================================================
+   MAIN STYLES - Vista semanal del calendario
+   ========================================================================== */
+
+/* Importar estilos base y componentes reutilizables */
+@import "base.css";
+@import "topbar.css";
+@import "sidebar.css";
+
+/* Importar vista específica semanal */
+@import "calendar-week.css";
