@@ -275,7 +275,7 @@ public class AdminOverviewController implements Initializable {
         VBox userSection = new VBox(20);
         userSection.setAlignment(Pos.CENTER);
 
-        TableView<User> userTable = createOptimizedUserTable();
+        TableView<User> userTable = createUserTable();
         HBox paginationBar = createUserPagination(userTable);
 
         VBox userContent = new VBox(10);
@@ -286,7 +286,7 @@ public class AdminOverviewController implements Initializable {
         return userSection;
     }
 
-    private TableView<User> createOptimizedUserTable() {
+    private TableView<User> createUserTable() {
         TableView<User> table = new TableView<>();
         table.getStyleClass().add("user-table");
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -438,7 +438,6 @@ public class AdminOverviewController implements Initializable {
         return calendarSection;
     }
 
-    // ✅ AGREGAR la columna de nombre que falta
     private TableView<Calendar> createOptimizedCalendarTable() {
         TableView<Calendar> table = new TableView<>();
         table.getStyleClass().add("data-table");
@@ -446,11 +445,13 @@ public class AdminOverviewController implements Initializable {
         table.setFixedCellSize(40);
         table.setPrefHeight(440);
 
+        // ✅ Columna ID centrada
         TableColumn<Calendar, String> idColumn = new TableColumn<>("Calendar ID");
         idColumn.setCellValueFactory(new PropertyValueFactory<>("calendarId"));
         idColumn.setPrefWidth(150);
+        idColumn.setCellFactory(col -> createCenteredTextCell());
 
-        // ✅ AGREGAR esta columna que falta
+        // ✅ Columna Nombre centrada
         TableColumn<Calendar, String> nameColumn = new TableColumn<>("Nombre");
         nameColumn.setCellValueFactory(cellData -> {
             Calendar calendar = cellData.getValue();
@@ -460,7 +461,19 @@ public class AdminOverviewController implements Initializable {
             return new SimpleStringProperty(displayName);
         });
         nameColumn.setPrefWidth(200);
+        nameColumn.setCellFactory(col -> createCenteredTextCell());
 
+        // ✅ Columna Última Modificación centrada
+        TableColumn<Calendar, String> modifiedColumn = new TableColumn<>("Última Modificación");
+        modifiedColumn.setCellValueFactory(cellData -> {
+            Calendar calendar = cellData.getValue();
+            return new SimpleStringProperty(calendar.getModifiedDate() != null ?
+                    calendar.getModifiedDate().format(dateFormatter) : "N/A");
+        });
+        modifiedColumn.setPrefWidth(150);
+        modifiedColumn.setCellFactory(col -> createCenteredTextCell());
+
+        // ✅ Columna Vista Previa centrada
         TableColumn<Calendar, Button> viewColumn = new TableColumn<>("Vista Previa");
         viewColumn.setCellValueFactory(cellData -> {
             Button viewButton = new Button("📅 Ver Calendario");
@@ -469,18 +482,42 @@ public class AdminOverviewController implements Initializable {
             return new SimpleObjectProperty<>(viewButton);
         });
         viewColumn.setPrefWidth(150);
+        viewColumn.setCellFactory(col -> createCenteredButtonCell());
 
-        TableColumn<Calendar, String> modifiedColumn = new TableColumn<>("Última Modificación");
-        modifiedColumn.setCellValueFactory(cellData -> {
-            Calendar calendar = cellData.getValue();
-            return new SimpleStringProperty(calendar.getModifiedDate() != null ?
-                    calendar.getModifiedDate().format(dateFormatter) : "N/A");
-        });
-        modifiedColumn.setPrefWidth(150);
-
-        // ✅ AGREGAR nameColumn a la tabla
-        table.getColumns().addAll(idColumn, nameColumn, viewColumn, modifiedColumn);
+        table.getColumns().addAll(idColumn, nameColumn, modifiedColumn, viewColumn);
         return table;
+    }
+
+    // ✅ Método helper para celdas de texto centradas
+    private TableCell<Calendar, String> createCenteredTextCell() {
+        return new TableCell<Calendar, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item);
+                }
+                setAlignment(Pos.CENTER);
+            }
+        };
+    }
+
+    // Centrar celdas de botones caledarManagemnt
+    private TableCell<Calendar, Button> createCenteredButtonCell() {
+        return new TableCell<Calendar, Button>() {
+            @Override
+            protected void updateItem(Button item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(item);
+                }
+                setAlignment(Pos.CENTER);
+            }
+        };
     }
 
     private void loadCalendarDataAsync(TableView<Calendar> calendarTable) {
