@@ -1,5 +1,8 @@
 package com.utez.calendario.models;
 import com.utez.calendario.controllers.AdminOverviewController;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.chart.PieChart;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -392,6 +395,28 @@ public class User {
     @Override
     public int hashCode() {
         return userId != null ? userId.hashCode() : 0;
+    }
+
+    public ObservableList<PieChart.Data> generateRolePieData() {///Generar la grafica de pastel
+        ObservableList<PieChart.Data> pieData = FXCollections.observableArrayList();
+        /// /todos menos el admin xd
+        String sql = "SELECT ROLE, COUNT(*) AS cantidad FROM USERS WHERE LOWER(ROLE) != 'admin' GROUP BY ROLE";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                String role = rs.getString("ROLE");
+                int cantidad = rs.getInt("cantidad");
+                pieData.add(new PieChart.Data(role, cantidad));
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error al obtener datos para la gráfica: " + e.getMessage());
+        }
+
+        return pieData;
     }
 }
 

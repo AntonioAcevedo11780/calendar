@@ -533,3 +533,12 @@
     -fx-border-color: #1976D2;
     -fx-text-fill: #0D47A1;
 }
+
+/*colores de la grafica xd*/
+.default-color0.chart-pie {
+    -fx-pie-color: #4CAF50FF; /* alumnos */
+}
+
+.default-color1.chart-pie {
+    -fx-pie-color: #1976D2FF; /* profesores */
+}

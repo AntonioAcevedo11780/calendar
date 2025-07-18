@@ -6,7 +6,9 @@ import com.utez.calendario.services.AuthService;
 import com.utez.calendario.models.User;
 
 import javafx.beans.property.*;
+import javafx.collections.ObservableList;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -885,11 +887,29 @@ public class AdminOverviewController implements Initializable {
         statsContent.getStyleClass().add("chart-container");
         statsContent.setAlignment(Pos.CENTER);
 
-        Label statsPlaceholder = new Label("Aquí se mostrarán las estadísticas del sistema");
-        statsPlaceholder.setStyle("-fx-font-size: 16px; -fx-padding: 40px;");
-        statsContent.getChildren().add(statsPlaceholder);
+        User model = new User();
+        ObservableList<PieChart.Data> data = model.generateRolePieData();
 
+        PieChart pieChart = new PieChart(data);
+        pieChart.setTitle("Porcentajes de Estudiantes y Docentes");
+
+        // Calcular el total para porcentajes
+        int total = 0;
+        for (PieChart.Data item : data) {
+            total += item.getPieValue();
+        }
+
+        // Modificar las etiquetas para mostrar porcentaje
+        for (PieChart.Data item : data) {
+            double porcentaje = (item.getPieValue() / total) * 100;
+            String etiqueta = String.format("%s (%.1f%%)", item.getName(), porcentaje);
+            item.setName(etiqueta);
+        }
+
+        // Agregar el gráfico al contenedor visual
+        statsContent.getChildren().add(pieChart);
         statsSection.getChildren().addAll(createSectionHeader("Estadísticas"), statsContent);
+
         return statsSection;
     }
 
