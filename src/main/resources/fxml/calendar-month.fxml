@@ -41,19 +41,35 @@
 
                 <!-- Top bar: Navegación - Columnas 3-5 - 25% -->
                 <HBox alignment="CENTER_LEFT" spacing="12" GridPane.columnIndex="2" GridPane.columnSpan="3" styleClass="header-section">
-                    <Label text="Hoy" styleClass="today-label" onMouseClicked="#handleTodayClick" />
-                    <Button fx:id="prevButton" text="‹" styleClass="nav-arrow" onAction="#handlePreviousMonth" />
-                    <Button fx:id="nextButton" text="›" styleClass="nav-arrow" onAction="#handleNextMonth" />
+                    <Button fx:id="todayButton" text="Hoy" styleClass="today-button-modern" onAction="#handleTodayClick" />
+                    <Button fx:id="prevButton" styleClass="nav-arrow-modern" onAction="#handlePreviousMonth">
+                        <graphic>
+                            <ImageView fitHeight="16" fitWidth="16" preserveRatio="true">
+                                <image>
+                                    <Image url="@/images/arrow-left-bold.png" />
+                                </image>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                    <Button fx:id="nextButton" styleClass="nav-arrow-modern" onAction="#handleNextMonth">
+                        <graphic>
+                            <ImageView fitHeight="16" fitWidth="16" preserveRatio="true">
+                                <image>
+                                    <Image url="@/images/arrow-right-bold.png" />
+                                </image>
+                            </ImageView>
+                        </graphic>
+                    </Button>
                 </HBox>
 
                 <!-- Top bar: Título del mes - Columnas 6-8 - 25% -->
                 <HBox alignment="CENTER" GridPane.columnIndex="5" GridPane.columnSpan="3" styleClass="header-section">
-                    <Label fx:id="monthYearLabel" text="JUNIO 2025" styleClass="month-title-center" />
+                    <Label fx:id="monthYearLabel" text="JUNIO 2025" styleClass="month-title-modern" />
                 </HBox>
 
-                <!-- Top bar: Búsqueda y cerrar - Columnas 9-12 - 25% -->
+                <!-- Top bar: Cerrar - Columnas 9-12 - 25% -->
                 <HBox alignment="CENTER_RIGHT" spacing="12" GridPane.columnIndex="9" GridPane.columnSpan="3" styleClass="header-section">
-                    <Button fx:id="closeButton" text="×" styleClass="close-btn" onAction="#handleCloseButton" />
+                    <Button fx:id="closeButton" text="×" styleClass="close-btn-modern" onAction="#handleCloseButton" />
                 </HBox>
             </GridPane>
         </VBox>
@@ -83,61 +99,99 @@
             </rowConstraints>
 
             <!-- Main: Sidebar - Columnas 1-2 - 16.67% -->
-            <VBox styleClass="sidebar" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.vgrow="ALWAYS">
-                <!--  BOTÓN CREAR CON fx:id AGREGADO -->
+            <VBox styleClass="sidebar-modern" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.vgrow="ALWAYS">
+                <!-- BOTÓN CREAR MODERNO CON EFECTO DE SOMBRA DOBLE -->
                 <Button fx:id="createButton"
                         text="Crear"
-                        styleClass="create-button"
+                        styleClass="create-button-ultra-modern"
                         alignment="CENTER"
                         onAction="#handleCreateButton" />
 
                 <!-- Opciones de vista del calendario -->
-                <VBox styleClass="view-section">
-                    <Label text="DÍA" styleClass="view-option" onMouseClicked="#handleDayView" />
-                    <Label text="SEMANA" styleClass="view-option" onMouseClicked="#handleWeekView" />
-                    <Label text="MES" styleClass="view-option-active" onMouseClicked="#handleMonthView" />
-                    <Label text="AÑO" styleClass="view-option" onMouseClicked="#handleYearView" />
+                <VBox styleClass="view-section-modern">
+                    <Label text="Día" styleClass="view-option-modern" onMouseClicked="#handleDayView" />
+                    <Label text="Semana" styleClass="view-option-modern" onMouseClicked="#handleWeekView" />
+                    <Label text="Mes" styleClass="view-option-active-modern" onMouseClicked="#handleMonthView" />
+                    <Label text="Año" styleClass="view-option-modern" onMouseClicked="#handleYearView" />
                 </VBox>
 
                 <!-- Lista de calendarios del usuario -->
-                <VBox styleClass="calendar-section">
-                    <HBox alignment="CENTER_LEFT" spacing="6">
-                        <Label text="▲" styleClass="section-arrow" />
-                        <Label text="Mis calendarios" styleClass="section-header" />
+                <VBox styleClass="calendar-section-modern">
+                    <HBox alignment="CENTER_LEFT" spacing="6" styleClass="calendar-section-header-modern">
+                        <Label text="▼" styleClass="section-arrow-modern" />
+                        <Label text="Mis calendarios" styleClass="section-header-modern" />
                     </HBox>
 
-                    <HBox styleClass="calendar-item">
-                        <CheckBox fx:id="userCalendarCheck" selected="true" styleClass="calendar-checkbox" />
-                        <Label text="📚 Mis Clases" styleClass="calendar-name-blue" />
+                    <!-- Mis Clases - Negro -->
+                    <HBox styleClass="calendar-item-modern" alignment="CENTER_LEFT" spacing="8">
+                        <CheckBox fx:id="userCalendarCheck" selected="true" styleClass="calendar-checkbox-books" />
+                        <ImageView fitHeight="21" fitWidth="21" preserveRatio="true">
+                            <image>
+                                <Image url="@/images/books.png" />
+                            </image>
+                        </ImageView>
+                        <Label text="Mis Clases" styleClass="calendar-name-books" />
                     </HBox>
 
-                    <HBox styleClass="calendar-item">
-                        <CheckBox fx:id="tasksCalendarCheck" selected="true" styleClass="calendar-checkbox" />
-                        <Label text="📋 Tareas y Proyectos" styleClass="calendar-name-red" />
+                    <!-- Tareas y Proyectos - Azul -->
+                    <HBox styleClass="calendar-item-modern" alignment="CENTER_LEFT" spacing="8">
+                        <CheckBox fx:id="tasksCalendarCheck" selected="true" styleClass="calendar-checkbox-tasks" />
+                        <ImageView fitHeight="21" fitWidth="21" preserveRatio="true">
+                            <image>
+                                <Image url="@/images/school.png" />
+                            </image>
+                        </ImageView>
+                        <Label text="Tareas" styleClass="calendar-name-tasks" />
                     </HBox>
 
-                    <HBox styleClass="calendar-item">
-                        <CheckBox fx:id="personalCalendarCheck" selected="true" styleClass="calendar-checkbox" />
-                        <Label text="👤 Personal" styleClass="calendar-name-green" />
+                    <!-- Personal - Verde -->
+                    <HBox styleClass="calendar-item-modern" alignment="CENTER_LEFT" spacing="8">
+                        <CheckBox fx:id="personalCalendarCheck" selected="true" styleClass="calendar-checkbox-personal" />
+                        <ImageView fitHeight="21" fitWidth="21" preserveRatio="true">
+                            <image>
+                                <Image url="@/images/person.png" />
+                            </image>
+                        </ImageView>
+                        <Label text="Personal" styleClass="calendar-name-personal" />
                     </HBox>
 
-                    <HBox styleClass="calendar-item">
-                        <CheckBox fx:id="examsCalendarCheck" selected="true" styleClass="calendar-checkbox" />
-                        <Label text="📝 Exámenes" styleClass="calendar-name-orange" />
+                    <!-- Exámenes - Naranja -->
+                    <HBox styleClass="calendar-item-modern" alignment="CENTER_LEFT" spacing="8">
+                        <CheckBox fx:id="examsCalendarCheck" selected="true" styleClass="calendar-checkbox-exams" />
+                        <ImageView fitHeight="21" fitWidth="21" preserveRatio="true">
+                            <image>
+                                <Image url="@/images/exam.png" />
+                            </image>
+                        </ImageView>
+                        <Label text="Exámenes" styleClass="calendar-name-exams" />
                     </HBox>
                 </VBox>
 
-                <Button text="Cerrar Sesión" styleClass="profile-button" onAction="#handleLogout" maxWidth="Infinity" />
+                <!-- Sección de otros calendarios -->
+                <VBox styleClass="calendar-section-modern">
+                    <HBox alignment="CENTER_LEFT" spacing="6" styleClass="calendar-section-header-modern">
+                        <Label text="▼" styleClass="section-arrow-modern" />
+                        <Label text="Otros calendarios" styleClass="section-header-modern" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <ImageView fitHeight="16" fitWidth="16" preserveRatio="true" styleClass="add-calendar-icon">
+                            <image>
+                                <Image url="@/images/plus.png" />
+                            </image>
+                        </ImageView>
+                    </HBox>
+                </VBox>
+
+                <Button text="Cerrar Sesión" styleClass="logout-button-modern" onAction="#handleLogout" maxWidth="Infinity" />
 
                 <!-- Espaciador para empujar contenido hacia arriba -->
                 <Region VBox.vgrow="ALWAYS" />
             </VBox>
 
             <!-- Main: Área de calendario - Columnas 3-12 - 83.33% -->
-            <VBox styleClass="calendar-area" GridPane.columnIndex="2" GridPane.columnSpan="10" GridPane.vgrow="ALWAYS">
+            <VBox styleClass="calendar-area-modern" GridPane.columnIndex="2" GridPane.columnSpan="10" GridPane.vgrow="ALWAYS">
 
                 <!-- Encabezados de días de la semana -->
-                <GridPane styleClass="weekdays-header">
+                <GridPane styleClass="weekdays-header-modern">
                     <columnConstraints>
                         <ColumnConstraints percentWidth="14.28" />
                         <ColumnConstraints percentWidth="14.28" />
@@ -147,17 +201,15 @@
                         <ColumnConstraints percentWidth="14.28" />
                         <ColumnConstraints percentWidth="14.28" />
                     </columnConstraints>
-
-
                 </GridPane>
 
                 <!-- Grid donde se generan los días del mes -->
-                <GridPane fx:id="calendarGrid" styleClass="main-calendar-grid" VBox.vgrow="ALWAYS">
+                <GridPane fx:id="calendarGrid" styleClass="main-calendar-grid-modern" VBox.vgrow="ALWAYS">
                     <!-- Las celdas del calendario se crean dinámicamente en el controlador -->
                 </GridPane>
             </VBox>
         </GridPane>
-        
+
     </center>
 
 </BorderPane>

@@ -2,6 +2,260 @@
    CALENDAR-YEAR VIEW - Vista de calendario anual
    ========================================================================== */
 
+/* Header Container */
+.header-container {
+    -fx-background-color: white;
+    -fx-padding: 0;
+}
+
+.header-grid {
+    -fx-background-color: white;
+    -fx-border-color: #2c2c2c;
+    -fx-grid-lines-visible: false;
+}
+
+.header-section {
+    -fx-background-color: white;
+}
+
+/* App Title */
+.app-title {
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+/* Botón Today */
+.today-button-modern {
+    -fx-background-color: white;
+    -fx-text-fill: #2c2c2c;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-padding: 8 24;
+    -fx-background-radius: 12;
+    -fx-border-color: #2c2c2c;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 2, 0, 0, 2);
+}
+
+.today-button-modern:hover {
+    -fx-background-color: #e3f2fd;
+    -fx-border-color: #1976d2;
+    -fx-text-fill: #1976d2;
+}
+
+/* Botones de navegación */
+.nav-arrow-modern {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+    -fx-padding: 8;
+}
+.nav-arrow-modern:hover {
+    -fx-text-fill: #1976d2;
+}
+
+/* Título del año */
+.month-title-modern {
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+/* Botón cerrar */
+.close-btn-modern {
+    -fx-background-color: transparent;
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-padding: 4;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+}
+
+.close-btn-modern:hover {
+    -fx-text-fill: #d32f2f;
+}
+
+/* Main Grid */
+.main-grid {
+    -fx-background-color: white;
+    -fx-padding: 0;
+}
+
+/* Sidebar */
+.sidebar-modern {
+    -fx-background-color: white;
+    -fx-padding: 24;
+    -fx-spacing: 20;
+    -fx-border-color: #2c2c2c;
+    -fx-border-width: 0 1 0 0;
+}
+
+/* Botón Crear */
+.create-button-ultra-modern {
+    -fx-background-color: white;
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-padding: 12 40;
+    -fx-background-radius: 24;
+    -fx-border-color: #2c2c2c;
+    -fx-border-width: 1;
+    -fx-border-radius: 24;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 4, 0, 0, 4);
+}
+
+.create-button-ultra-modern:hover {
+    -fx-background-color: #e3f2fd;
+    -fx-border-color: #1976d2;
+    -fx-text-fill: #1976d2;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 6, 0, 0, 6);
+}
+
+/* View Section */
+.view-section-modern {
+    -fx-spacing: 8;
+}
+
+.view-option-modern {
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 8;
+    -fx-cursor: hand;
+}
+
+.view-option-active-modern {
+    -fx-text-fill: #1976d2;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 8;
+    -fx-cursor: hand;
+}
+
+.view-option-modern:hover {
+    -fx-background-color: #f5f5f5;
+    -fx-background-radius: 4;
+}
+
+/* Calendar Section */
+.calendar-section-modern {
+    -fx-spacing: 12;
+}
+
+.calendar-section-header-modern {
+    -fx-spacing: 6;
+}
+
+.section-arrow-modern {
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.section-header-modern {
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+/* Calendar Items */
+.calendar-item-modern {
+    -fx-spacing: 8;
+    -fx-padding: 6;
+}
+
+.calendar-item-modern:hover {
+    -fx-background-color: #f5f5f5;
+    -fx-background-radius: 4;
+}
+
+/* Checkboxes */
+.calendar-checkbox-books .box {
+    -fx-background-color: white;
+    -fx-border-color: #1E76E8;
+    -fx-border-width: 2;
+}
+
+.calendar-checkbox-books:selected .mark {
+    -fx-background-color: #1E76E8;
+}
+
+.calendar-checkbox-tasks .box {
+    -fx-background-color: white;
+    -fx-border-color: #2c2c2c;
+    -fx-border-width: 2;
+}
+
+.calendar-checkbox-tasks:selected .mark {
+    -fx-background-color: #2c2c2c;
+}
+
+.calendar-checkbox-personal .box {
+    -fx-background-color: white;
+    -fx-border-color: #53C925;
+    -fx-border-width: 2;
+}
+
+.calendar-checkbox-personal:selected .mark {
+    -fx-background-color: #53C925;
+}
+
+.calendar-checkbox-exams .box {
+    -fx-background-color: white;
+    -fx-border-color: #f2c51f;
+    -fx-border-width: 2;
+}
+
+.calendar-checkbox-exams:selected .mark {
+    -fx-background-color: #f2c51f;
+}
+
+/* Calendar Names */
+.calendar-name-books {
+    -fx-text-fill: #1E76E8;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.calendar-name-tasks {
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.calendar-name-personal {
+    -fx-text-fill: #53C925;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.calendar-name-exams {
+    -fx-text-fill: #f2c51f;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+/* Logout Button */
+.logout-button-modern {
+    -fx-background-color: transparent;
+    -fx-text-fill: #e53935;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 8;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+}
+
+.logout-button-modern:hover {
+    -fx-background-color: #ffebee;
+    -fx-background-radius: 4;
+}
+
 /* Contenedor principal del año */
 .year-scroll-pane {
     -fx-background-color: white;
@@ -47,10 +301,10 @@
     -fx-effect: dropshadow(gaussian, rgba(26,115,232,0.2), 6, 0, 0, 3);
 }
 
-/* Título del mes */
+/* Título del mes - EN NEGRITAS Y MAYÚSCULAS */
 .mini-month-title {
     -fx-font-size: 16px;
-    -fx-font-weight: 600;
+    -fx-font-weight: 900; /* Extra bold */
     -fx-text-fill: #4E6688;
     -fx-alignment: center;
     -fx-text-alignment: center;
@@ -84,10 +338,11 @@
     -fx-max-width: Double.MAX_VALUE;
 }
 
-/* Días individuales */
+/* Días individuales - normales del mes actual */
 .mini-day {
     -fx-font-size: 11px;
     -fx-text-fill: #1c1e21;
+    -fx-font-weight: 500; /* Un poco más bold */
     -fx-alignment: center;
     -fx-text-alignment: center;
     -fx-min-width: 20;
@@ -115,12 +370,47 @@
     -fx-max-height: 18;
 }
 
-/* Día actual */
+/* DÍA ACTUAL - Destacado igual que en la vista mensual */
 .mini-day-today {
     -fx-background-color: #1a73e8;
     -fx-text-fill: white;
-    -fx-background-radius: 9;
+    -fx-background-radius: 9; /* Círculo completo */
     -fx-font-weight: bold;
+    -fx-font-size: 11px;
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+    -fx-min-width: 18;
+    -fx-pref-width: 18;
+    -fx-max-width: 18;
+    -fx-min-height: 18;
+    -fx-max-height: 18;
+    -fx-cursor: hand;
+}
+
+.mini-day-today:hover {
+    -fx-background-color: #1557b0; /* Azul más oscuro en hover */
+    -fx-effect: dropshadow(gaussian, rgba(26,115,232,0.4), 4, 0, 0, 2);
+}
+
+/* Días de otros meses (anterior y siguiente) */
+.mini-day-other-month {
+    -fx-font-size: 11px;
+    -fx-text-fill: #9a9a9a; /* Color más claro para distinguir */
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+    -fx-min-width: 20;
+    -fx-pref-width: Region.USE_COMPUTED_SIZE;
+    -fx-max-width: Double.MAX_VALUE;
+    -fx-min-height: 18;
+    -fx-max-height: 18;
+    -fx-cursor: hand;
+    -fx-background-radius: 2;
+}
+
+.mini-day-other-month:hover {
+    -fx-background-color: #f8f9fa;
+    -fx-text-fill: #666666;
+    -fx-background-radius: 2;
 }
 
 /* Días con eventos */
@@ -135,17 +425,71 @@
     -fx-background-color: #d2e3fc;
 }
 
-/* Título del año en el header */
-.year-title-center {
-    -fx-font-size: 28px;
-    -fx-font-weight: Bold;
-    -fx-text-fill: #3c4043;
-    -fx-alignment: center;
+/* Día actual con eventos - prioridad sobre eventos */
+.mini-day-today.mini-day-with-events {
+    -fx-background-color: #1a73e8;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 9;
+}
+
+.mini-day-today.mini-day-with-events:hover {
+    -fx-background-color: #1557b0;
+    -fx-effect: dropshadow(gaussian, rgba(26,115,232,0.4), 4, 0, 0, 2);
 }
 
 .status-text {
     -fx-text-fill: #5f6368;
     -fx-font-size: 12px;
+}
+
+/* Responsividad para títulos en diferentes tamaños */
+@media screen and (min-width: 1200px) {
+    .mini-month-title {
+        -fx-font-size: 18px;
+        -fx-font-weight: 900;
+    }
+
+    .mini-day-today {
+        -fx-min-width: 20;
+        -fx-pref-width: 20;
+        -fx-max-width: 20;
+        -fx-min-height: 20;
+        -fx-max-height: 20;
+        -fx-font-size: 12px;
+    }
+}
+
+@media screen and (max-width: 1199px) and (min-width: 900px) {
+    .mini-month-title {
+        -fx-font-size: 15px;
+        -fx-font-weight: 900;
+    }
+
+    .mini-day-today {
+        -fx-min-width: 18;
+        -fx-pref-width: 18;
+        -fx-max-width: 18;
+        -fx-min-height: 18;
+        -fx-max-height: 18;
+        -fx-font-size: 11px;
+    }
+}
+
+@media screen and (max-width: 899px) {
+    .mini-month-title {
+        -fx-font-size: 13px;
+        -fx-font-weight: 900;
+    }
+
+    .mini-day-today {
+        -fx-min-width: 16;
+        -fx-pref-width: 16;
+        -fx-max-width: 16;
+        -fx-min-height: 16;
+        -fx-max-height: 16;
+        -fx-font-size: 10px;
+    }
 }
 
 /* Responsividad mejorada */
@@ -206,27 +550,4 @@
         -fx-min-height: 16;
         -fx-max-height: 16;
     }
-
-    /*logout */
-    /* Botón de cierre de sesión */
-    .profile-button {
-        -fx-background-color: transparent;
-        -fx-text-fill: #e53935; /* Color rojo para indicar acción de cierre */
-        -fx-alignment: CENTER_LEFT;
-        -fx-padding: 14px 15px;
-        -fx-cursor: hand;
-        -fx-graphic-text-gap: 12px;
-        -fx-font-family: -modern-font-family;
-        -fx-font-size: 15px;
-        -fx-font-weight: 500;
-        -fx-letter-spacing: -0.1px;
-        -fx-background-radius: 8px;
-        -fx-border-radius: 8px;
-    }
-
-    .profile-button:hover {
-        -fx-text-fill: #c62828; /* Rojo más oscuro al pasar el mouse */
-        -fx-font-weight: bold;
-    }
-
 }

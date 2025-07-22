@@ -220,8 +220,8 @@ public class CalendarYearController implements Initializable {
         vbox.setPrefWidth(200);
         vbox.setAlignment(Pos.CENTER);
 
-        // Nombre del mes
-        Label lblMonth = new Label(Month.of(month + 1).getDisplayName(TextStyle.FULL, new Locale("es")));
+        // Nombre del mes en mayúsculas
+        Label lblMonth = new Label(Month.of(month + 1).getDisplayName(TextStyle.FULL, new Locale("es")).toUpperCase());
         lblMonth.getStyleClass().add("mini-month-title");
         lblMonth.setMaxWidth(Double.MAX_VALUE);
         lblMonth.setAlignment(Pos.CENTER);
@@ -251,21 +251,38 @@ public class CalendarYearController implements Initializable {
         int lengthOfMonth = firstDay.lengthOfMonth();
         int startDay = firstDay.getDayOfWeek().getValue() % 7; // Lunes=1,...,Domingo=7=>0
 
+        // Calcular días del mes anterior para llenar espacios vacíos
+        LocalDate prevMonth = firstDay.minusMonths(1);
+        int prevMonthDays = prevMonth.lengthOfMonth();
+
+        // Calcular días del mes siguiente
+        LocalDate nextMonth = firstDay.plusMonths(1);
+
         int dayNum = 1;
-        for (int week = 0; week < 6 && dayNum <= lengthOfMonth; week++) {
+        int nextMonthDay = 1;
+
+        for (int week = 0; week < 6; week++) {
             for (int dow = 0; dow < 7; dow++) {
-                if ((week == 0 && dow < startDay) || dayNum > lengthOfMonth) {
-                    Label emptyDay = new Label(" ");
-                    emptyDay.getStyleClass().add("mini-day-empty");
-                    emptyDay.setPrefWidth(20);
-                    emptyDay.setAlignment(Pos.CENTER);
-                    daysGrid.add(emptyDay, dow, week);
-                } else {
+                Label dayLabel = new Label();
+                dayLabel.setPrefWidth(20);
+                dayLabel.setAlignment(Pos.CENTER);
+
+                if (week == 0 && dow < startDay) {
+                    // Días del mes anterior
+                    int prevDay = prevMonthDays - startDay + dow + 1;
+                    dayLabel.setText(String.valueOf(prevDay));
+                    dayLabel.getStyleClass().add("mini-day-other-month");
+
+                    // Click handler para navegar al mes anterior
+                    final int finalPrevMonth = month - 1 < 0 ? 11 : month - 1;
+                    final int finalPrevDay = prevDay;
+                    dayLabel.setOnMouseClicked(e -> navigateToMonth(finalPrevMonth, finalPrevDay));
+
+                } else if (dayNum <= lengthOfMonth) {
+                    // Días del mes actual
                     LocalDate dayDate = LocalDate.of(currentYear, month + 1, dayNum);
-                    Label dayLabel = new Label(String.valueOf(dayNum));
+                    dayLabel.setText(String.valueOf(dayNum));
                     dayLabel.getStyleClass().add("mini-day");
-                    dayLabel.setPrefWidth(20);
-                    dayLabel.setAlignment(Pos.CENTER);
 
                     // Destacar día actual
                     if (dayDate.equals(LocalDate.now())) {
@@ -282,9 +299,26 @@ public class CalendarYearController implements Initializable {
                     final int finalDay = dayNum;
                     dayLabel.setOnMouseClicked(e -> navigateToMonth(finalMonth, finalDay));
 
-                    daysGrid.add(dayLabel, dow, week);
                     dayNum++;
+                } else {
+                    // Días del mes siguiente
+                    dayLabel.setText(String.valueOf(nextMonthDay));
+                    dayLabel.getStyleClass().add("mini-day-other-month");
+
+                    // Click handler para navegar al mes siguiente
+                    final int finalNextMonth = month + 1 > 11 ? 0 : month + 1;
+                    final int finalNextDay = nextMonthDay;
+                    dayLabel.setOnMouseClicked(e -> navigateToMonth(finalNextMonth, finalNextDay));
+
+                    nextMonthDay++;
                 }
+
+                daysGrid.add(dayLabel, dow, week);
+            }
+
+            // Si ya hemos completado todos los días del mes y los siguientes necesarios, salir
+            if (dayNum > lengthOfMonth && nextMonthDay > 7) {
+                break;
             }
         }
 

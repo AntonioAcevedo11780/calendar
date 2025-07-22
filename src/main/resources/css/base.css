@@ -6,6 +6,7 @@
     -fx-background-color: #f8f9fa;
     -fx-font-family: "Inria Sans", "Segoe UI", Arial, sans-serif;
     -fx-font-size: 13px;
+    -fx-font-weight: bold;
 }
 
 /* Layout principal con grid de 12 columnas */
@@ -19,46 +20,47 @@
 /* Configuración general de botones */
 .button {
     -fx-cursor: hand;
+    -fx-font-weight: bold;
 }
 
-/* Colores de los diferentes calendarios - Usado en múltiples componentes */
+/* Colores de los diferentes calendarios - Actualizados según boceto */
 .calendar-name-blue {
-    -fx-text-fill: #1a73e8;
-    -fx-font-size: 13px;
-    -fx-font-weight: normal;
+    -fx-text-fill: #1E76E8;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
 }
 
 .calendar-name-green {
-    -fx-text-fill: #137333;
-    -fx-font-size: 13px;
-    -fx-font-weight: normal;
+    -fx-text-fill: #53C925;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
 }
 
-.calendar-name-purple {
-    -fx-text-fill: #8e24aa;
-    -fx-font-size: 13px;
-    -fx-font-weight: normal;
+.calendar-name-yellow {
+    -fx-text-fill: #f2c51f;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
 }
 
-.calendar-name-orange {
-    -fx-text-fill: #ea8600;
-    -fx-font-size: 13px;
-    -fx-font-weight: normal;
+.calendar-name-red {
+    -fx-text-fill: #e53935;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
 }
 
 /* Eventos - Colores reutilizables */
 .event-item-blue {
-    -fx-background-color: #1a73e8;
-}
-
-.event-item-purple {
-    -fx-background-color: #8e24aa;
+    -fx-background-color: #1E76E8;
 }
 
 .event-item-green {
-    -fx-background-color: #137333;
+    -fx-background-color: #53C925;
 }
 
-.event-item-orange {
-    -fx-background-color: #ea8600;
+.event-item-yellow {
+    -fx-background-color: #f2c51f;
+}
+
+.event-item-red {
+    -fx-background-color: #e53935;
 }

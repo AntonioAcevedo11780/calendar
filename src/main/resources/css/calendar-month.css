@@ -12,7 +12,7 @@
 /* Grid del calendario que se ajusta al contenedor */
 .main-calendar-grid {
     -fx-background-color: white;
-    -fx-border-color: #dadce0;
+    -fx-border-color: #2c2c2c;
     -fx-border-width: 1;
     -fx-grid-lines-visible: false;
     -fx-hgap: 0;
@@ -22,10 +22,14 @@
     -fx-max-height: Double.MAX_VALUE;
 }
 
+.main-calendar-grid-modern {
+    -fx-background-color: white;
+}
+
 /* Celdas individuales del calendario */
 .calendar-cell {
     -fx-background-color: white;
-    -fx-border-color: #dadce0;
+    -fx-border-color: #2c2c2c;
     -fx-border-width: 0 1 1 0;
     -fx-padding: 6;
     -fx-alignment: top-center;
@@ -67,9 +71,9 @@
 
 /* Encabezados de los días de la semana */
 .day-header-integrated {
-    -fx-text-fill: #5f6368;
+    -fx-text-fill: #2c2c2c;
     -fx-font-size: 11px;
-    -fx-font-weight: 600;
+    -fx-font-weight: bold;
     -fx-alignment: center;
     -fx-text-alignment: center;
     -fx-padding: 3 0 4 0;
@@ -78,11 +82,16 @@
     -fx-background-color: transparent;
 }
 
+.weekdays-header-modern {
+    -fx-background-color: white;
+
+}
+
 /* Números de los días */
 .day-number {
-    -fx-text-fill: #3c4043;
+    -fx-text-fill: #2c2c2c;
     -fx-font-size: 13px;
-    -fx-font-weight: normal;
+    -fx-font-weight: bold;
     -fx-padding: 3;
     -fx-alignment: center;
     -fx-text-alignment: center;
@@ -101,13 +110,13 @@
     -fx-font-size: 13px;
 }
 
-/* Eventos dentro de las celdas - MEJORADOS CON EFECTOS DE VISTA SEMANAL */
+/* Eventos dentro de las celdas */
 .event-item {
     -fx-text-fill: white;
     -fx-background-radius: 4;
     -fx-padding: 2 6;
     -fx-font-size: 10px;
-    -fx-font-weight: 500;
+    -fx-font-weight: 600;
     -fx-max-width: infinity;
     -fx-cursor: hand;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 2, 0, 0, 1);
@@ -115,8 +124,8 @@
     -fx-text-overrun: ellipsis;
 }
 
-/* Colores de eventos mejorados */
-.event-item.event-blue {
+/* Colores de eventos */
+.event-item.event-blue, .event-item-blue {
     -fx-background-color: #1976d2;
 }
 
@@ -124,15 +133,15 @@
     -fx-background-color: #e53935;
 }
 
-.event-item.event-green {
+.event-item.event-green, .event-item-green {
     -fx-background-color: #43a047;
 }
 
-.event-item.event-orange {
+.event-item.event-orange, .event-item-orange {
     -fx-background-color: #fb8c00;
 }
 
-.event-item.event-purple {
+.event-item.event-purple, .event-item-purple {
     -fx-background-color: #8e24aa;
 }
 
@@ -152,7 +161,6 @@
     -fx-background-color: #757575;
 }
 
-/* Efectos hover para eventos - COPIADOS DE VISTA SEMANAL */
 .event-item:hover {
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 4, 0, 0, 2);
     -fx-scale-x: 1.02;
@@ -176,26 +184,274 @@
     -fx-text-fill: #3c4043;
 }
 
-/* ========== EVENTOS TODO EL DÍA ========== */
-.all-day-event {
-    -fx-background-radius: 12;
-    -fx-padding: 3 8;
-    -fx-font-size: 9px;
-    -fx-font-weight: 600;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 1, 0, 0, 1);
-}
-
-/* ========== EFECTOS DE TRANSICIÓN ========== */
-.calendar-cell {
+/* Header Container */
+.header-container {
     -fx-background-color: white;
-    -fx-effect: null;
+    -fx-padding: 0;
 }
 
-.calendar-cell:hover {
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 2, 0, 0, 1);
+.header-grid {
+    -fx-background-color: white;
+    -fx-border-color: #2c2c2c;
+    -fx-grid-lines-visible:false;
+
 }
 
-/* ========== RESPONSIVE ========== */
+.header-section {
+    -fx-background-color: white;
+}
+
+/* App Title */
+.app-title {
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+/* Botón Today */
+.today-button-modern {
+    -fx-background-color: white;
+    -fx-text-fill: #2c2c2c;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-padding: 8 24;
+    -fx-background-radius: 12;
+    -fx-border-color: #2c2c2c;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 2, 0, 0, 2);
+}
+
+.today-button-modern:hover {
+    -fx-background-color: #e3f2fd;
+    -fx-border-color: #1976d2;
+    -fx-text-fill: #1976d2;
+}
+
+/* Botones de navegación */
+.nav-arrow-modern {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+    -fx-padding: 8;
+}
+.nav-arrow-modern:hover {
+    -fx-text-fill: #1976d2;
+}
+
+/* Título del mes */
+.month-title-modern {
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+/* Botón cerrar */
+.close-btn-modern {
+    -fx-background-color: transparent;
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-padding: 4;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+}
+
+.close-btn-modern:hover {
+    -fx-text-fill: #d32f2f;
+}
+
+/* Main Grid */
+.main-grid {
+    -fx-background-color: white;
+    -fx-padding: 0;
+}
+
+/* Sidebar */
+.sidebar-modern {
+    -fx-background-color: white;
+    -fx-padding: 24;
+    -fx-spacing: 20;
+    -fx-border-color: #2c2c2c;
+    -fx-border-width: 0 1 0 0;
+}
+
+/* Botón Crear */
+.create-button-ultra-modern {
+    -fx-background-color: white;
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-padding: 12 40;
+    -fx-background-radius: 24;
+    -fx-border-color: #2c2c2c;
+    -fx-border-width: 1;
+    -fx-border-radius: 24;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 4, 0, 0, 4);
+}
+
+.create-button-ultra-modern:hover {
+    -fx-background-color: #e3f2fd;
+    -fx-border-color: #1976d2;
+    -fx-text-fill: #1976d2;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 6, 0, 0, 6);
+}
+
+/* View Section */
+.view-section-modern {
+    -fx-spacing: 8;
+}
+
+.view-option-modern {
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 8;
+    -fx-cursor: hand;
+}
+
+.view-option-active-modern {
+    -fx-text-fill: #1976d2;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 8;
+    -fx-cursor: hand;
+}
+
+.view-option-modern:hover {
+    -fx-background-color: #f5f5f5;
+    -fx-background-radius: 4;
+}
+
+/* Calendar Section */
+.calendar-section-modern {
+    -fx-spacing: 12;
+}
+
+.header-container{
+    -fx-background-color: white;
+    -fx-padding: 0;
+}
+
+.calendar-section-header-modern {
+    -fx-spacing: 6;
+}
+
+.section-arrow-modern {
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.section-header-modern {
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+/* Calendar Items */
+.calendar-item-modern {
+    -fx-spacing: 8;
+    -fx-padding: 6;
+}
+
+.calendar-item-modern:hover {
+    -fx-background-color: #f5f5f5;
+    -fx-background-radius: 4;
+}
+
+/* Checkboxes */
+.calendar-checkbox-books .box {
+    -fx-background-color: white;
+    -fx-border-color: #1E76E8;
+    -fx-border-width: 2;
+}
+
+.calendar-checkbox-books:selected .mark {
+    -fx-background-color: #1E76E8;
+}
+
+.calendar-checkbox-tasks .box {
+    -fx-background-color: white;
+    -fx-border-color: #2c2c2c;
+    -fx-border-width: 2;
+}
+
+.calendar-checkbox-tasks:selected .mark {
+    -fx-background-color: #2c2c2c;
+}
+
+.calendar-checkbox-personal .box {
+    -fx-background-color: white;
+    -fx-border-color: #53C925;
+    -fx-border-width: 2;
+}
+
+.calendar-checkbox-personal:selected .mark {
+    -fx-background-color: #53C925;
+}
+
+.calendar-checkbox-exams .box {
+    -fx-background-color: white;
+    -fx-border-color: #f2c51f;
+    -fx-border-width: 2;
+}
+
+.calendar-checkbox-exams:selected .mark {
+    -fx-background-color: #f2c51f;
+}
+
+/* Calendar Names */
+.calendar-name-books {
+    -fx-text-fill: #1E76E8;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.calendar-name-tasks {
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.calendar-name-personal {
+    -fx-text-fill: #53C925;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.calendar-name-exams {
+    -fx-text-fill: #f2c51f;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+/* Logout Button */
+.logout-button-modern {
+    -fx-background-color: transparent;
+    -fx-text-fill: #e53935;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 8;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+}
+
+.logout-button-modern:hover {
+    -fx-background-color: #ffebee;
+    -fx-background-radius: 4;
+}
+
+/* Calendar Area */
+.calendar-area-modern {
+    -fx-background-color: white;
+    -fx-padding: 0;
+    -fx-spacing: 0;
+}
+
+/* Responsive */
 @media screen and (min-width: 1600px) {
     .calendar-cell {
         -fx-min-height: 120;
@@ -286,7 +542,6 @@
     }
 }
 
-/* ========== ESTADOS ESPECIALES ========== */
 .weekend-cell {
     -fx-background-color: #fafbff;
 }
@@ -295,7 +550,6 @@
     -fx-background-color: #f0f2ff;
 }
 
-/* ========== TOOLTIPS MEJORADOS ========== */
 .tooltip {
     -fx-background-color: #2c2c2c;
     -fx-text-fill: white;
@@ -305,7 +559,6 @@
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 4, 0, 0, 2);
 }
 
-/* ========== MINI CALENDARIO EN SIDEBAR ========== */
 .mini-calendar-cell {
     -fx-min-height: 25;
     -fx-pref-height: 25;
@@ -313,10 +566,9 @@
     -fx-font-size: 10px;
 }
 
-/* Botón de cierre de sesión */
 .profile-button {
     -fx-background-color: transparent;
-    -fx-text-fill: #e53935; /* Color rojo para indicar acción de cierre */
+    -fx-text-fill: #e53935;
     -fx-alignment: CENTER_LEFT;
     -fx-padding: 14px 15px;
     -fx-cursor: hand;
