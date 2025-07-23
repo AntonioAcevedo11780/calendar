@@ -1,8 +1,10 @@
 package com.utez.calendario.models;
+import com.utez.calendario.config.DatabaseConfig;
 import com.utez.calendario.controllers.AdminOverviewController;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.chart.PieChart;
+import javafx.scene.chart.XYChart;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -417,6 +419,38 @@ public class User {
         }
 
         return pieData;
+    }
+
+    public ObservableList<XYChart.Data<String, Number>> getActiveForEducatorEvents() {
+        ObservableList<XYChart.Data<String, Number>> datos = FXCollections.observableArrayList();
+
+        String sql = """
+        SELECT u.FIRST_NAME || ' ' || u.LAST_NAME AS nombre_docente,
+               COUNT(e.EVENT_ID) AS eventos_activos
+        FROM EVENTS e
+        JOIN USERS u ON e.CREATOR_ID = u.USER_ID
+        WHERE LOWER(u.ROLE) = 'docente'
+          AND e.START_DATE > CURRENT_DATE
+        GROUP BY u.FIRST_NAME || ' ' || u.LAST_NAME
+        ORDER BY eventos_activos DESC
+        """;
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                String nombre = rs.getString("nombre_docente");
+                int eventos = rs.getInt("eventos_activos");
+                datos.add(new XYChart.Data<>(nombre, eventos));
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error obteniendo datos del gráfico: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return datos;
     }
 }
 

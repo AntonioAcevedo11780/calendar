@@ -8,7 +8,7 @@ import com.utez.calendario.models.User;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.chart.PieChart;
+import javafx.scene.chart.*;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -428,14 +428,17 @@ public class AdminOverviewController implements Initializable {
         VBox calendarSection = new VBox(20);
         calendarSection.setAlignment(Pos.CENTER);
 
-        VBox calendarContent = new VBox();
+        VBox calendarContent = new VBox(10);
+
         calendarContent.getStyleClass().add("table-container");
         calendarContent.setAlignment(Pos.CENTER);
 
         TableView<Calendar> calendarTable = createOptimizedCalendarTable();
+        HBox paginationBar = createCalendarPagination(calendarTable);
         loadCalendarDataAsync(calendarTable);
 
-        calendarContent.getChildren().add(calendarTable);
+        calendarContent.getChildren().addAll(calendarTable, paginationBar);
+
         calendarSection.getChildren().addAll(createSectionHeader("Administración de Calendarios"), calendarContent);
         return calendarSection;
     }
@@ -906,11 +909,43 @@ public class AdminOverviewController implements Initializable {
             item.setName(etiqueta);
         }
 
-        // Agregar el gráfico al contenedor visual
-        statsContent.getChildren().add(pieChart);
+        // 🟦 Gráfica de barras (eventos activos por docente)
+        CategoryAxis xAxis = new CategoryAxis();
+        xAxis.setLabel("Docente");
+
+        NumberAxis yAxis = new NumberAxis();
+        yAxis.setLabel("Eventos Activos");
+
+        BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
+        barChart.setTitle("Docentes con más eventos activos");
+
+        XYChart.Series<String, Number> serie = new XYChart.Series<>();
+        serie.setName("Eventos activos");
+
+        User userModel = new User();
+        serie.getData().addAll(userModel.getActiveForEducatorEvents());
+
+        barChart.getData().add(serie);
+        barChart.setLegendVisible(false); // Opcional
+
+        //Generar colores para las barras
+        String[] colores = { "#27AE60", "#C0392B", "#2980B9" };
+        Platform.runLater(() -> {
+            int index = 0;
+            for (XYChart.Data<String, Number> item : serie.getData()) {
+                String color = colores[index % colores.length];
+                item.getNode().setStyle("-fx-bar-fill: " + color + ";");
+                index++;
+            }
+        });
+
+
+        // Agregar ambas gráficas al contenedor visual
+        statsContent.getChildren().addAll(pieChart, barChart);
         statsSection.getChildren().addAll(createSectionHeader("Estadísticas"), statsContent);
 
         return statsSection;
+
     }
 
     // ✅ MÉTODOS UTILITARIOS FINALES
@@ -1007,5 +1042,50 @@ public class AdminOverviewController implements Initializable {
     public void cleanup() {
         if (clockTimeline != null) clockTimeline.stop();
         User.setDashboardController(null);
+    }
+
+    //DIVISION DE LA TABLA DE CALENDARIOS
+    private HBox createCalendarPagination(TableView<Calendar> calendarTable) {
+        final int itemsPerPage = 10;
+        final IntegerProperty currentPageIndex = new SimpleIntegerProperty(0);
+        final List<Calendar> masterData = Calendar.getAllActiveCalendars();
+
+        Runnable updatePageData = () -> {
+            int startIndex = currentPageIndex.get() * itemsPerPage;
+            int endIndex = Math.min(startIndex + itemsPerPage, masterData.size());
+            calendarTable.getItems().setAll(masterData.subList(startIndex, endIndex));
+            setStatus("Mostrando calendarios " + (startIndex + 1) + " a " + endIndex + " de " + masterData.size());
+        };
+
+        Button[] navButtons = {
+                createPaginationButton("◀", "/images/arrow-left.png", e -> {
+                    if (currentPageIndex.get() > 0) {
+                        currentPageIndex.set(currentPageIndex.get() - 1);
+                        updatePageData.run();
+                    }
+                }),
+                createPaginationButton("▶", "/images/arrow-right.png", e -> {
+                    currentPageIndex.set(currentPageIndex.get() + 1);
+                    updatePageData.run();
+                })
+        };
+
+        Label pageInfoLabel = new Label();
+
+        currentPageIndex.addListener((obs, oldVal, newVal) -> {
+            int pageIndex = newVal.intValue();
+            navButtons[0].setDisable(pageIndex == 0);
+            navButtons[1].setDisable((pageIndex + 1) * itemsPerPage >= masterData.size());
+            pageInfoLabel.setText("Página " + (pageIndex + 1) + " de " + ((masterData.size() - 1) / itemsPerPage + 1));
+        });
+
+        updatePageData.run();
+        pageInfoLabel.setText("Página 1 de " + ((masterData.size() - 1) / itemsPerPage + 1));
+
+        HBox paginationBar = new HBox(10, navButtons[0], pageInfoLabel, navButtons[1]);
+        paginationBar.setAlignment(Pos.CENTER);
+        paginationBar.getStyleClass().add("pagination-bar");
+
+        return paginationBar;
     }
 }

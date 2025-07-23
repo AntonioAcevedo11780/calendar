@@ -114,10 +114,12 @@
 
 /* Perfil en sidebar */
 .profile-container {
+    -fx-background-radius: 10px;
     -fx-padding: 20px 10px;
 }
 
 .profile-photo {
+    -fx-background-radius: 10px;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 0, 0);
     -fx-background-radius: 50%;
 }
@@ -534,11 +536,10 @@
     -fx-text-fill: #0D47A1;
 }
 
-/*colores de la grafica xd*/
+/*colores de la grafica de pastel xd*/
 .default-color0.chart-pie {
     -fx-pie-color: #4CAF50FF; /* alumnos */
 }
-
 .default-color1.chart-pie {
     -fx-pie-color: #1976D2FF; /* profesores */
 }

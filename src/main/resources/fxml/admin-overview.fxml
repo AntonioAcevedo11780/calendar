@@ -37,7 +37,7 @@
                 <VBox alignment="CENTER" styleClass="profile-container">
                     <ImageView fitHeight="80" fitWidth="80" styleClass="profile-photo">
                         <image>
-                            <Image url="@../images/profile-photo.png" />
+                            <Image url="@../images/1.jpg" />
                         </image>
                     </ImageView>
                     <Label text="Administrador" styleClass="profile-name" />
@@ -53,7 +53,7 @@
                     <Button text="Vista General" styleClass="menu-button, active-menu-item" onAction="#handleGeneralView" maxWidth="Infinity">
                         <graphic>
                             <ImageView fitHeight="16" fitWidth="16">
-                                <Image url="@../images/icons8-casa.png"/>
+                                <Image url="@../images/1.jpg"/>
                             </ImageView>
                         </graphic>
                     </Button>
