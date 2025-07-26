@@ -161,18 +161,60 @@ public class LoginController implements Initializable {
 
     @FXML
     private void handleCreateAccount() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Crear cuenta ITHERA");
-        alert.setHeaderText("Usuarios disponibles para pruebas");
-        alert.setContentText("ESTUDIANTES:\n" + "• 20243ds076@utez.edu.mx / 123456 (Antonio Acevedo)\n" + "• 20243ds085@utez.edu.mx / 123456 (Carlos Gonz)\n" + "• 20243ds075@utez.edu.mx / 123456 (Daniel Arroyo)\n\n" + "DOCENTES:\n" + "• aldoromero@utez.edu.mx / 123456 (Aldo Romero)\n" + "• mariaperez@utez.edu.mx / 123456 (María Pérez)\n\n" + "ADMINISTRADOR:\n" + "• admin@utez.edu.mx / 123456 (Admin Sistema)");
         try {
-            Stage alertStage = (Stage) alert.getDialogPane().getScene().getWindow();
-            Image icon = new Image(getClass().getResourceAsStream("/images/logo.png"));
-            alertStage.getIcons().add(icon);
+            System.out.println("Ingresando a la creacion de usuario...");
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/create-user.fxml"));
+            Parent userCreationRoot = loader.load();
+
+            Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+            double width = Math.min(400, screenBounds.getWidth() * 0.95);
+            double height = Math.min(850, screenBounds.getHeight() * 0.95);
+
+            Stage userCreationStage = new Stage();
+            Scene userCreationScene = new Scene(userCreationRoot, width, height);
+
+            try {
+                userCreationScene.getStylesheets().add(getClass().getResource("/css/create-user.css").toExternalForm());
+                userCreationScene.getStylesheets().add(getClass().getResource("/css/window-styles.css").toExternalForm());
+            } catch (Exception e) {
+                System.out.println("No se pudieron cargar los estilos del calendario");
+            }
+
+            userCreationStage.initStyle(javafx.stage.StageStyle.UNDECORATED);
+            userCreationStage.setScene(userCreationScene);
+            userCreationStage.setMinWidth(1000);
+            userCreationStage.setMinHeight(600);
+
+            try {
+                Image icon = new Image(getClass().getResourceAsStream("/images/logo.png"));
+                userCreationStage.getIcons().add(icon);
+            } catch (Exception e) {
+                System.out.println("No se pudo cargar el ícono del calendario: " + e.getMessage());
+            }
+
+            userCreationStage.show();
+            userCreationStage.centerOnScreen();
+            addDragFunctionality(userCreationRoot, userCreationStage);
+
+            // Cerrar login
+            Stage loginStage = (Stage) emailField.getScene().getWindow();
+            loginStage.close();
+
+            System.out.println("Calendario cargado exitosamente");
+
         } catch (Exception e) {
-            System.out.println("No se pudo cargar el ícono del diálogo");
+            System.err.println("ERROR al cargar el calendario: " + e.getMessage());
+            e.printStackTrace();
+
+            Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+            errorAlert.setTitle("Error");
+            errorAlert.setHeaderText("No se pudo cargar el formulario de creación de usuario");
+            errorAlert.setContentText("Error: " + e.getMessage());
+            errorAlert.showAndWait();
+
+            setLoginInProgress(false);
         }
-        alert.showAndWait();
     }
 
     private void showError(String message) {
