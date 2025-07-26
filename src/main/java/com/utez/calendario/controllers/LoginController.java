@@ -168,8 +168,9 @@ public class LoginController implements Initializable {
             Parent userCreationRoot = loader.load();
 
             Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
-            double width = Math.min(400, screenBounds.getWidth() * 0.95);
-            double height = Math.min(850, screenBounds.getHeight() * 0.95);
+
+            double width = Math.min(750, screenBounds.getWidth() * 0.95);
+            double height = Math.min(700, screenBounds.getHeight() * 0.95);
 
             Stage userCreationStage = new Stage();
             Scene userCreationScene = new Scene(userCreationRoot, width, height);
@@ -183,8 +184,9 @@ public class LoginController implements Initializable {
 
             userCreationStage.initStyle(javafx.stage.StageStyle.UNDECORATED);
             userCreationStage.setScene(userCreationScene);
+            // TAMBIÉN CAMBIAR ESTOS VALORES
             userCreationStage.setMinWidth(1000);
-            userCreationStage.setMinHeight(600);
+            userCreationStage.setMinHeight(650);
 
             try {
                 Image icon = new Image(getClass().getResourceAsStream("/images/logo.png"));
