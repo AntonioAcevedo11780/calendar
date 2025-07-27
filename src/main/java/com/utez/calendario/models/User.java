@@ -337,22 +337,34 @@ public class User {
      * Determina si es un email de estudiante UTEZ basado en el patrón
      */
     public static boolean isStudentEmail(String email) {
-        return email.matches("\\d{7}[a-z]{2}\\d{3}@utez\\.edu\\.mx");
+        if (email == null) return false;
+        String normalized = email.toLowerCase();
+        // Formato actual: 5 dígitos + 2 letras + 3 dígitos
+        return normalized.matches("\\d{5}[a-z]{2}\\d{3}@utez\\.edu\\.mx");
     }
 
     /**
      * Determina si es un email de docente UTEZ basado en el patrón
      */
     public static boolean isTeacherEmail(String email) {
-        return email.matches("[a-z]+@utez\\.edu\\.mx") && !isStudentEmail(email);
+        if (email == null) return false;
+        String normalized = email.toLowerCase();
+        // Verificar dominio primero
+        if (!normalized.endsWith("@utez.edu.mx")) return false;
+        String localPart = normalized.split("@")[0];
+        // Patrón flexible para docentes
+        boolean validFormat = localPart.matches("[a-z0-9_.-]{3,30}");
+        return validFormat && !isStudentEmail(normalized);
     }
 
     /**
      * Extrae la matrícula del email si es estudiante
      */
     public static String extractMatriculaFromEmail(String email) {
-        if (isStudentEmail(email)) {
-            return email.split("@")[0];
+        if (email == null) return null;
+        String normalized = email.toLowerCase();
+        if (isStudentEmail(normalized)) {
+            return normalized.split("@")[0];
         }
         return null;
     }
@@ -361,7 +373,10 @@ public class User {
      * Valida que el email sea institucional UTEZ
      */
     public static boolean isValidUtezEmail(String email) {
-        return email.endsWith("@utez.edu.mx") && (isStudentEmail(email) || isTeacherEmail(email));
+        if (email == null || email.isBlank()) return false;
+        String normalized = email.toLowerCase();
+        return normalized.endsWith("@utez.edu.mx") &&
+                (isStudentEmail(normalized) || isTeacherEmail(normalized));
     }
 
     /**

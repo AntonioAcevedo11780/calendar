@@ -2,6 +2,9 @@ package com.utez.calendario;
 
 import com.utez.calendario.config.DatabaseConfig;
 import com.utez.calendario.services.EventService;
+import com.utez.calendario.services.MailService;
+import jakarta.mail.AuthenticationFailedException;
+import jakarta.mail.MessagingException;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
@@ -60,6 +63,30 @@ public class MainApp extends Application {
             e.printStackTrace();
         }
     }
+
+    private static volatile MailService emailService;
+
+    public static synchronized MailService getEmailService() {
+        if (emailService == null) {
+            String host = "smtp.gmail.com";
+            int port = 587;
+            String user = System.getenv("SMTP_USER");
+            String pass = System.getenv("SMTP_PASSWORD");
+            String senderName = "Equipo Ithera Calendar";
+
+            if (user == null || user.isEmpty()) {
+                user = "ithera117@gmail.com";
+            }
+
+            if (pass == null || pass.isEmpty()) {
+                pass = "qlsd dztm iquq zygp"; // Contraseña de aplicación
+            }
+
+            emailService = new MailService(host, port, user, pass, senderName);
+        }
+        return emailService;
+    }
+
 
     public static void main(String[] args) {
         launch(args);

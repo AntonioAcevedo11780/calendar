@@ -24,6 +24,14 @@
   </properties>
 
   <dependencies>
+
+    <!-- Dependencia para que manden correos -->
+    <dependency>
+      <groupId>org.eclipse.angus</groupId>
+      <artifactId>angus-mail</artifactId>
+      <version>2.0.3</version>
+    </dependency>
+
     <!-- JavaFX Controls -->
     <dependency>
       <groupId>org.openjfx</groupId>

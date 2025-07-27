@@ -4,8 +4,13 @@ import com.utez.calendario.config.DatabaseConfig;
 import com.utez.calendario.models.User;
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class AuthService {
+
+    private static final String USER_ID_PREFIX = "USR";
+    private static final int ID_DIGITS = 7;
+
     private static AuthService instance;
     private User currentUser;
 
@@ -16,6 +21,12 @@ public class AuthService {
             instance = new AuthService();
         }
         return instance;
+    }
+
+    private static Connection getConnection() throws SQLException {
+
+        return com.utez.calendario.config.DatabaseConfig.getConnection();
+
     }
 
     public boolean login(String email, String password) {
@@ -129,6 +140,114 @@ public class AuthService {
 
         } catch (SQLException e) {
             System.err.println("Error actualizando login: " + e.getMessage());
+        }
+    }
+
+    public static void registerUser(String firstName, String lastName, String email, String password) {
+        // 1. Validar email institucional UTEZ
+        if (!User.isValidUtezEmail(email)) {
+            throw new IllegalArgumentException("Correo institucional inválido. Debe ser de dominio @utez.edu.mx");
+        }
+
+        // 2. Verificar si es email de estudiante
+        boolean isStudent = User.isStudentEmail(email);
+
+        // 3. Determinar rol automáticamente
+        String role = isStudent ? "alumno" : "docente";
+
+        // 4. Extraer/generar matrícula según rol
+        String matricula;
+        if (isStudent) {
+            // Para estudiantes: extraer del correo
+            matricula = User.extractMatriculaFromEmail(email);
+            if (matricula == null || !matricula.matches("\\d{5}[a-z]{2}\\d{3}")) {
+                throw new IllegalArgumentException("Formato de matrícula inválido en el correo");
+            }
+        } else {
+            // Para docentes: generar código DOC
+            matricula = generateNextDocenteCode();
+        }
+
+        // 5. Generar USER_ID (siempre USR + 7 dígitos)
+        String userId = generateNextUserId();
+
+        // 6. Insertar en base de datos
+        String sql = "INSERT INTO USERS (USER_ID, MATRICULA, FIRST_NAME, LAST_NAME, EMAIL, PASSWORD, ROLE, ACTIVE) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, 'Y')";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, userId);
+            pstmt.setString(2, matricula);
+            pstmt.setString(3, firstName);
+            pstmt.setString(4, lastName);
+            pstmt.setString(5, email);
+            pstmt.setString(6, password);
+            pstmt.setString(7, role);
+
+            int rowsAffected = pstmt.executeUpdate();
+
+            if (rowsAffected == 0) {
+                throw new SQLException("Registro fallido, ninguna fila afectada");
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error en base de datos: " + e.getMessage(), e);
+        }
+    }
+
+    // Genera USER_ID en formato USR0000001
+    private static String generateNextUserId() {
+        String lastUserId = getLastUserIdFromDatabase("USR");
+        int nextNumber = lastUserId != null ?
+                Integer.parseInt(lastUserId.substring(3)) + 1 : 1;
+        return String.format("USR%07d", nextNumber);
+    }
+
+    // Genera código de docente en formato DOC000001
+    private static String generateNextDocenteCode() {
+        String lastDocCode = getLastDocenteCodeFromDatabase();
+        int nextNumber = lastDocCode != null ?
+                Integer.parseInt(lastDocCode.substring(3)) + 1 : 1;
+        return String.format("DOC%06d", nextNumber);
+    }
+
+    // Obtiene el último USER_ID
+    private static String getLastUserIdFromDatabase(String prefix) {
+        String sql = "SELECT USER_ID FROM ("
+                + "SELECT USER_ID FROM USERS "
+                + "WHERE USER_ID LIKE ? "
+                + "ORDER BY TO_NUMBER(SUBSTR(USER_ID, 4)) DESC"
+                + ") WHERE ROWNUM = 1";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, prefix + "%");
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getString("USER_ID") : null;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener último ID: " + e.getMessage(), e);
+        }
+    }
+
+    // Obtiene el último código de docente de la columna MATRICULA
+    private static String getLastDocenteCodeFromDatabase() {
+        String sql = "SELECT MATRICULA FROM ("
+                + "SELECT MATRICULA FROM USERS "
+                + "WHERE MATRICULA LIKE 'DOC%' "
+                + "ORDER BY TO_NUMBER(SUBSTR(MATRICULA, 4)) DESC"
+                + ") WHERE ROWNUM = 1";
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            return rs.next() ? rs.getString("MATRICULA") : null;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener último código docente: " + e.getMessage(), e);
         }
     }
 

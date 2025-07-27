@@ -12,137 +12,152 @@
             styleClass="root" prefWidth="700.0" prefHeight="600.0"
             stylesheets="@/css/create-user.css">
     <center>
-        <VBox alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity"
-              minHeight="-Infinity" minWidth="-Infinity"
-              prefHeight="650.0" prefWidth="650.0" spacing="0"
-              styleClass="create-account-container">
-            <children>
-                <!-- Logo en la parte superior del contenedor -->
-                <VBox alignment="CENTER" spacing="0" styleClass="logo-container">
-                    <children>
-                        <ImageView fitHeight="80" fitWidth="80" preserveRatio="true">
-                            <image>
-                                <Image url="@/images/logo.png" />
-                            </image>
-                        </ImageView>
-                    </children>
-                    <padding>
-                        <Insets top="30.0" bottom="20.0" />
-                    </padding>
-                </VBox>
+        <StackPane>
+            <VBox alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity"
+                  minHeight="-Infinity" minWidth="-Infinity"
+                  prefHeight="650.0" prefWidth="650.0" spacing="0"
+                  styleClass="create-account-container">
+                <children>
+                    <!-- Logo en la parte superior del contenedor -->
+                    <VBox alignment="CENTER" styleClass="logo-container">
+                        <children>
+                            <ImageView fitHeight="80" fitWidth="80" preserveRatio="true">
+                                <image>
+                                    <Image url="@/images/logo.png" />
+                                </image>
+                            </ImageView>
+                        </children>
+                    </VBox>
 
-                <!-- Título principal con línea divisora integrada -->
-                <VBox alignment="CENTER" spacing="0">
-                    <Label styleClass="create-account-title"
-                           text="Crea tu cuenta de Ithera"
-                           textAlignment="CENTER" wrapText="true">
-                        <font>
-                            <Font name="System Bold" size="24.0" />
-                        </font>
-                        <padding>
-                            <Insets bottom="5.0" />
-                        </padding>
-                    </Label>
-
-                    <!-- Línea divisora personalizada -->
-                    <Line startX="0" endX="300" stroke="#3498db" strokeWidth="2" />
-                </VBox>
-
-                <VBox alignment="CENTER" spacing="0">
-                    <padding>
-                        <Insets top="20.0" bottom="10.0" />
-                    </padding>
-                </VBox>
-
-                <!-- Campos de entrada con mejor espaciado -->
-                <VBox prefWidth="350.0" spacing="20" styleClass="fields-container"
-                      alignment="CENTER">
-                    <children>
-                        <!-- Email -->
-                        <TextField fx:id="emailField"
-                                   promptText="Correo electrónico"
-                                   styleClass="input-field"
-                                   prefWidth="300.0" />
-
-                        <!-- Contraseña -->
-                        <PasswordField fx:id="passwordField"
-                                       promptText="Contraseña"
-                                       styleClass="input-field"
-                                       prefWidth="300.0" />
-
-                        <!-- Confirmar Contraseña -->
-                        <PasswordField fx:id="confirmPasswordField"
-                                       promptText="Confirmar contraseña"
-                                       styleClass="input-field"
-                                       prefWidth="300.0" />
-
-                        <!-- Botón de crear cuenta -->
-                        <Button textAlignment="CENTER"
-                                fx:id="createAccountButton"
-                                text="Crear cuenta"
-                                styleClass="create-button"
-                                prefWidth="300.0">
+                    <!-- Título principal con línea divisora integrada -->
+                    <VBox alignment="CENTER" spacing="0">
+                        <Label styleClass="create-account-title"
+                               text="Crea tu cuenta de Ithera"
+                               textAlignment="CENTER" wrapText="true">
+                            <font>
+                                <Font name="System Bold" size="24.0" />
+                            </font>
                             <padding>
-                                <Insets top="12.0" bottom="12.0" />
+                                <Insets bottom="5.0" />
                             </padding>
-                        </Button>
+                        </Label>
 
-                        <!-- Contenedor de verificación -->
-                        <VBox fx:id="verificationContainer"
-                              visible="false" managed="false" styleClass="verification-container"
-                              alignment="CENTER" spacing="10">
-                            <children>
-                                <Label text="Verificación de cuenta"
-                                       styleClass="verification-title"/>
-                                <Label text="Ingresa el código enviado a tu correo:"
-                                       styleClass="verification-subtitle"/>
+                        <!-- Línea divisora personalizada -->
+                        <Line startX="0" endX="300" stroke="#3498db" strokeWidth="2" />
+                    </VBox>
 
-                                <!-- Contenedor para los campos de código -->
-                                <HBox spacing="10" alignment="CENTER">
-                                    <children>
-                                        <TextField fx:id="code1" styleClass="code-field"
-                                                   maxWidth="50" alignment="CENTER"/>
-                                        <TextField fx:id="code2" styleClass="code-field"
-                                                   maxWidth="50" alignment="CENTER"/>
-                                        <TextField fx:id="code3" styleClass="code-field"
-                                                   maxWidth="50" alignment="CENTER"/>
-                                        <TextField fx:id="code4" styleClass="code-field"
-                                                   maxWidth="50" alignment="CENTER"/>
-                                    </children>
-                                    <padding>
-                                        <Insets top="15" bottom="15"/>
-                                    </padding>
-                                </HBox>
+                    <VBox alignment="CENTER" spacing="0">
+                        <padding>
+                            <Insets top="20.0" bottom="10.0" />
+                        </padding>
+                    </VBox>
 
-                                <Button fx:id="verifyButton"
-                                        text="Verificar"
-                                        styleClass="verify-button"
-                                        prefWidth="150.0"/>
-                            </children>
-                        </VBox>
+                    <!-- Campos de entrada con mejor espaciado -->
+                    <VBox prefWidth="350.0" spacing="20" styleClass="fields-container"
+                          alignment="CENTER">
+                        <children>
 
-                        <!-- Enlace para ir al login -->
-                        <HBox alignment="CENTER" spacing="5" styleClass="login-link-container">
-                            <VBox.margin>
-                                <Insets top="20.0"/>
-                            </VBox.margin>
-                            <Label text="¿Ya tienes una cuenta?" styleClass="login-text" />
-                            <Hyperlink fx:id="loginLink" text="Inicia sesión" styleClass="login-link"/>
-                        </HBox>
+                            <!-- Email -->
+                            <TextField fx:id="firstNamesField"
+                                       promptText="Primer nombre/s"
+                                       styleClass="input-field"
+                                       prefWidth="300.0" />
 
-                    </children>
-                </VBox>
+                            <!-- Contraseña -->
+                            <TextField fx:id="lastNameField"
+                                           promptText="Apellido/s"
+                                           styleClass="input-field"
+                                           prefWidth="300.0" />
+                            <!-- Email -->
+                            <TextField fx:id="emailField"
+                                       promptText="Correo electrónico"
+                                       styleClass="input-field"
+                                       prefWidth="300.0" />
 
-                <!-- Mensaje de error -->
-                <Label fx:id="errorLabel"
-                       styleClass="error-message"
-                       text="" visible="false"
-                       prefWidth="350.0" wrapText="true"
-                       alignment="CENTER" />
-            </children>
-            <padding>
-                <Insets bottom="40.0" left="50.0" right="50.0" top="20.0" />
-            </padding>
-        </VBox>
+                            <!-- Contraseña -->
+                            <PasswordField fx:id="passwordField"
+                                           promptText="Contraseña"
+                                           styleClass="input-field"
+                                           prefWidth="300.0" />
+
+                            <!-- Confirmar Contraseña -->
+                            <PasswordField fx:id="confirmPasswordField"
+                                           promptText="Confirmar contraseña"
+                                           styleClass="input-field"
+                                           prefWidth="300.0" />
+
+                            <!-- Botón de crear cuenta -->
+                            <Button textAlignment="CENTER"
+                                    fx:id="createAccountButton"
+                                    text="Crear cuenta"
+                                    styleClass="create-button"
+                                    prefWidth="300.0"
+                                    onAction="#handleCreateAccount">
+                                <padding>
+                                    <Insets top="12.0" />
+                                </padding>
+                            </Button>
+
+                            <!-- Contenedor de verificación -->
+                            <VBox fx:id="verificationContainer"
+                                  visible="false" managed="false" styleClass="verification-container"
+                                  alignment="CENTER" spacing="10"
+                                   prefWidth="350.0" maxWidth="350.0"
+                                  minWidth="350.0">
+                                <children>
+                                    <Label text="Verificación de cuenta"
+                                           styleClass="verification-title"/>
+                                    <Label text="Ingresa el código enviado a tu correo:"
+                                           styleClass="verification-subtitle"/>
+
+                                    <!-- Contenedor para los campos de código -->
+                                    <HBox spacing="10" alignment="CENTER">
+                                        <children>
+                                            <TextField fx:id="code1" styleClass="code-field"
+                                                       maxWidth="50" alignment="CENTER"/>
+                                            <TextField fx:id="code2" styleClass="code-field"
+                                                       maxWidth="50" alignment="CENTER"/>
+                                            <TextField fx:id="code3" styleClass="code-field"
+                                                       maxWidth="50" alignment="CENTER"/>
+                                            <TextField fx:id="code4" styleClass="code-field"
+                                                       maxWidth="50" alignment="CENTER"/>
+                                        </children>
+                                        <padding>
+                                            <Insets top="15" bottom="15"/>
+                                        </padding>
+                                    </HBox>
+
+                                    <Button onAction="#handleVerifyCode"
+                                            fx:id="verifyButton"
+                                            text="Verificar"
+                                            styleClass="verify-button"
+                                            prefWidth="150.0"/>
+                                </children>
+                            </VBox>
+
+                            <!-- Enlace para ir al login -->
+                            <HBox alignment="CENTER" spacing="5" styleClass="login-link-container">
+                                <VBox.margin>
+                                    <Insets top="20.0"/>
+                                </VBox.margin>
+                                <Label text="¿Ya tienes una cuenta?" styleClass="login-text" />
+                                <Hyperlink fx:id="loginLink" text="Inicia sesión" styleClass="login-link"/>
+                            </HBox>
+
+                        </children>
+                    </VBox>
+
+                    <!-- Mensaje de error -->
+                    <Label fx:id="errorLabel"
+                           styleClass="error-message"
+                           text="" visible="false"
+                           prefWidth="350.0" wrapText="true"
+                           alignment="CENTER" />
+                </children>
+                <padding>
+                    <Insets bottom="40.0" left="50.0" right="50.0" top="20.0" />
+                </padding>
+            </VBox>
+        </StackPane>
     </center>
 </BorderPane>
