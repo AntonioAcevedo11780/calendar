@@ -177,14 +177,19 @@
 .event-label {
     -fx-font-size: 11px;
     -fx-text-fill: white;
-    -fx-padding: 4 8;
+    -fx-padding: 5 8; /* un poco más de padding arriba y abajo */
     -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-border-color: rgba(0,0,0,0.1);
+    -fx-border-width: 1;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 2, 0, 0, 1);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 3, 0, 0, 1);
     -fx-max-width: Double.MAX_VALUE;
     -fx-wrap-text: true;
     -fx-text-overrun: ellipsis;
+    -fx-margin: 3 0 3 0; /* para dar espacio vertical entre labels */
 }
+
 
 .event-blue {
     -fx-background-color: #1976d2;
@@ -210,11 +215,29 @@
     -fx-background-color: #757575;
 }
 
+
 .event-label:hover {
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 4, 0, 0, 2);
     -fx-scale-x: 1.02;
     -fx-scale-y: 1.02;
 }
+
+.event-block {
+    -fx-background-color: #777;
+    -fx-text-fill: white;
+    -fx-padding: 4;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-font-size: 12px;
+}
+
+
+/*
+.event-label:hover {
+    -fx-background-color: rgba(70,130,180, 0.9);
+    -fx-cursor: hand;
+}
+*/
 
 /* ========== LÍNEA DE HORA ACTUAL ========== */
 .current-time-line {

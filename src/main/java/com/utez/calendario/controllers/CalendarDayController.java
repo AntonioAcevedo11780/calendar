@@ -211,8 +211,8 @@ public class CalendarDayController implements Initializable {
                 int endHour = end.getHour();
 
                 int rowIndex = startHour + 1; // +1 por encabezado
-                //int rowSpan = Math.max(1, endHour - startHour);
-                int rowSpan = Math.max(1, endHour - startHour + 1);
+                int rowSpan = Math.max(1, endHour - startHour);
+                //int rowSpan = Math.max(1, endHour - startHour + 1);
 
 
                 Label eventLabel = createEventLabel(event);

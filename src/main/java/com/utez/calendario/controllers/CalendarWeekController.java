@@ -9,6 +9,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
@@ -192,6 +193,8 @@ public class CalendarWeekController implements Initializable {
             }
         }
 
+        renderEventsOverlay();
+
         System.out.println("✓ Vista semanal creada con " + TOTAL_HOURS + " horas");
     }
 
@@ -235,27 +238,16 @@ public class CalendarWeekController implements Initializable {
         cell.setAlignment(Pos.TOP_LEFT);
         cell.setSpacing(2);
 
-        // Agregar eventos para esta hora y fecha si los calendarios están habilitados
-        List<Event> dayEvents = events.get(date);
-        if (dayEvents != null) {
-            for (Event event : dayEvents) {
-                if (shouldShowEvent(event)) {
-                    LocalTime eventTime = event.getStartDate().toLocalTime();
-                    if (eventTime.getHour() == hour) {
-                        Label eventLabel = createEventLabel(event);
-                        cell.getChildren().add(eventLabel);
-                    }
-                }
-            }
-        }
+        // Aquí llamamos al nuevo método
+        //renderEventsForHour(cell, date, hour);
 
-        // Efectos hover
+        // Hover
         cell.setOnMouseEntered(e -> cell.getStyleClass().add("hour-cell-hover"));
         cell.setOnMouseExited(e -> cell.getStyleClass().remove("hour-cell-hover"));
 
-        // Click para crear evento
+        // Doble click para crear evento
         cell.setOnMouseClicked(e -> {
-            if (e.getClickCount() == 2) { // Doble click
+            if (e.getClickCount() == 2) {
                 LocalDateTime clickDateTime = LocalDateTime.of(date, LocalTime.of(hour, 0));
                 openEventDialogForCreate(clickDateTime.toLocalDate());
             }
@@ -263,6 +255,50 @@ public class CalendarWeekController implements Initializable {
 
         return cell;
     }
+
+    private void renderEventsOverlay() {
+        eventOverlay.getChildren().clear();
+
+        double rowHeight = 60; // altura por hora (asegúrate que coincida con tu CSS)
+        double colWidth = (calendarGrid.getWidth() - 60) / 7; // 60 px = columna de horas
+
+        for (int day = 0; day < 7; day++) {
+            LocalDate date = startOfWeek.plusDays(day);
+            List<Event> dayEvents = events.get(date);
+            if (dayEvents == null) continue;
+
+            for (Event event : dayEvents) {
+                if (!shouldShowEvent(event)) continue;
+
+                LocalTime start = event.getStartDate().toLocalTime();
+                LocalTime end = event.getEndDate().toLocalTime();
+
+                // convertir hora a píxeles
+                double startY = start.getHour() * rowHeight +
+                        (start.getMinute() / 60.0) * rowHeight;
+                double endY = end.getHour() * rowHeight +
+                        (end.getMinute() / 60.0) * rowHeight;
+
+                double height = Math.max(rowHeight * 0.5, endY - startY);
+                double x = 60 + day * colWidth; // 60 = ancho de columna de horas
+
+                Label eventBlock = new Label(event.getTitle() + " (" +
+                        start.format(DateTimeFormatter.ofPattern("HH:mm")) + " - " +
+                        end.format(DateTimeFormatter.ofPattern("HH:mm")) + ")");
+                eventBlock.getStyleClass().addAll("event-label", "event-block");
+                eventBlock.setLayoutX(x);
+                double headerHeight = 60; // coincide con .day-header
+                eventBlock.setLayoutY(startY + headerHeight);
+
+                eventBlock.setPrefWidth(colWidth);
+                eventBlock.setPrefHeight(height);
+
+                eventOverlay.getChildren().add(eventBlock);
+            }
+        }
+    }
+
+
 
     private boolean shouldShowEvent(Event event) {
         String calendarId = event.getCalendarId();
@@ -355,6 +391,9 @@ public class CalendarWeekController implements Initializable {
     }
 
     // ========== NAVEGACIÓN ==========
+    @FXML private StackPane weekContainer;
+    @FXML private Pane eventOverlay;
+
     @FXML
     private void handleTodayClick() {
         System.out.println("🔄 Navegando a hoy...");
