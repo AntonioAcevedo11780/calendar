@@ -67,11 +67,30 @@ public class MainApp extends Application {
 
         // Agregar handler para cerrar correctamente los recursos
         primaryStage.setOnCloseRequest(event -> {
+
             // Cerrar el pool de conexiones
             DatabaseConfig.closeDataSource();
             // Apagar los servicios con ExecutorService
             EventService.getInstance().shutdown();
-            System.out.println("Cerrando recursos de la aplicación...");
+
+            // Apagar servicio de notificaciones
+            if (notificationService != null && notificationService.isRunning()) {
+                notificationService.shutdown();
+            }
+
+            //Apagar servicio de mail
+            if  (emailService != null) {
+                MailService.shutdown();
+            }
+
+            new Thread(() -> {
+                try {
+                    Thread.sleep(1000);
+                    System.exit(0);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }).start();
         });
     }
 

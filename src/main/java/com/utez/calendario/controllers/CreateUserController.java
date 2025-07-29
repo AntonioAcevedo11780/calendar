@@ -2,6 +2,7 @@ package com.utez.calendario.controllers;
 
 import com.sun.tools.javac.Main;
 import com.utez.calendario.MainApp;
+import com.utez.calendario.models.User;
 import com.utez.calendario.services.AuthService;
 import com.utez.calendario.services.MailService;
 import jakarta.mail.MessagingException;
@@ -154,12 +155,24 @@ public class CreateUserController implements Initializable {
     @FXML
     private void handleCreateAccount() {
         // Validar campos
-
         String firstName = firstNamesField.getText().trim();
         String lastName = lastNameField.getText().trim();
         String email = emailField.getText().trim();
         String password = passwordField.getText().trim();
         String confirmPassword = confirmPasswordField.getText().trim();
+
+        // Verificar si el email ya existe
+        User usr = new User();
+
+        if (usr.searchEmail(email)) {
+            // Mostrar alerta y limpiar campo
+            showError("El email ya está registrado. Por favor, use otro email.");
+
+            emailField.setText("");
+            emailField.requestFocus();
+
+            return;
+        }
 
         if (email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() || firstName.isEmpty() || lastName.isEmpty()) {
             showError("Todos los campos son obligatorios");

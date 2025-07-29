@@ -118,6 +118,24 @@ public class User {
 
     }
 
+    public boolean searchEmail(String email) {
+        String sql = "SELECT email FROM users WHERE email = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, email);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next(); // Devuelve true si hay al menos un resultado
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error al buscar el email: " + e.getMessage());
+            return false; // Devuelve false en caso de error
+        }
+    }
+
     // Helpers
     public static List<User> getAllUsers() {
         return getUsers(-1, -1, true);  // Sin paginación, con admins

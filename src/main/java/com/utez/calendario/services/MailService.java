@@ -7,6 +7,11 @@ import java.io.UnsupportedEncodingException;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class MailService {
@@ -16,13 +21,18 @@ public class MailService {
 
     private final String username;
     private final String password;
-    private final String senderName;  // Nuevo campo para nombre del remitente
+    private final String senderName;
     private final Properties props;
+
+    // Cache para evitar envíos duplicados
+    private static final Set<String> sentVerificationEmails = ConcurrentHashMap.newKeySet();
+    private static final ScheduledExecutorService cooldownScheduler = Executors.newScheduledThreadPool(2);
+    private static final long VERIFICATION_COOLDOWN_MINUTES = 5; // 5 minutos de enfriamiento
 
     public MailService(String host, int port, String username, String password, String senderName) {
         this.username = username;
         this.password = password;
-        this.senderName = senderName;  // Nombre personalizado para mostrar
+        this.senderName = senderName;
 
         this.props = new Properties();
         props.put("mail.smtp.auth", "true");
@@ -47,6 +57,12 @@ public class MailService {
 
         if (verificationCode == null || verificationCode.isBlank()) {
             throw new IllegalArgumentException("El código de verificación no puede estar vacío");
+        }
+
+        // Verificar si ya se envió recientemente
+        if (sentVerificationEmails.contains(recipient)) {
+            System.out.println("⏳ Correo de verificación ya enviado recientemente a " + recipient);
+            return;
         }
 
         Session session = Session.getInstance(props, new Authenticator() {
@@ -94,6 +110,15 @@ public class MailService {
             message.setContent(htmlContent, "text/html; charset=utf-8");
             Transport.send(message);
 
+            // Registrar envío en caché
+            sentVerificationEmails.add(recipient);
+
+            // Programar eliminación después del tiempo de enfriamiento
+            cooldownScheduler.schedule(() -> {
+                sentVerificationEmails.remove(recipient);
+                System.out.println("✅ Cooldown completado para " + recipient);
+            }, VERIFICATION_COOLDOWN_MINUTES, TimeUnit.MINUTES);
+
         } catch (UnsupportedEncodingException e) {
             throw new MessagingException("Error en codificación del nombre del remitente", e);
         } catch (MessagingException e) {
@@ -106,6 +131,7 @@ public class MailService {
     public static String generateVerificationCode() {
         return String.format("%04d", (int) (Math.random() * 10000));
     }
+
     public void sendEventReminder(String recipient, Event event, long minutesBefore) throws MessagingException {
         if (recipient == null || recipient.isBlank()) {
             throw new IllegalArgumentException("El destinatario no puede estar vacío");
@@ -186,6 +212,19 @@ public class MailService {
         } catch (MessagingException e) {
             System.err.println("Error enviando recordatorio a " + recipient + ": " + e.getMessage());
             throw new MessagingException("No se pudo enviar el recordatorio", e);
+        }
+    }
+
+    // Metodo para apagar el scheduler al cerrar la aplicación
+    public static void shutdown() {
+        cooldownScheduler.shutdown();
+        try {
+            if (!cooldownScheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                cooldownScheduler.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            cooldownScheduler.shutdownNow();
+            Thread.currentThread().interrupt();
         }
     }
 }
