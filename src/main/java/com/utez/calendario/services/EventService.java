@@ -489,6 +489,90 @@ public class EventService {
     }
 
     /**
+     * Obtiene el email de un usuario desde la base de datos
+     */
+    public String getUserEmail(String userId) {
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(
+                     "SELECT EMAIL FROM USERS WHERE USER_ID = ? AND ACTIVE = 'Y'")) {
+
+            pstmt.setString(1, userId);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                String email = rs.getString("EMAIL");
+                log("Email encontrado para usuario " + userId + ": " + email);
+                return email;
+            } else {
+                logError("No se encontró email para usuario: " + userId);
+            }
+
+        } catch (SQLException e) {
+            logError("Error obteniendo email del usuario " + userId + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Obtiene usuarios que tienen eventos en un rango de fechas
+     */
+    public List<String> getUsersWithUpcomingEvents(LocalDateTime startDate, LocalDateTime endDate) {
+        List<String> userIds = new ArrayList<>();
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(
+                     "SELECT DISTINCT c.OWNER_ID FROM EVENTS e " +
+                             "INNER JOIN CALENDARS c ON e.CALENDAR_ID = c.CALENDAR_ID " +
+                             "WHERE e.START_DATE >= ? AND e.START_DATE <= ? " +
+                             "AND e.ACTIVE = 'Y' AND c.ACTIVE = 'Y'")) {
+
+            pstmt.setTimestamp(1, Timestamp.valueOf(startDate));
+            pstmt.setTimestamp(2, Timestamp.valueOf(endDate));
+
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                userIds.add(rs.getString("OWNER_ID"));
+            }
+
+            log("Encontrados " + userIds.size() + " usuarios con eventos entre " +
+                    startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) + " y " +
+                    endDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+
+        } catch (SQLException e) {
+            logError("Error obteniendo usuarios con eventos próximos: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return userIds;
+    }
+
+    /**
+     * Busca un evento específico por ID y usuario
+     */
+    public Event getEventById(String userId, String eventId) {
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(
+                     "SELECT e.* FROM EVENTS e " +
+                             "INNER JOIN CALENDARS c ON e.CALENDAR_ID = c.CALENDAR_ID " +
+                             "WHERE c.OWNER_ID = ? AND e.EVENT_ID = ? AND e.ACTIVE = 'Y' AND c.ACTIVE = 'Y'")) {
+
+            pstmt.setString(1, userId);
+            pstmt.setString(2, eventId);
+
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToEvent(rs);
+            }
+
+        } catch (SQLException e) {
+            logError("Error obteniendo evento " + eventId + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
      * Registra un mensaje de éxito en la consola
      */
     private void log(String message) {

@@ -1,10 +1,10 @@
 package com.utez.calendario;
 
+
 import com.utez.calendario.config.DatabaseConfig;
 import com.utez.calendario.services.EventService;
 import com.utez.calendario.services.MailService;
-import jakarta.mail.AuthenticationFailedException;
-import jakarta.mail.MessagingException;
+import com.utez.calendario.services.NotificationService;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
@@ -15,6 +15,32 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 public class MainApp extends Application {
+
+    private static NotificationService notificationService;
+    /**
+     * Inicializa el sistema de notificaciones automáticas
+     */
+    private void initializeNotificationSystem() {
+        try {
+            System.out.println("🚀 Inicializando sistema de notificaciones...");
+
+            // Obtener el servicio de email existente
+            MailService emailService = getEmailService();
+
+            // Crear e inicializar el scheduler de notificaciones
+            notificationService = NotificationService.getInstance(emailService);
+            notificationService.startNotificationService();
+
+            System.out.println("✅ Sistema de notificaciones iniciado correctamente");
+            System.out.println("📧 " + notificationService.getServiceStatus());
+
+        } catch (Exception e) {
+            System.err.println("❌ Error inicializando sistema de notificaciones: " + e.getMessage());
+            e.printStackTrace();
+            // La aplicación puede continuar sin notificaciones
+        }
+    }
+
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -36,6 +62,8 @@ public class MainApp extends Application {
         primaryStage.setMinHeight(600);
         primaryStage.show();
         primaryStage.centerOnScreen();
+
+        initializeNotificationSystem();
 
         // Agregar handler para cerrar correctamente los recursos
         primaryStage.setOnCloseRequest(event -> {
@@ -86,7 +114,6 @@ public class MainApp extends Application {
         }
         return emailService;
     }
-
 
     public static void main(String[] args) {
         launch(args);
