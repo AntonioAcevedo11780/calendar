@@ -1,5 +1,5 @@
 /* ==========================================================================
-   CALENDAR-DAY VIEW - Vista de calendario diaria
+   CALENDAR-DAY VIEW - Vista de calendario diaria (UNIFICADA CON VISTA SEMANAL)
    ========================================================================== */
 
 /* ========== CONTENEDOR PRINCIPAL ========== */
@@ -21,7 +21,7 @@
 /* ScrollPane del calendario */
 .day-scrollpane {
     -fx-background-color: white;
-    -fx-padding: 20;
+    -fx-padding: 10;
     -fx-fit-to-width: true;
     -fx-fit-to-height: true;
     -fx-hbar-policy: never;
@@ -51,11 +51,11 @@
     -fx-border-radius: 5;
 }
 
-/* ========== GRID PRINCIPAL DEL CALENDARIO - SIN ESPACIOS ========== */
+/* ========== GRID PRINCIPAL DEL CALENDARIO ========== */
 .main-calendar-grid {
     -fx-background-color: white;
-    -fx-border-color: #dadce0;
-    -fx-border-width: 1 1 1 1;
+    -fx-border-color: #2c2c2c;
+    -fx-border-width: 1 0 0 1;
     -fx-grid-lines-visible: false;
     -fx-hgap: 0;
     -fx-vgap: 0;
@@ -65,27 +65,38 @@
     -fx-max-width: Double.MAX_VALUE;
 }
 
-/* ========== CELDA DE ESQUINA - SIN ESPACIOS ========== */
+/* ========== CELDA DE ESQUINA ========= */
 .corner-cell {
     -fx-background-color: #f8f9fa;
-    -fx-border-color: #dadce0;
+    -fx-border-color: #2c2c2c;
     -fx-border-width: 0 0 1 0;
-    -fx-min-width: 80;
-    -fx-pref-width: 80;
-    -fx-max-width: 80;
     -fx-min-height: 60;
     -fx-pref-height: 60;
     -fx-alignment: center;
+}
+
+/* ========== ENCABEZADO DEL DÍA ========== */
+.day-header {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #2c2c2c;
+    -fx-border-width: 0 1 1 0;
+    -fx-padding: 10 8 10 8;
+    -fx-alignment: center;
+    -fx-spacing: 4;
+    -fx-min-height: 60;
+    -fx-pref-height: 60;
+    -fx-min-width: 400;
+    -fx-pref-width: Region.USE_COMPUTED_SIZE;
+    -fx-max-width: Double.MAX_VALUE;
     -fx-background-insets: 0;
     -fx-border-insets: 0;
 }
 
-/* ========== ENCABEZADO DEL DÍA - SIN ESPACIOS ========== */
-.day-header {
+.day-header-first {
     -fx-background-color: #f8f9fa;
-    -fx-border-color: #dadce0;
-    -fx-border-width: 0 0 1 0;
-    -fx-padding: 8 15;
+    -fx-border-color: #ea4335;
+    -fx-border-width: 0 3 1 1;
+    -fx-padding: 10 8 10 8;
     -fx-alignment: center;
     -fx-spacing: 4;
     -fx-min-height: 60;
@@ -98,9 +109,9 @@
 }
 
 .day-header-name {
-    -fx-font-size: 12px;
-    -fx-font-weight: 600;
-    -fx-text-fill: #5f6368;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c2c2c;
     -fx-alignment: center;
     -fx-text-alignment: center;
     -fx-wrap-text: false;
@@ -108,11 +119,11 @@
 }
 
 .day-header-number {
-    -fx-font-size: 24px;
-    -fx-font-weight: 400;
-    -fx-text-fill: #3c4043;
-    -fx-min-width: 30;
-    -fx-min-height: 30;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c2c2c;
+    -fx-min-width: 26;
+    -fx-min-height: 26;
     -fx-alignment: center;
     -fx-text-alignment: center;
 }
@@ -120,33 +131,51 @@
 .day-header-today {
     -fx-background-color: #1a73e8;
     -fx-text-fill: white;
-    -fx-background-radius: 20;
-    -fx-font-weight: 500;
-    -fx-padding: 4 8;
+    -fx-background-radius: 50%;
+    -fx-font-weight: bold;
 }
 
-/* ========== ETIQUETAS DE HORA - SIN ESPACIOS ========== */
+/* ========== ETIQUETAS DE HORA  ========== */
 .hour-label {
     -fx-font-size: 11px;
-    -fx-text-fill: #70757a;
-    -fx-alignment: center-right;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c2c2c;
+    -fx-padding: 0 15 0 0;
+    -fx-alignment: center;
     -fx-background-color: #f8f9fa;
-    -fx-border-color: #dadce0;
+    -fx-border-color: #2c2c2c;
     -fx-border-width: 0 0 1 0;
     -fx-min-height: 60;
     -fx-pref-height: 60;
-    -fx-min-width: 150;
-    -fx-pref-width: 150;
-    -fx-max-width: 80;
+    -fx-min-width: 90;
+    -fx-pref-width: 90;
+    -fx-max-width: 90;
     -fx-background-insets: 0;
     -fx-border-insets: 0;
 }
 
-/* ========== CELDAS DE HORAS - COMPLETAMENTE SIN ESPACIOS ========== */
+/* ========== CELDAS DE HORAS ========== */
 .hour-cell {
     -fx-background-color: white;
-    -fx-border-color: #dadce0;
-    -fx-border-width: 0 0 1 0;
+    -fx-border-color: #2c2c2c;
+    -fx-border-width: 0 1 1 0;
+    -fx-padding: 4;
+    -fx-spacing: 2;
+    -fx-alignment: top-left;
+    -fx-min-height: 60;
+    -fx-pref-height: 60;
+    -fx-min-width: 400;
+    -fx-pref-width: Region.USE_COMPUTED_SIZE;
+    -fx-max-width: Double.MAX_VALUE;
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+}
+
+.hour-cell-first {
+    -fx-background-color: white;
+    -fx-border-color: #ea4335;
+    -fx-border-width: 0 3 1 1;
+    -fx-padding: 4;
     -fx-spacing: 2;
     -fx-alignment: top-left;
     -fx-min-height: 60;
@@ -165,24 +194,24 @@
 .hour-cell-selected {
     -fx-background-color: #e8f0fe;
     -fx-border-color: #1a73e8;
-    -fx-border-width: 0 0 1 2;
+    -fx-border-width: 0 1 1 1;
 }
 
 /* ========== EVENTOS ========== */
 .event-label {
-    -fx-font-size: 16px;
-    /*-fx-background-color: #4A90E2;*/
+    -fx-font-size: 11px;
     -fx-text-fill: white;
-    -fx-padding: 4 8;
-    -fx-background-radius: 8px;
-    -fx-border-radius: 8px;
-    -fx-font-weight: bold;
+    -fx-padding: 4 2;
+    -fx-background-radius: 2;
+    -fx-border-radius: 2;
+    -fx-border-color: rgba(0,0,0,0.1);
+    -fx-border-width: 1;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 4, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 3, 0, 0, 1);
     -fx-max-width: Double.MAX_VALUE;
     -fx-wrap-text: true;
     -fx-text-overrun: ellipsis;
-    -fx-alignment: center-left;
+    -fx-margin: 1 0;
 }
 
 .event-blue {
@@ -205,218 +234,320 @@
     -fx-background-color: #8e24aa;
 }
 
-.event-pink {
-    -fx-background-color: #e91e63;
-}
-
-.event-teal {
-    -fx-background-color: #00acc1;
-}
-
-.event-indigo {
-    -fx-background-color: #3f51b5;
-}
-
 .event-default {
     -fx-background-color: #757575;
 }
 
 .event-label:hover {
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 4, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 4, 0, 0, 2);
     -fx-scale-x: 1.02;
     -fx-scale-y: 1.02;
 }
 
-/* ========== LÍNEA DE HORA ACTUAL CON BOLITA ========== */
-.current-time-container {
-    -fx-alignment: center-left;
-    -fx-spacing: 0;
-    -fx-padding: 0;
-    -fx-max-width: Double.MAX_VALUE;
+.event-block {
+    -fx-background-color: #777;
+    -fx-text-fill: white;
+    -fx-padding: 4 2;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-font-size: 12px;
 }
 
-.current-time-indicator {
-    -fx-background-color: #ea4335;
-    -fx-background-radius: 50%;
-    -fx-min-width: 8;
-    -fx-min-height: 8;
-    -fx-max-width: 8;
-    -fx-max-height: 8;
-    -fx-effect: dropshadow(gaussian, rgba(234,67,53,0.6), 2, 0, 0, 0);
-}
-
+/* ========== LÍNEA DE HORA ACTUAL ========== */
 .current-time-line {
     -fx-background-color: #ea4335;
     -fx-min-height: 2;
     -fx-pref-height: 2;
     -fx-max-height: 2;
-    -fx-effect: dropshadow(gaussian, rgba(234,67,53,0.6), 2, 0, 0, 0);
-    -fx-hgrow: always;
-    -fx-max-width: Double.MAX_VALUE;
+    -fx-effect: dropshadow(gaussian, rgba(234,67,53,0.5), 2, 0, 0, 0);
 }
 
-/* ========== EFECTOS Y ANIMACIONES ========== */
-.day-header:hover {
-    -fx-background-color: #e8eaed;
+/* ========== HEADER CONTAINER  ========== */
+.header-container {
+    -fx-background-color: white;
+    -fx-padding: 0;
 }
 
-.hour-cell:hover {
-    -fx-cursor: crosshair;
+.header-grid {
+    -fx-background-color: white;
+    -fx-border-color: #2c2c2c;
+    -fx-grid-lines-visible: false;
 }
 
-/* ========== RESPONSIVE PARA VISTA DIARIA ========== */
-@media screen and (min-width: 1400px) {
-    .hour-cell {
-        -fx-min-width: 500;
-    }
-
-    .day-header {
-        -fx-min-width: 500;
-    }
-
-    .day-header-name {
-        -fx-font-size: 14px;
-    }
-
-    .day-header-number {
-        -fx-font-size: 28px;
-    }
-
-    .event-label {
-        -fx-font-size: 12px;
-    }
+.header-section {
+    -fx-background-color: white;
 }
 
-@media screen and (max-width: 1200px) {
-    .hour-cell {
-        -fx-min-width: 350;
-    }
-
-    .day-header {
-        -fx-min-width: 350;
-        -fx-padding: 6 12;
-    }
-
-    .day-header-name {
-        -fx-font-size: 11px;
-    }
-
-    .day-header-number {
-        -fx-font-size: 20px;
-    }
-
-    .corner-cell {
-        -fx-min-width: 70;
-        -fx-pref-width: 70;
-        -fx-max-width: 70;
-    }
-
-    .hour-label {
-        -fx-font-size: 10px;
-        -fx-min-width: 70;
-        -fx-pref-width: 70;
-        -fx-max-width: 70;
-    }
-
-    .event-label {
-        -fx-font-size: 10px;
-        -fx-padding: 3 6;
-    }
-}
-
-@media screen and (max-width: 900px) {
-    .hour-cell {
-        -fx-min-width: 300;
-    }
-
-    .day-header {
-        -fx-min-width: 300;
-        -fx-min-height: 50;
-        -fx-pref-height: 50;
-    }
-
-    .day-header-name {
-        -fx-font-size: 10px;
-    }
-
-    .day-header-number {
-        -fx-font-size: 18px;
-    }
-
-    .corner-cell {
-        -fx-min-width: 60;
-        -fx-pref-width: 60;
-        -fx-max-width: 60;
-        -fx-min-height: 50;
-        -fx-pref-height: 50;
-    }
-
-    .hour-label {
-        -fx-font-size: 9px;
-        -fx-min-width: 60;
-        -fx-pref-width: 60;
-        -fx-max-width: 60;
-        -fx-min-height: 50;
-        -fx-pref-height: 50;
-    }
-
-    .hour-cell {
-        -fx-min-height: 50;
-        -fx-pref-height: 50;
-    }
-}
-
-/* ========== TOOLTIPS ========== */
-.tooltip {
-    -fx-background-color: #2c2c2c;
-    -fx-text-fill: white;
-    -fx-font-size: 11px;
-    -fx-padding: 6 10;
-    -fx-background-radius: 4;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 3, 0, 0, 1);
-}
-
-/* ========== ESTADOS ESPECIALES ========== */
-.weekend-hour-cell {
-    -fx-background-color: #fafbff;
-}
-
-.all-day-events-area {
-    -fx-background-color: #f8f9fa;
-    -fx-border-color: #dadce0;
-    -fx-border-width: 0 0 1 0;
-    -fx-padding: 6;
-    -fx-spacing: 3;
-    -fx-min-height: 30;
-    -fx-pref-height: Region.USE_COMPUTED_SIZE;
-    -fx-max-height: 100;
-}
-
-.all-day-event {
-    -fx-background-radius: 12;
-    -fx-padding: 3 10;
-    -fx-font-size: 10px;
-    -fx-font-weight: 500;
-}
-
-/*logout */
-/* Botón de cierre de sesión */
-.profile-button {
-    -fx-background-color: transparent;
-    -fx-text-fill: #e53935; /* Color rojo para indicar acción de cierre */
-    -fx-alignment: CENTER_LEFT;
-    -fx-padding: 14px 15px;
-    -fx-cursor: hand;
-    -fx-graphic-text-gap: 12px;
-    -fx-font-family: -modern-font-family;
-    -fx-font-size: 15px;
-    -fx-font-weight: 500;
-    -fx-letter-spacing: -0.1px;
-    -fx-background-radius: 8px;
-    -fx-border-radius: 8px;
-}
-
-.profile-button:hover {
-    -fx-text-fill: #c62828; /* Rojo más oscuro al pasar el mouse */
+/* App Title */
+.app-title {
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 18px;
     -fx-font-weight: bold;
+}
+
+/* Botón Today */
+.today-button-modern {
+    -fx-background-color: white;
+    -fx-text-fill: #2c2c2c;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-padding: 8 24;
+    -fx-background-radius: 12;
+    -fx-border-color: #2c2c2c;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 2, 0, 0, 2);
+}
+
+.today-button-modern:hover {
+    -fx-background-color: #e3f2fd;
+    -fx-border-color: #1976d2;
+    -fx-text-fill: #1976d2;
+}
+
+/* Botones de navegación */
+.nav-arrow-modern {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+    -fx-padding: 8;
+}
+
+.nav-arrow-modern:hover {
+    -fx-text-fill: #1976d2;
+}
+
+/* Título del mes */
+.month-title-modern {
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-wrap-text: false;
+    -fx-text-overrun: none;
+    -fx-max-width: Double.MAX_VALUE;
+    -fx-min-width: Region.USE_PREF_SIZE;
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+}
+
+/* Botón cerrar */
+.close-btn-modern {
+    -fx-background-color: transparent;
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-padding: 4;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+}
+
+.close-btn-modern:hover {
+    -fx-text-fill: #d32f2f;
+}
+
+/* ========== SIDEBAR  ========== */
+.sidebar-modern {
+    -fx-background-color: white;
+    -fx-padding: 24;
+    -fx-spacing: 20;
+    -fx-border-color: #2c2c2c;
+    -fx-border-width: 0 1 0 0;
+}
+
+/* Botón Crear */
+.create-button-ultra-modern {
+    -fx-background-color: white;
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-padding: 12 40;
+    -fx-background-radius: 24;
+    -fx-border-color: #2c2c2c;
+    -fx-border-width: 1;
+    -fx-border-radius: 24;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 4, 0, 0, 4);
+}
+
+.create-button-ultra-modern:hover {
+    -fx-background-color: #e3f2fd;
+    -fx-border-color: #1976d2;
+    -fx-text-fill: #1976d2;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 6, 0, 0, 6);
+}
+
+/* View Section */
+.view-section-modern {
+    -fx-spacing: 8;
+}
+
+.view-option-modern {
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 8;
+    -fx-cursor: hand;
+}
+
+.view-option-active-modern {
+    -fx-text-fill: #1976d2;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 8;
+    -fx-cursor: hand;
+}
+
+.view-option-modern:hover {
+    -fx-background-color: #f5f5f5;
+    -fx-background-radius: 4;
+}
+
+/* Calendar Section */
+.calendar-section-modern {
+    -fx-spacing: 12;
+}
+
+.calendar-section-header-modern {
+    -fx-spacing: 6;
+}
+
+.section-arrow-modern {
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.section-header-modern {
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+/* Calendar Items */
+.calendar-item-modern {
+    -fx-spacing: 8;
+    -fx-padding: 6;
+}
+
+.calendar-item-modern:hover {
+    -fx-background-color: #f5f5f5;
+    -fx-background-radius: 4;
+}
+
+/* Checkboxes */
+.calendar-checkbox-books .box {
+    -fx-background-color: white;
+    -fx-border-color: #1E76E8;
+    -fx-border-width: 2;
+}
+
+.calendar-checkbox-books:selected .mark {
+    -fx-background-color: #1E76E8;
+}
+
+.calendar-checkbox-tasks .box {
+    -fx-background-color: white;
+    -fx-border-color: #2c2c2c;
+    -fx-border-width: 2;
+}
+
+.calendar-checkbox-tasks:selected .mark {
+    -fx-background-color: #2c2c2c;
+}
+
+.calendar-checkbox-personal .box {
+    -fx-background-color: white;
+    -fx-border-color: #53C925;
+    -fx-border-width: 2;
+}
+
+.calendar-checkbox-personal:selected .mark {
+    -fx-background-color: #53C925;
+}
+
+.calendar-checkbox-exams .box {
+    -fx-background-color: white;
+    -fx-border-color: #f2c51f;
+    -fx-border-width: 2;
+}
+
+.calendar-checkbox-exams:selected .mark {
+    -fx-background-color: #f2c51f;
+}
+
+/* Calendar Names */
+.calendar-name-books {
+    -fx-text-fill: #1E76E8;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.calendar-name-tasks {
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.calendar-name-personal {
+    -fx-text-fill: #53C925;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.calendar-name-exams {
+    -fx-text-fill: #f2c51f;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+/* Logout Button */
+.logout-button-modern {
+    -fx-background-color: transparent;
+    -fx-text-fill: #e53935;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 8;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+}
+
+.logout-button-modern:hover {
+    -fx-background-color: #ffebee;
+    -fx-background-radius: 4;
+}
+
+/* ========== RESPONSIVE ========== */
+@media screen and (min-width: 1600px) {
+    .day-header {
+        -fx-min-width: 500;
+    }
+
+    .hour-cell {
+        -fx-min-width: 500;
+    }
+
+    .day-header-name {
+        -fx-font-size: 13px;
+    }
+
+    .day-header-number {
+        -fx-font-size: 15px;
+    }
+}
+
+@media screen and (max-width: 1400px) {
+    .day-header {
+        -fx-min-width: 450;
+    }
+
+    .hour-cell {
+        -fx-min-width: 450;
+    }
+
+    .corner-cell {
+        -fx-min-width: 80;
+        -fx-pref-width: 80;
+        -fx-max-width: 80;
+    }
 }

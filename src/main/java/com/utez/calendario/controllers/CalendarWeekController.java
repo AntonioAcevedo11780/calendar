@@ -174,6 +174,12 @@ public class CalendarWeekController implements Initializable {
         for (int day = 0; day < 7; day++) {
             LocalDate date = startOfWeek.plusDays(day);
             VBox dayHeader = createDayHeader(dayNames[day], date);
+            if (day == 0) {
+                dayHeader.getStyleClass().add("day-header-first");
+            } else {
+                dayHeader.getStyleClass().add("day-header");
+            }
+
             calendarGrid.add(dayHeader, day + 1, 0);
         }
 
@@ -189,6 +195,12 @@ public class CalendarWeekController implements Initializable {
             for (int day = 0; day < 7; day++) {
                 LocalDate cellDate = startOfWeek.plusDays(day);
                 VBox hourCell = createHourCell(cellDate, actualHour);
+                if (day == 0) {
+                    hourCell.getStyleClass().add("hour-cell-first");
+                } else {
+                    hourCell.getStyleClass().add("hour-cell");
+                }
+
                 calendarGrid.add(hourCell, day + 1, hour + 1);
             }
         }
@@ -386,7 +398,7 @@ public class CalendarWeekController implements Initializable {
             String weekRange = startOfWeek.format(DateTimeFormatter.ofPattern("d MMM")) +
                     " - " +
                     endOfWeek.format(DateTimeFormatter.ofPattern("d MMM yyyy"));
-            monthYearLabel.setText(weekRange);
+            monthYearLabel.setText(weekRange.toUpperCase());
         }
     }
 

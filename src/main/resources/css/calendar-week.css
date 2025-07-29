@@ -99,6 +99,21 @@
     -fx-background-insets: 0;
     -fx-border-insets: 0;
 }
+.day-header-first {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #2c2c2c;
+    -fx-border-width: 0 1 1 1;
+    -fx-padding: 10 8 10 8;
+    -fx-alignment: center;
+    -fx-spacing: 6;
+    -fx-min-height: 60;
+    -fx-pref-height: 60;
+    -fx-min-width: 130;
+    -fx-pref-width: Region.USE_COMPUTED_SIZE;
+    -fx-max-width: Double.MAX_VALUE;
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+}
 
 .day-header-name {
     -fx-font-size: 11px;
@@ -108,6 +123,7 @@
     -fx-text-alignment: center;
     -fx-wrap-text: false;
     -fx-text-overrun: none;
+    -fx-text-transform: uppercase;
 }
 
 .day-header-number {
@@ -133,7 +149,7 @@
     -fx-font-weight: bold;
     -fx-text-fill: #2c2c2c;
     -fx-padding: 0 15 0 0;
-    -fx-alignment: center-right;
+    -fx-alignment: center;
     -fx-background-color: #f8f9fa;
     -fx-border-color: #2c2c2c;
     -fx-border-width: 0 1 1 0;
@@ -162,6 +178,21 @@
     -fx-background-insets: 0;
     -fx-border-insets: 0;
 }
+.hour-cell-first {
+    -fx-background-color: white;
+    -fx-border-color: #2c2c2c;
+    -fx-border-width: 0 1 1 1;
+    -fx-padding: 4;
+    -fx-spacing: 2;
+    -fx-alignment: top-left;
+    -fx-min-height: 60;
+    -fx-pref-height: 60;
+    -fx-min-width: 130;
+    -fx-pref-width: Region.USE_COMPUTED_SIZE;
+    -fx-max-width: Double.MAX_VALUE;
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+}
 
 .hour-cell-hover {
     -fx-background-color: #f1f3f4;
@@ -173,13 +204,13 @@
     -fx-border-width: 0 1 1 1;
 }
 
-/* ========== EVENTOS - MEJORADOS ========== */
+/* ========== EVENTOS ========== */
 .event-label {
     -fx-font-size: 11px;
     -fx-text-fill: white;
-    -fx-padding: 5 8; /* un poco más de padding arriba y abajo */
-    -fx-background-radius: 6;
-    -fx-border-radius: 6;
+    -fx-padding: 4 2;
+    -fx-background-radius: 2;
+    -fx-border-radius: 2;
     -fx-border-color: rgba(0,0,0,0.1);
     -fx-border-width: 1;
     -fx-cursor: hand;
@@ -187,8 +218,9 @@
     -fx-max-width: Double.MAX_VALUE;
     -fx-wrap-text: true;
     -fx-text-overrun: ellipsis;
-    -fx-margin: 3 0 3 0; /* para dar espacio vertical entre labels */
+    -fx-margin: 1 0;
 }
+
 
 
 .event-blue {
@@ -225,9 +257,9 @@
 .event-block {
     -fx-background-color: #777;
     -fx-text-fill: white;
-    -fx-padding: 4;
-    -fx-background-radius: 6;
-    -fx-border-radius: 6;
+    -fx-padding: 4 2;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
     -fx-font-size: 12px;
 }
 
