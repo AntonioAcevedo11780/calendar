@@ -169,7 +169,7 @@ public class LoginController implements Initializable {
 
             Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
 
-            double width = Math.min(750, screenBounds.getWidth() * 0.95);
+            double width = Math.min(850, screenBounds.getWidth() * 0.95);
             double height = Math.min(1100, screenBounds.getHeight() * 0.95);
 
             Stage userCreationStage = new Stage();
