@@ -22,6 +22,7 @@ import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.util.Duration;
 
 import java.io.IOException;
@@ -220,11 +221,15 @@ public class CalendarYearController implements Initializable {
         vbox.setPrefWidth(200);
         vbox.setAlignment(Pos.CENTER);
 
-        // Nombre del mes en mayúsculas
+        // Nombre del mes en mayúsculas clickeable para navegar al mes
         Label lblMonth = new Label(Month.of(month + 1).getDisplayName(TextStyle.FULL, new Locale("es")).toUpperCase());
         lblMonth.getStyleClass().add("mini-month-title");
+        lblMonth.getStyleClass().add("clickable-month"); // Nueva clase para estilo hover
         lblMonth.setMaxWidth(Double.MAX_VALUE);
         lblMonth.setAlignment(Pos.CENTER);
+
+        //Agregar evento de clic al nombre del mes
+        lblMonth.setOnMouseClicked(e -> navigateToMonth(month, 1));
 
         // Días de la semana
         HBox weekDays = new HBox(2);
@@ -276,7 +281,8 @@ public class CalendarYearController implements Initializable {
                     // Click handler para navegar al mes anterior
                     final int finalPrevMonth = month - 1 < 0 ? 11 : month - 1;
                     final int finalPrevDay = prevDay;
-                    dayLabel.setOnMouseClicked(e -> navigateToMonth(finalPrevMonth, finalPrevDay));
+                    final int finalPrevYear = month - 1 < 0 ? currentYear - 1 : currentYear;
+                    dayLabel.setOnMouseClicked(e -> navigateToSpecificMonthAndDay(finalPrevYear, finalPrevMonth, finalPrevDay));
 
                 } else if (dayNum <= lengthOfMonth) {
                     // Días del mes actual
@@ -297,7 +303,7 @@ public class CalendarYearController implements Initializable {
                     // Click handler para navegar al mes
                     final int finalMonth = month;
                     final int finalDay = dayNum;
-                    dayLabel.setOnMouseClicked(e -> navigateToMonth(finalMonth, finalDay));
+                    dayLabel.setOnMouseClicked(e -> navigateToSpecificMonthAndDay(currentYear, finalMonth, finalDay));
 
                     dayNum++;
                 } else {
@@ -308,7 +314,8 @@ public class CalendarYearController implements Initializable {
                     // Click handler para navegar al mes siguiente
                     final int finalNextMonth = month + 1 > 11 ? 0 : month + 1;
                     final int finalNextDay = nextMonthDay;
-                    dayLabel.setOnMouseClicked(e -> navigateToMonth(finalNextMonth, finalNextDay));
+                    final int finalNextYear = month + 1 > 11 ? currentYear + 1 : currentYear;
+                    dayLabel.setOnMouseClicked(e -> navigateToSpecificMonthAndDay(finalNextYear, finalNextMonth, finalNextDay));
 
                     nextMonthDay++;
                 }
@@ -327,11 +334,24 @@ public class CalendarYearController implements Initializable {
     }
 
     private void navigateToMonth(int month, int day) {
+        navigateToSpecificMonthAndDay(currentYear, month, day);
+    }
+
+    //  Navegación específica a un mes y día concretos
+    private void navigateToSpecificMonthAndDay(int year, int month, int day) {
         try {
             // Cargar la vista mensual
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/calendar-month.fxml"));
             Parent monthRoot = loader.load();
 
+            // Obtener el controlador y enviarle la fecha seleccionada
+            CalendarMonthController monthController = loader.getController();
+
+            // Navegar a la fecha específica utilizando el método del controlador mensual
+            LocalDate targetDate = LocalDate.of(year, month + 1, day);
+
+            // NOTA: Esta línea es crítica - navega específicamente a la fecha
+            monthController.navigateToDate(targetDate);
 
             // Cambiar la escena
             Stage stage = (Stage) yearGrid.getScene().getWindow();
@@ -339,9 +359,12 @@ public class CalendarYearController implements Initializable {
             scene.getStylesheets().add(getClass().getResource("/css/styles-month.css").toExternalForm());
             stage.setScene(scene);
 
+            System.out.println("Navegación exitosa a " + targetDate);
+
         } catch (IOException e) {
             System.err.println("Error navegando a vista mensual: " + e.getMessage());
             e.printStackTrace();
+            showAlert("Error", "No se pudo navegar a la vista mensual:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
@@ -396,7 +419,7 @@ public class CalendarYearController implements Initializable {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/event-dialog.fxml"));
             Parent dialogRoot = loader.load();
-            // EventDialogController dialogController = loader.getController();
+            EventDialogController dialogController = loader.getController();
 
             Runnable onEventChanged = () -> {
                 System.out.println("✓ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
@@ -404,8 +427,16 @@ public class CalendarYearController implements Initializable {
                 loadEventsFromDatabase();
             };
 
+            // Configurar el controlador según el modo
+            if ("CREATE".equals(mode)) {
+                dialogController.initializeForCreate(date, onEventChanged);
+            }
+
             Stage dialogStage = new Stage();
-            dialogStage.setTitle("UTEZ Calendar - Gestión de Eventos");
+
+           //Remover decoraciones de la ventana
+            dialogStage.initStyle(StageStyle.UNDECORATED);
+
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(createButton.getScene().getWindow());
             Scene dialogScene = new Scene(dialogRoot);
@@ -417,9 +448,11 @@ public class CalendarYearController implements Initializable {
             }
 
             dialogStage.setScene(dialogScene);
-            dialogStage.setResizable(true);
-            dialogStage.setMinWidth(600);
-            dialogStage.setMinHeight(500);
+            dialogStage.setResizable(false);
+
+            // Hacer la ventana arrastrable
+            makeDialogDraggable(dialogRoot, dialogStage);
+
             dialogStage.showAndWait();
 
         } catch (IOException e) {
@@ -428,6 +461,22 @@ public class CalendarYearController implements Initializable {
             showAlert("Error", "No se pudo abrir el diálogo de eventos:\n" + e.getMessage(),
                     Alert.AlertType.ERROR);
         }
+    }
+
+    // Hacer diálogo arrastrable
+    private void makeDialogDraggable(Parent root, Stage stage) {
+        final double[] xOffset = {0};
+        final double[] yOffset = {0};
+
+        root.setOnMousePressed(event -> {
+            xOffset[0] = event.getSceneX();
+            yOffset[0] = event.getSceneY();
+        });
+
+        root.setOnMouseDragged(event -> {
+            stage.setX(event.getScreenX() - xOffset[0]);
+            stage.setY(event.getScreenY() - yOffset[0]);
+        });
     }
 
     @FXML
@@ -522,10 +571,7 @@ public class CalendarYearController implements Initializable {
         alert.showAndWait();
     }
 
-
-
     /// ///CERRAR SESION
-
 
     //cosas para el logout
     @FXML
@@ -570,8 +616,9 @@ public class CalendarYearController implements Initializable {
             e.printStackTrace();
         }
     }
+
     @FXML
-    private  void handleLogout(){
+    private void handleLogout(){
         try {
             setStatus("Cerrando sesión...");
 
@@ -587,6 +634,4 @@ public class CalendarYearController implements Initializable {
             setStatus("Error al cerrar sesión");
         }
     }
-
-
 }

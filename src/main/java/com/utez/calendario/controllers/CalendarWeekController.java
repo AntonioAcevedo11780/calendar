@@ -19,6 +19,7 @@ import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 import java.io.IOException;
 import java.net.URL;
@@ -250,18 +251,16 @@ public class CalendarWeekController implements Initializable {
         cell.setAlignment(Pos.TOP_LEFT);
         cell.setSpacing(2);
 
-        // Aquí llamamos al nuevo método
-        //renderEventsForHour(cell, date, hour);
-
         // Hover
         cell.setOnMouseEntered(e -> cell.getStyleClass().add("hour-cell-hover"));
         cell.setOnMouseExited(e -> cell.getStyleClass().remove("hour-cell-hover"));
 
-        // Doble click para crear evento
+        //Click para crear evento con hora específica
         cell.setOnMouseClicked(e -> {
-            if (e.getClickCount() == 2) {
-                LocalDateTime clickDateTime = LocalDateTime.of(date, LocalTime.of(hour, 0));
-                openEventDialogForCreate(clickDateTime.toLocalDate());
+            if (e.getClickCount() == 1) {
+                LocalTime startTime = LocalTime.of(hour, 0);
+                LocalTime endTime = LocalTime.of(hour + 1, 0);
+                openEventDialogWithTime(date, startTime, endTime);
             }
         });
 
@@ -294,23 +293,33 @@ public class CalendarWeekController implements Initializable {
                 double height = Math.max(rowHeight * 0.5, endY - startY);
                 double x = 60 + day * colWidth; // 60 = ancho de columna de horas
 
+                // Crear un contenedor para el bloque de evento
+                VBox eventContainer = new VBox();
+                eventContainer.setLayoutX(x);
+                double headerHeight = 60; // coincide con .day-header
+                eventContainer.setLayoutY(startY + headerHeight);
+                eventContainer.setPrefWidth(colWidth);
+                eventContainer.setPrefHeight(height);
+                eventContainer.getStyleClass().addAll("event-container");
+
                 Label eventBlock = new Label(event.getTitle() + " (" +
                         start.format(DateTimeFormatter.ofPattern("HH:mm")) + " - " +
                         end.format(DateTimeFormatter.ofPattern("HH:mm")) + ")");
                 eventBlock.getStyleClass().addAll("event-label", "event-block");
-                eventBlock.setLayoutX(x);
-                double headerHeight = 60; // coincide con .day-header
-                eventBlock.setLayoutY(startY + headerHeight);
-
                 eventBlock.setPrefWidth(colWidth);
                 eventBlock.setPrefHeight(height);
 
-                eventOverlay.getChildren().add(eventBlock);
+                //Añadir evento de clic para abrir el evento específico
+                final Event currentEvent = event;
+                eventContainer.setOnMouseClicked(e -> {
+                    openSpecificEvent(currentEvent);
+                });
+
+                eventContainer.getChildren().add(eventBlock);
+                eventOverlay.getChildren().add(eventContainer);
             }
         }
     }
-
-
 
     private boolean shouldShowEvent(Event event) {
         String calendarId = event.getCalendarId();
@@ -353,11 +362,10 @@ public class CalendarWeekController implements Initializable {
                 eventLabel.getStyleClass().add("event-default");
         }
 
-        // Click para ver/editar evento
+        //Click para abrir evento específico
+        final Event currentEvent = event;
         eventLabel.setOnMouseClicked(e -> {
-            if (e.getClickCount() == 1) {
-                openEventDialogForRead(event.getStartDate().toLocalDate());
-            }
+            openSpecificEvent(currentEvent);
         });
 
         return eventLabel;
@@ -444,17 +452,23 @@ public class CalendarWeekController implements Initializable {
         }
     }
 
-    private void openEventDialogForCreate(LocalDate date) {
+    //  Abrir diálogo con tiempo específico
+    private void openEventDialogWithTime(LocalDate date, LocalTime startTime, LocalTime endTime) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/event-dialog.fxml"));
             Parent dialogRoot = loader.load();
-            com.utez.calendario.controllers.EventDialogController dialogController = loader.getController();
+            EventDialogController dialogController = loader.getController();
 
             Runnable onEventChanged = this::loadEventsFromDatabase;
-            dialogController.initializeForCreate(date, onEventChanged);
+
+            // Usar el método específico para crear con tiempo
+            dialogController.initializeForCreateWithTime(date, startTime, endTime, onEventChanged);
 
             Stage dialogStage = new Stage();
-            dialogStage.setTitle("UTEZ Calendar - Crear Evento");
+
+            // Remover decoraciones de la ventana
+            dialogStage.initStyle(StageStyle.UNDECORATED);
+
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(createButton.getScene().getWindow());
             Scene dialogScene = new Scene(dialogRoot);
@@ -464,9 +478,104 @@ public class CalendarWeekController implements Initializable {
             } catch (Exception ignored) {}
 
             dialogStage.setScene(dialogScene);
-            dialogStage.setResizable(true);
-            dialogStage.setMinWidth(600);
-            dialogStage.setMinHeight(500);
+            dialogStage.setResizable(false);
+
+            // Hacer la ventana arrastrable
+            makeDialogDraggable(dialogRoot, dialogStage);
+
+            dialogStage.showAndWait();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Error", "No se pudo abrir el diálogo de eventos: " + e.getMessage(),
+                    Alert.AlertType.ERROR);
+        }
+    }
+
+    // Abrir evento específico
+    private void openSpecificEvent(Event event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/event-dialog.fxml"));
+            Parent dialogRoot = loader.load();
+            EventDialogController dialogController = loader.getController();
+
+            Runnable onEventChanged = this::loadEventsFromDatabase;
+
+            // Usar el método para visualizar evento específico
+            dialogController.initializeForViewEvent(event, onEventChanged);
+
+            Stage dialogStage = new Stage();
+
+            // Remover decoraciones de la ventana
+            dialogStage.initStyle(StageStyle.UNDECORATED);
+
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(createButton.getScene().getWindow());
+            Scene dialogScene = new Scene(dialogRoot);
+
+            try {
+                dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
+            } catch (Exception ignored) {}
+
+            dialogStage.setScene(dialogScene);
+            dialogStage.setResizable(false);
+
+            // Hacer la ventana arrastrable
+            makeDialogDraggable(dialogRoot, dialogStage);
+
+            dialogStage.showAndWait();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Error", "No se pudo abrir el evento: " + e.getMessage(),
+                    Alert.AlertType.ERROR);
+        }
+    }
+
+    // Hacer diálogo arrastrable
+    private void makeDialogDraggable(Parent root, Stage stage) {
+        final double[] xOffset = {0};
+        final double[] yOffset = {0};
+
+        root.setOnMousePressed(event -> {
+            xOffset[0] = event.getSceneX();
+            yOffset[0] = event.getSceneY();
+        });
+
+        root.setOnMouseDragged(event -> {
+            stage.setX(event.getScreenX() - xOffset[0]);
+            stage.setY(event.getScreenY() - yOffset[0]);
+        });
+    }
+
+    private void openEventDialogForCreate(LocalDate date) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/event-dialog.fxml"));
+            Parent dialogRoot = loader.load();
+            EventDialogController dialogController = loader.getController();
+
+            Runnable onEventChanged = this::loadEventsFromDatabase;
+            dialogController.initializeForCreate(date, onEventChanged);
+
+            Stage dialogStage = new Stage();
+
+            // Remover decoraciones de la ventana
+            dialogStage.initStyle(StageStyle.UNDECORATED);
+
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(createButton.getScene().getWindow());
+            Scene dialogScene = new Scene(dialogRoot);
+
+            try {
+                dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
+            } catch (Exception ignored) {}
+
+            dialogStage.setScene(dialogScene);
+            dialogStage.setResizable(false);
+
+            // Hacer la ventana arrastrable
+            makeDialogDraggable(dialogRoot, dialogStage);
+
             dialogStage.showAndWait();
 
         } catch (IOException e) {
@@ -480,13 +589,16 @@ public class CalendarWeekController implements Initializable {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/event-dialog.fxml"));
             Parent dialogRoot = loader.load();
-            com.utez.calendario.controllers.EventDialogController dialogController = loader.getController();
+            EventDialogController dialogController = loader.getController();
 
             Runnable onEventChanged = this::loadEventsFromDatabase;
             dialogController.initializeForRead(date, onEventChanged);
 
             Stage dialogStage = new Stage();
-            dialogStage.setTitle("UTEZ Calendar - Ver Eventos");
+
+            // Remover decoraciones de la ventana
+            dialogStage.initStyle(StageStyle.UNDECORATED);
+
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(createButton.getScene().getWindow());
             Scene dialogScene = new Scene(dialogRoot);
@@ -496,9 +608,11 @@ public class CalendarWeekController implements Initializable {
             } catch (Exception ignored) {}
 
             dialogStage.setScene(dialogScene);
-            dialogStage.setResizable(true);
-            dialogStage.setMinWidth(600);
-            dialogStage.setMinHeight(500);
+            dialogStage.setResizable(false);
+
+            // Hacer la ventana arrastrable
+            makeDialogDraggable(dialogRoot, dialogStage);
+
             dialogStage.showAndWait();
 
         } catch (IOException e) {
@@ -644,6 +758,4 @@ public class CalendarWeekController implements Initializable {
             setStatus("Error al cerrar sesión");
         }
     }
-
-
 }
