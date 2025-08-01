@@ -112,7 +112,7 @@
 
 /* Eventos dentro de las celdas */
 .event-item {
-    -fx-text-fill: white;
+    -fx-text-fill: black;
     -fx-background-radius: 4;
     -fx-padding: 2 6;
     -fx-font-size: 10px;

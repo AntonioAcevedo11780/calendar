@@ -207,7 +207,7 @@
 /* ========== EVENTOS ========== */
 .event-label {
     -fx-font-size: 11px;
-    -fx-text-fill: white;
+    -fx-text-fill: black;
     -fx-padding: 4 2;
     -fx-background-radius: 2;
     -fx-border-radius: 2;
@@ -256,7 +256,7 @@
 
 .event-block {
     -fx-background-color: #777;
-    -fx-text-fill: white;
+    -fx-text-fill: black;
     -fx-padding: 4 2;
     -fx-background-radius: 0;
     -fx-border-radius: 0;

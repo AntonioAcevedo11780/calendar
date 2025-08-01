@@ -200,7 +200,7 @@
 /* ========== EVENTOS ========== */
 .event-label {
     -fx-font-size: 11px;
-    -fx-text-fill: white;
+    -fx-text-fill: black;
     -fx-padding: 4 2;
     -fx-background-radius: 2;
     -fx-border-radius: 2;
@@ -213,6 +213,19 @@
     -fx-text-overrun: ellipsis;
     -fx-margin: 1 0;
 }
+
+
+.all-day-event {
+    -fx-font-size: 20px;
+    -fx-text-fill: black;
+    -fx-alignment: center;
+    -fx-padding: 4 2;
+    -fx-background-radius: 2;
+    /*-fx-border-color: #f57f17;*/
+    -fx-border-width: 1;
+}
+
+
 
 .event-blue {
     -fx-background-color: #1976d2;

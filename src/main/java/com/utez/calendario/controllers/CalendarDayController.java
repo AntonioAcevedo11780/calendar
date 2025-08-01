@@ -175,7 +175,6 @@ public class CalendarDayController implements Initializable {
         // Celda vacía para esquina superior izquierda
         Label cornerLabel = new Label("");
         cornerLabel.getStyleClass().add("corner-cell");
-        // ASEGURAR QUE NO HAYA MARGINS
         GridPane.setMargin(cornerLabel, new javafx.geometry.Insets(0));
         calendarGrid.add(cornerLabel, 0, 0);
 
@@ -188,35 +187,46 @@ public class CalendarDayController implements Initializable {
         for (int hour = 0; hour < TOTAL_HOURS; hour++) {
             int actualHour = START_HOUR + hour;
 
-            // Etiqueta de hora
             Label hourLabel = createHourLabel(actualHour);
             GridPane.setMargin(hourLabel, new javafx.geometry.Insets(0));
             calendarGrid.add(hourLabel, 0, hour + 1);
 
-            // Celda para esta hora
             VBox hourCell = createHourCell(actualHour);
             GridPane.setMargin(hourCell, new javafx.geometry.Insets(0));
             calendarGrid.add(hourCell, 1, hour + 1);
         }
 
-        // Mostrar eventos con rowspan (un solo bloque por evento)
+        // Mostrar eventos (incluyendo todo el día)
         for (Event event : events) {
-            if (shouldShowEvent(event)) {
-                LocalDateTime start = event.getStartDate();
-                LocalDateTime end = event.getEndDate();
+            if (!shouldShowEvent(event)) continue;
+            if (!event.getStartDate().toLocalDate().equals(currentDate)) continue;
 
-                if (!start.toLocalDate().equals(currentDate)) continue;
-
-                int startHour = start.getHour();
-                int endHour = end.getHour();
-
-                int rowIndex = startHour + 1; // +1 por encabezado
-                int rowSpan = Math.max(1, endHour - startHour);
-                //int rowSpan = Math.max(1, endHour - startHour + 1);
-
+            if (event.isAllDay()) {
+                int rowIndex = 1;  // debajo del encabezado
+                int rowSpan = TOTAL_HOURS;
 
                 Label eventLabel = createEventLabel(event);
-                eventLabel.setMinHeight(60 * rowSpan); // Ajustar altura visual (opcional)
+                eventLabel.getStyleClass().add("all-day-event");
+
+                eventLabel.setMinHeight((60 * TOTAL_HOURS) ); // -2 para evitar que sobresalga
+
+
+                GridPane.setRowIndex(eventLabel, rowIndex);
+                GridPane.setColumnIndex(eventLabel, 1);
+                GridPane.setRowSpan(eventLabel, rowSpan);
+
+                calendarGrid.getChildren().add(eventLabel);
+            }
+            else {
+                // === EVENTO NORMAL ===
+                int startHour = event.getStartDate().getHour();
+                int endHour = event.getEndDate().getHour();
+                int rowIndex = startHour + 1;
+                int rowSpan = Math.max(1, endHour - startHour);
+
+                Label eventLabel = createEventLabel(event);
+                eventLabel.setMinHeight(60 * rowSpan);
+
                 GridPane.setRowIndex(eventLabel, rowIndex);
                 GridPane.setColumnIndex(eventLabel, 1);
                 GridPane.setRowSpan(eventLabel, rowSpan);
@@ -225,15 +235,15 @@ public class CalendarDayController implements Initializable {
             }
         }
 
-
         // Agregar línea de hora actual si es hoy
         if (currentDate.equals(LocalDate.now())) {
             addCurrentTimeLine();
         }
 
         System.out.println("✓ Vista diaria creada para: " + currentDate + " con " + TOTAL_HOURS + " horas");
-
     }
+
+
 
     private VBox createDayHeader() {
         VBox header = new VBox();
@@ -374,8 +384,8 @@ public class CalendarDayController implements Initializable {
         String startTime = event.getStartDate().toLocalTime().format(timeFormatter);
         String endTime = event.getEndDate().toLocalTime().format(timeFormatter);
 
-        String timeRange = "[" + startTime + " - " + endTime + "]";
-        String labelText = timeRange + "\n" + event.getTitle();
+
+        String labelText = event.getTitle()  + " (" + startTime + " - " + endTime + ")" ;
 
         Label eventLabel = new Label(labelText);
         eventLabel.getStyleClass().add("event-label");
@@ -546,6 +556,11 @@ public class CalendarDayController implements Initializable {
     }
 
     // ========== NAVEGACIÓN ENTRE VISTAS ==========
+
+    @FXML
+    private HBox allDayEventsPane;
+
+
     @FXML
     private void handleDayView() {
         // Ya estamos en vista diaria
