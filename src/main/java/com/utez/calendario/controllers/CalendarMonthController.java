@@ -23,12 +23,14 @@ import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.util.Duration;
 
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
@@ -325,60 +327,93 @@ public class CalendarMonthController implements Initializable {
         currentYearMonth = currentYearMonth.plusMonths(1);
         loadEventsFromDatabase();
     }
-
     @FXML
     private void handleCreateButton() {
         if (authService.getCurrentUser() != null) {
-            openEventDialog("CREATE", selectedDate != null ? selectedDate : LocalDate.now());
+            LocalDate dateToUse = selectedDate != null ? selectedDate : LocalDate.now();
+            openEventDialog("CREATE", dateToUse);
         } else {
             showAlert("Error", "No hay usuario logueado", Alert.AlertType.ERROR);
         }
+    }
+
+    private void handleDateClick(LocalDate date) {
+        selectedDate = date;
+        if (date.getMonth() != currentYearMonth.getMonth() || date.getYear() != currentYearMonth.getYear()) {
+            currentYearMonth = YearMonth.from(date);
+            loadEventsFromDatabase();
+        } else {
+            updateCalendarView();
+        }
+
+        openEventDialog("READ", date);
     }
 
     private void openEventDialog(String mode, LocalDate date) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/event-dialog.fxml"));
             Parent dialogRoot = loader.load();
-            com.utez.calendario.controllers.EventDialogController dialogController = loader.getController();
+            EventDialogController dialogController = loader.getController();
 
             Runnable onEventChanged = () -> {
-                System.out.println("✓ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
-                        "Recargando eventos tras cambio");
+                System.out.println("✓ Recargando eventos tras cambio");
                 loadEventsFromDatabase();
             };
 
+            // Configurar el controlador según el modo
             if ("CREATE".equals(mode)) {
                 dialogController.initializeForCreate(date, onEventChanged);
-            } else {
+            } else if ("READ".equals(mode)) {
                 dialogController.initializeForRead(date, onEventChanged);
             }
 
             Stage dialogStage = new Stage();
-            dialogStage.setTitle("UTEZ Calendar - Gestión de Eventos");
+
+            // ✨ CLAVE: Remover decoraciones de la ventana
+            dialogStage.initStyle(StageStyle.UNDECORATED);
+
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(createButton.getScene().getWindow());
+
             Scene dialogScene = new Scene(dialogRoot);
 
             // Cargar estilos CSS
             try {
                 dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
             } catch (Exception ignored) {
-                System.out.println(" No se pudo cargar CSS para el diálogo");
+                System.out.println("No se pudo cargar CSS para el diálogo");
             }
 
             dialogStage.setScene(dialogScene);
-            dialogStage.setResizable(true);
-            dialogStage.setMinWidth(600);
-            dialogStage.setMinHeight(500);
+            dialogStage.setResizable(false); // Desactivar redimensionado para mejor apariencia
+
+            // ✨ Hacer la ventana arrastrable
+            makeDialogDraggable(dialogRoot, dialogStage);
+
             dialogStage.showAndWait();
 
         } catch (IOException e) {
-            System.err.println("✗ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
-                    "Error abriendo diálogo: " + e.getMessage());
+            System.err.println("Error abriendo diálogo: " + e.getMessage());
             e.printStackTrace();
             showAlert("Error", "No se pudo abrir el diálogo de eventos:\n" + e.getMessage(),
                     Alert.AlertType.ERROR);
         }
+    }
+
+    // Método para hacer arrastrable el diálogo
+    private void makeDialogDraggable(Parent root, Stage stage) {
+        final double[] xOffset = {0};
+        final double[] yOffset = {0};
+
+        root.setOnMousePressed(event -> {
+            xOffset[0] = event.getSceneX();
+            yOffset[0] = event.getSceneY();
+        });
+
+        root.setOnMouseDragged(event -> {
+            stage.setX(event.getScreenX() - xOffset[0]);
+            stage.setY(event.getScreenY() - yOffset[0]);
+        });
     }
 
     @FXML
@@ -589,20 +624,90 @@ public class CalendarMonthController implements Initializable {
         updateStatusBar();
     }
 
-    private void handleDateClick(LocalDate date) {
-        selectedDate = date;
-        if (date.getMonth() != currentYearMonth.getMonth() || date.getYear() != currentYearMonth.getYear()) {
-            currentYearMonth = YearMonth.from(date);
-            loadEventsFromDatabase();
-        } else {
-            updateCalendarView();
-        }
+    /**
+     * Abre el diálogo para crear un evento con hora específica
+     */
+    private void openEventDialogWithTime(LocalDate date, LocalTime startTime, LocalTime endTime) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/event-dialog.fxml"));
+            Parent dialogRoot = loader.load();
+            EventDialogController dialogController = loader.getController();
 
-        // Abrir diálogo según si hay eventos o no
-        if (events.containsKey(date)) {
-            openEventDialog("READ", date);
-        } else {
-            openEventDialog("CREATE", date);
+            Runnable onEventChanged = () -> {
+                System.out.println("✓ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                        "Recargando eventos tras cambio");
+                loadEventsFromDatabase();
+            };
+
+            // Usar el método específico para crear con tiempo
+            dialogController.initializeForCreateWithTime(date, startTime, endTime, onEventChanged);
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("UTEZ Calendar - Nuevo Evento");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(createButton.getScene().getWindow());
+            Scene dialogScene = new Scene(dialogRoot);
+
+            try {
+                dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
+            } catch (Exception ignored) {
+                System.out.println("No se pudo cargar CSS para el diálogo");
+            }
+
+            dialogStage.setScene(dialogScene);
+            dialogStage.setResizable(true);
+            dialogStage.setMinWidth(600);
+            dialogStage.setMinHeight(500);
+            dialogStage.showAndWait();
+
+        } catch (IOException e) {
+            System.err.println("Error abriendo diálogo con tiempo: " + e.getMessage());
+            e.printStackTrace();
+            showAlert("Error", "No se pudo abrir el diálogo de eventos:\n" + e.getMessage(),
+                    Alert.AlertType.ERROR);
+        }
+    }
+    /**
+     * Abre el diálogo para visualizar un evento específico
+     */
+    public void openSpecificEvent(Event event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/event-dialog.fxml"));
+            Parent dialogRoot = loader.load();
+            EventDialogController dialogController = loader.getController();
+
+            Runnable onEventChanged = () -> {
+                System.out.println("✓ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                        "Recargando eventos tras cambio");
+                loadEventsFromDatabase();
+            };
+
+            // Usar el método para visualizar evento específico
+            dialogController.initializeForViewEvent(event, onEventChanged);
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("UTEZ Calendar - " + event.getTitle());
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(createButton.getScene().getWindow());
+            Scene dialogScene = new Scene(dialogRoot);
+
+            try {
+                dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
+            } catch (Exception ignored) {
+                System.out.println("No se pudo cargar CSS para el diálogo");
+            }
+
+            dialogStage.setScene(dialogScene);
+            dialogStage.setResizable(true);
+            dialogStage.setMinWidth(600);
+            dialogStage.setMinHeight(500);
+            dialogStage.showAndWait();
+
+        } catch (IOException e) {
+            System.err.println("Error abriendo evento específico: " + e.getMessage());
+            e.printStackTrace();
+            showAlert("Error", "No se pudo abrir el evento:\n" + e.getMessage(),
+                    Alert.AlertType.ERROR);
         }
     }
 

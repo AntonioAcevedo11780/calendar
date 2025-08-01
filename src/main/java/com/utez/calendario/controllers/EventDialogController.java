@@ -10,10 +10,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.geometry.Pos;
 
 import java.net.URL;
 import java.time.*;
@@ -22,29 +20,49 @@ import java.util.*;
 
 public class EventDialogController implements Initializable {
 
-    @FXML private Label modeLabel;
+    // Elementos del header
+    @FXML private Label dialogTitle;
+    @FXML private Button closeButton;
+
+    // Elementos de la vista (visualización de evento)
+    @FXML private ScrollPane eventViewScrollPane;
+    @FXML private VBox eventViewContainer;
+    @FXML private Label eventTimeLabel;
+    @FXML private HBox locationViewRow;
+    @FXML private Label eventLocationLabel;
+    @FXML private HBox descriptionViewContainer;
+    @FXML private Label eventDescriptionLabel;
+    @FXML private Label eventCalendarLabel;
+    @FXML private Label createdByLabel;
+    @FXML private HBox viewButtonContainer;
+    @FXML private Button editButton;
+    @FXML private Button deleteViewButton;
+
+    // Elementos del formulario (creación/edición)
+    @FXML private ScrollPane eventFormScrollPane;
+    @FXML private VBox eventFormContainer;
     @FXML private TextField titleField;
-    @FXML private TextArea descriptionArea;
-    @FXML private TextField locationField;
-    @FXML private ComboBox<String> calendarComboBox;
     @FXML private DatePicker datePicker;
-    @FXML private TextField startTimeField;
-    @FXML private TextField endTimeField;
+    @FXML private ComboBox<String> startTimeComboBox;
+    @FXML private ComboBox<String> endTimeComboBox;
     @FXML private CheckBox allDayCheckBox;
+    @FXML private Button addGuestsFormButton;
+    @FXML private TextField locationField;
+    @FXML private TextArea descriptionArea;
+    @FXML private ComboBox<String> calendarComboBox;
+    @FXML private HBox formButtonContainer;
+    @FXML private Button cancelButton;
     @FXML private Button saveButton;
     @FXML private Button updateButton;
-    @FXML private Button deleteButton;
-    @FXML private Button cancelButton;
-    @FXML private VBox eventFormContainer;
-    @FXML private VBox eventListContainer;
-    @FXML private ListView<Event> eventListView;
+    @FXML private Button deleteFormButton;
 
     private EventService eventService;
     private AuthService authService;
-    private String mode = "CREATE";
+    private String mode = "CREATE"; // CREATE, VIEW, EDIT
     private Event currentEvent;
     private LocalDate selectedDate;
-    private Map<String, Event> eventsMap;
+    private LocalTime selectedStartTime;
+    private LocalTime selectedEndTime;
     private Runnable onEventChanged;
     private boolean calendarInitialized = false;
 
@@ -52,9 +70,8 @@ public class EventDialogController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         eventService = EventService.getInstance();
         authService = AuthService.getInstance();
-        eventsMap = new HashMap<>();
 
-        // Inicializar los calendarios del usuario para evitar problemas de FK
+        // Inicializar calendarios del usuario
         String userId = authService.getCurrentUser().getUserId();
         eventService.initializeUserCalendarsAsync(userId)
                 .thenRun(() -> {
@@ -72,113 +89,158 @@ public class EventDialogController implements Initializable {
         setupEventHandlers();
     }
 
+    /**
+     * Inicializa el diálogo para crear un nuevo evento
+     */
     public void initializeForCreate(LocalDate date, Runnable onEventChanged) {
         this.mode = "CREATE";
         this.selectedDate = date;
         this.onEventChanged = onEventChanged;
 
-        modeLabel.setText("Crear Nuevo Evento - " + date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-        eventFormContainer.setVisible(true);
-        eventListContainer.setVisible(false);
-        saveButton.setVisible(true);
-        updateButton.setVisible(false);
-        deleteButton.setVisible(false);
+        dialogTitle.setText("Nuevo evento");
+        showFormView();
 
-        // Establecer fecha seleccionada
+        // Configurar fecha seleccionada
         datePicker.setValue(date);
 
-        // Establecer horario predeterminado
-        startTimeField.setText("08:00");
-        endTimeField.setText("09:00");
+        // Configurar horarios por defecto
+        if (startTimeComboBox != null) {
+            startTimeComboBox.setValue("09:00");
+        }
+        if (endTimeComboBox != null) {
+            endTimeComboBox.setValue("10:00");
+        }
+
+        // Si se proporcionaron horas específicas, usarlas
+        if (selectedStartTime != null && startTimeComboBox != null) {
+            startTimeComboBox.setValue(selectedStartTime.format(DateTimeFormatter.ofPattern("HH:mm")));
+        }
+        if (selectedEndTime != null && endTimeComboBox != null) {
+            endTimeComboBox.setValue(selectedEndTime.format(DateTimeFormatter.ofPattern("HH:mm")));
+        }
     }
 
+    /**
+     * Inicializa el diálogo para crear un evento con hora específica
+     */
+    public void initializeForCreateWithTime(LocalDate date, LocalTime startTime, LocalTime endTime, Runnable onEventChanged) {
+        this.selectedStartTime = startTime;
+        this.selectedEndTime = endTime;
+        initializeForCreate(date, onEventChanged);
+    }
+
+    /**
+     * Inicializa el diálogo para ver eventos de una fecha
+     */
     public void initializeForRead(LocalDate date, Runnable onEventChanged) {
-        this.mode = "VIEW";
+        this.mode = "VIEW_LIST";
         this.selectedDate = date;
         this.onEventChanged = onEventChanged;
-
-        modeLabel.setText("Eventos para " + date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-        eventFormContainer.setVisible(false);
-        eventListContainer.setVisible(true);
 
         loadEventsForDate(date);
     }
 
+    /**
+     * Inicializa el diálogo para ver un evento específico
+     */
+    public void initializeForViewEvent(Event event, Runnable onEventChanged) {
+        this.mode = "VIEW";
+        this.currentEvent = event;
+        this.selectedDate = event.getStartDate().toLocalDate();
+        this.onEventChanged = onEventChanged;
+        dialogTitle.setText(event.getTitle());
+        showEventView();
+        loadEventToView(event);
+    }
+
+    /**
+     * Inicializa el diálogo para editar un evento
+     */
     public void initializeForEdit(Event event, Runnable onEventChanged) {
-        this.mode = "UPDATE";
+        this.mode = "EDIT";
         this.currentEvent = event;
         this.selectedDate = event.getStartDate().toLocalDate();
         this.onEventChanged = onEventChanged;
 
-        modeLabel.setText("Editar Evento - " + event.getTitle());
-        eventFormContainer.setVisible(true);
-        eventListContainer.setVisible(false);
-        saveButton.setVisible(false);
-        updateButton.setVisible(true);
-        deleteButton.setVisible(true);
-
+        dialogTitle.setText("Editar evento");
+        showFormView();
         loadEventToForm(event);
     }
 
     private void setupComponents() {
-        // Configurar la lista de eventos
-        if (eventListView != null) {
-            eventListView.setCellFactory(param -> new ListCell<Event>() {
-                @Override
-                protected void updateItem(Event event, boolean empty) {
-                    super.updateItem(event, empty);
-                    if (empty || event == null) {
-                        setText(null);
-                        setGraphic(null);
-                    } else {
-                        VBox container = new VBox(5);
-                        container.getStyleClass().add("event-item");
-
-                        Label titleLabel = new Label(event.getTitle());
-                        titleLabel.getStyleClass().add("event-title");
-
-                        String timeText = formatEventTime(event);
-                        Label timeLabel = new Label(timeText);
-                        timeLabel.getStyleClass().add("event-time");
-
-                        HBox buttonBox = new HBox(10);
-                        Button editButton = new Button("Editar");
-                        editButton.getStyleClass().add("edit-button");
-                        editButton.setOnAction(e -> handleEditEvent(event));
-
-                        Button deleteButton = new Button("Eliminar");
-                        deleteButton.getStyleClass().add("delete-button");
-                        deleteButton.setOnAction(e -> handleDeleteEvent(event));
-
-                        buttonBox.getChildren().addAll(editButton, deleteButton);
-                        buttonBox.setAlignment(Pos.CENTER_RIGHT);
-                        HBox.setHgrow(buttonBox, Priority.ALWAYS);
-
-                        container.getChildren().addAll(titleLabel, timeLabel, buttonBox);
-                        setGraphic(container);
-                    }
-                }
-            });
-        }
-
         // Configurar DatePicker
         if (datePicker != null) {
             datePicker.setValue(LocalDate.now());
         }
 
+        // Configurar ComboBox de tiempo
+        setupTimeComboBoxes();
+
         // Configurar CheckBox para todo el día
         if (allDayCheckBox != null) {
             allDayCheckBox.setSelected(false);
             allDayCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
-                startTimeField.setDisable(newVal);
-                endTimeField.setDisable(newVal);
+                startTimeComboBox.setDisable(newVal);
+                endTimeComboBox.setDisable(newVal);
 
                 if (newVal) {
-                    startTimeField.setText("00:00");
-                    endTimeField.setText("23:59");
+                    startTimeComboBox.setValue("00:00");
+                    endTimeComboBox.setValue("23:59");
                 } else {
-                    startTimeField.setText("08:00");
-                    endTimeField.setText("09:00");
+                    startTimeComboBox.setValue("09:00");
+                    endTimeComboBox.setValue("10:00");
+                }
+            });
+        }
+    }
+    private String formatEventDate(Event event) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM", new Locale("es", "ES"));
+        String dateText = event.getStartDate().toLocalDate().format(formatter);
+
+        if (dateText.length() > 0) {
+            dateText = dateText.substring(0, 1).toUpperCase() + dateText.substring(1);
+        }
+
+        return dateText;
+    }
+
+    private void setupTimeComboBoxes() {
+        ObservableList<String> timeOptions = FXCollections.observableArrayList();
+
+        // Generar opciones de tiempo cada 15 minutos
+        for (int hour = 0; hour < 24; hour++) {
+            for (int minute = 0; minute < 60; minute += 15) {
+                String timeString = String.format("%02d:%02d", hour, minute);
+                timeOptions.add(timeString);
+            }
+        }
+
+        if (startTimeComboBox != null) {
+            startTimeComboBox.setItems(timeOptions);
+            startTimeComboBox.setValue("09:00");
+            startTimeComboBox.setEditable(false);
+        }
+
+        if (endTimeComboBox != null) {
+            endTimeComboBox.setItems(timeOptions);
+            endTimeComboBox.setValue("10:00");
+            endTimeComboBox.setEditable(false);
+
+            // Auto-ajustar hora de fin cuando cambia la de inicio
+            startTimeComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null && !allDayCheckBox.isSelected()) {
+                    try {
+                        LocalTime startTime = LocalTime.parse(newVal);
+                        LocalTime suggestedEndTime = startTime.plusHours(1);
+                        String endTimeString = suggestedEndTime.format(DateTimeFormatter.ofPattern("HH:mm"));
+
+                        // Solo cambiar si la nueva hora está disponible en las opciones
+                        if (timeOptions.contains(endTimeString)) {
+                            endTimeComboBox.setValue(endTimeString);
+                        }
+                    } catch (Exception e) {
+                        // Ignorar errores de parsing
+                    }
                 }
             });
         }
@@ -193,48 +255,198 @@ public class EventDialogController implements Initializable {
                 if (calendarNames != null && !calendarNames.isEmpty()) {
                     ObservableList<String> items = FXCollections.observableArrayList(calendarNames);
                     calendarComboBox.setItems(items);
-                    calendarComboBox.setValue(items.get(0)); // Seleccionar el primer calendario por defecto
+                    calendarComboBox.setValue(items.get(0));
                 } else {
-                    System.err.println("No se encontraron calendarios para el usuario");
-                    calendarComboBox.setItems(FXCollections.observableArrayList("Mis Clases"));
-                    calendarComboBox.setValue("Mis Clases");
+                    calendarComboBox.setItems(FXCollections.observableArrayList("Mi Calendario"));
+                    calendarComboBox.setValue("Mi Calendario");
                 }
             } catch (Exception e) {
                 System.err.println("Error cargando calendarios: " + e.getMessage());
-                calendarComboBox.setItems(FXCollections.observableArrayList("Mis Clases"));
-                calendarComboBox.setValue("Mis Clases");
+                calendarComboBox.setItems(FXCollections.observableArrayList("Mi Calendario"));
+                calendarComboBox.setValue("Mi Calendario");
             }
         }
     }
 
     private void setupEventHandlers() {
+        if (closeButton != null) {
+            closeButton.setOnAction(e -> closeDialog());
+        }
+
         if (saveButton != null) {
-            saveButton.setOnAction(event -> handleSave());
+            saveButton.setOnAction(e -> handleSave());
         }
 
         if (updateButton != null) {
-            updateButton.setOnAction(event -> handleUpdate());
+            updateButton.setOnAction(e -> handleUpdate());
         }
 
-        if (deleteButton != null) {
-            deleteButton.setOnAction(event -> handleDelete());
+        if (deleteFormButton != null) {
+            deleteFormButton.setOnAction(e -> handleDelete());
+        }
+
+        if (deleteViewButton != null) {
+            deleteViewButton.setOnAction(e -> handleDelete());
+        }
+
+        if (editButton != null) {
+            editButton.setOnAction(e -> switchToEditMode());
         }
 
         if (cancelButton != null) {
-            cancelButton.setOnAction(event -> closeDialog());
+            cancelButton.setOnAction(e -> {
+                if ("EDIT".equals(mode)) {
+                    switchToViewMode();
+                } else {
+                    closeDialog();
+                }
+            });
+        }
+
+        if (addGuestsFormButton != null) {
+            addGuestsFormButton.setOnAction(e -> handleAddGuests());
         }
     }
 
-    private void loadEventToForm(Event event) {
-        titleField.setText(event.getTitle());
-        descriptionArea.setText(event.getDescription());
-        locationField.setText(event.getLocation());
+    /**
+     * Cambia la vista para mostrar el formulario
+     */
+    private void showFormView() {
+        // Ocultar vista de evento
+        eventViewContainer.setVisible(false);
+        eventViewContainer.setManaged(false);
+        viewButtonContainer.setVisible(false);
+        viewButtonContainer.setManaged(false);
 
-        // Buscar el nombre del calendario para este evento
+        // Mostrar formulario
+        eventFormContainer.setVisible(true);
+        eventFormContainer.setManaged(true);
+        formButtonContainer.setVisible(true);
+        formButtonContainer.setManaged(true);
+
+        // Configurar botones según el modo
+        if ("CREATE".equals(mode)) {
+            saveButton.setVisible(true);
+            saveButton.setManaged(true);
+            updateButton.setVisible(false);
+            updateButton.setManaged(false);
+            deleteFormButton.setVisible(false);
+            deleteFormButton.setManaged(false);
+        } else if ("EDIT".equals(mode)) {
+            saveButton.setVisible(false);
+            saveButton.setManaged(false);
+            updateButton.setVisible(true);
+            updateButton.setManaged(true);
+            deleteFormButton.setVisible(true);
+            deleteFormButton.setManaged(true);
+        }
+    }
+
+    /**
+     * Cambia la vista para mostrar el evento
+     */
+    private void showEventView() {
+        // Ocultar formulario
+        eventFormContainer.setVisible(false);
+        eventFormContainer.setManaged(false);
+        formButtonContainer.setVisible(false);
+        formButtonContainer.setManaged(false);
+
+        // Mostrar vista de evento
+        eventViewContainer.setVisible(true);
+        eventViewContainer.setManaged(true);
+        viewButtonContainer.setVisible(true);
+        viewButtonContainer.setManaged(true);
+    }
+
+    /**
+     * Carga los eventos para una fecha específica
+     */
+    private void loadEventsForDate(LocalDate date) {
+        try {
+            String userId = authService.getCurrentUser().getUserId();
+            List<Event> events = eventService.getEventsForDate(userId, date);
+
+            if (events.isEmpty()) {
+                // No hay eventos, abrir modo crear
+                initializeForCreate(date, onEventChanged);
+            } else if (events.size() == 1) {
+                // Un solo evento, abrir en modo vista
+                initializeForViewEvent(events.get(0), onEventChanged);
+            } else {
+                // Múltiples eventos, mostrar lista (por implementar)
+                initializeForViewEvent(events.get(0), onEventChanged);
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error cargando eventos: " + e.getMessage());
+            showAlert("Error", "No se pudieron cargar los eventos: " + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    /**
+     * Carga un evento en la vista de solo lectura
+     */
+    private void loadEventToView(Event event) {
+
+        // Configurar fecha y hora - CON PRIMERA LETRA MAYÚSCULA
+        String timeText = formatEventTime(event);
+        String dateText = formatEventDate(event); // Usar el nuevo método
+        eventTimeLabel.setText(dateText + " • " + timeText);
+
+        // Configurar ubicación
+        if (event.getLocation() != null && !event.getLocation().trim().isEmpty()) {
+            eventLocationLabel.setText(event.getLocation());
+            locationViewRow.setVisible(true);
+            locationViewRow.setManaged(true);
+        } else {
+            locationViewRow.setVisible(false);
+            locationViewRow.setManaged(false);
+        }
+
+        // Configurar descripción
+        if (event.getDescription() != null && !event.getDescription().trim().isEmpty()) {
+            eventDescriptionLabel.setText(event.getDescription());
+            descriptionViewContainer.setVisible(true);
+            descriptionViewContainer.setManaged(true);
+        } else {
+            descriptionViewContainer.setVisible(false);
+            descriptionViewContainer.setManaged(false);
+        }
+
+        // Configurar información del calendario
         String userId = authService.getCurrentUser().getUserId();
         List<String> calendarNames = eventService.getUserCalendarNames(userId);
 
-        String selectedCalendarName = calendarNames.get(0); // valor por defecto
+        String calendarName = "Mi Calendario";
+        for (String name : calendarNames) {
+            String calendarId = eventService.getCalendarIdByName(userId, name);
+            if (calendarId.equals(event.getCalendarId())) {
+                calendarName = name;
+                break;
+            }
+        }
+
+        eventCalendarLabel.setText(calendarName);
+
+        // Información del creador
+        String creatorName = authService.getCurrentUser().getDisplayInfo();
+        createdByLabel.setText("Creado por: " + creatorName);
+    }
+
+    /**
+     * Carga un evento en el formulario para edición
+     */
+    private void loadEventToForm(Event event) {
+        titleField.setText(event.getTitle());
+        descriptionArea.setText(event.getDescription() != null ? event.getDescription() : "");
+        locationField.setText(event.getLocation() != null ? event.getLocation() : "");
+
+        // Configurar calendario
+        String userId = authService.getCurrentUser().getUserId();
+        List<String> calendarNames = eventService.getUserCalendarNames(userId);
+
+        String selectedCalendarName = calendarNames.get(0);
         for (String calendarName : calendarNames) {
             String calendarId = eventService.getCalendarIdByName(userId, calendarName);
             if (calendarId.equals(event.getCalendarId())) {
@@ -242,127 +454,46 @@ public class EventDialogController implements Initializable {
                 break;
             }
         }
-
         calendarComboBox.setValue(selectedCalendarName);
 
         // Configurar fecha y hora
         datePicker.setValue(event.getStartDate().toLocalDate());
 
-        // Usa el método isAllDay() que convierte char a boolean
         boolean isAllDay = event.isAllDay();
         allDayCheckBox.setSelected(isAllDay);
 
         if (isAllDay) {
-            startTimeField.setText("00:00");
-            endTimeField.setText("23:59");
+            startTimeComboBox.setValue("00:00");
+            endTimeComboBox.setValue("23:59");
         } else {
-            startTimeField.setText(formatTime(event.getStartDate()));
-            endTimeField.setText(formatTime(event.getEndDate()));
+            startTimeComboBox.setValue(formatTime(event.getStartDate()));
+            endTimeComboBox.setValue(formatTime(event.getEndDate()));
         }
     }
 
-    private void loadEventsForDate(LocalDate date) {
-        try {
-            showLoading(true);
-            String userId = authService.getCurrentUser().getUserId();
-
-            eventService.getEventsForDateAsync(userId, date)
-                    .thenAccept(events -> {
-                        Platform.runLater(() -> {
-                            eventsMap.clear();
-                            for (Event event : events) {
-                                eventsMap.put(event.getEventId(), event);
-                            }
-
-                            ObservableList<Event> items = FXCollections.observableArrayList(events);
-                            eventListView.setItems(items);
-                            showLoading(false);
-                        });
-                    })
-                    .exceptionally(ex -> {
-                        Platform.runLater(() -> {
-                            System.err.println("Error cargando eventos: " + ex.getMessage());
-                            showAlert("Error", "No se pudieron cargar los eventos: " + ex.getMessage(), Alert.AlertType.ERROR);
-                            showLoading(false);
-                        });
-                        return null;
-                    });
-        } catch (Exception e) {
-            System.err.println("Error cargando eventos: " + e.getMessage());
-            showLoading(false);
-        }
+    /**
+     * Cambia al modo de edición
+     */
+    private void switchToEditMode() {
+        mode = "EDIT";
+        dialogTitle.setText("Editar evento");
+        showFormView();
+        loadEventToForm(currentEvent);
     }
 
-    private Event createEventFromForm() {
-        Event event = new Event();
-        event.setTitle(titleField.getText().trim());
-        event.setDescription(descriptionArea.getText().trim());
-        event.setLocation(locationField.getText().trim());
-
-        // Generar ID para el evento
-        String eventId = generateEventId();
-        event.setEventId(eventId);
-
-        // Obtener ID del calendario seleccionado
-        String userId = authService.getCurrentUser().getUserId();
-        String calendarName = calendarComboBox.getValue();
-        String calendarId = eventService.getCalendarIdByName(userId, calendarName);
-        event.setCalendarId(calendarId);
-
-        // Establecer creador
-        event.setCreatorId(userId);
-
-        // Configurar fecha y hora
-        LocalDate date = datePicker.getValue();
-        boolean isAllDay = allDayCheckBox.isSelected();
-
-        // CORRECCIÓN: Convierte boolean a char 'Y'/'N'
-        event.setAllDay(isAllDay ? 'Y' : 'N');
-
-        if (isAllDay) {
-            event.setStartDate(LocalDateTime.of(date, LocalTime.MIN));
-            event.setEndDate(LocalDateTime.of(date, LocalTime.MAX));
-        } else {
-            LocalTime startTime = parseTime(startTimeField.getText());
-            LocalTime endTime = parseTime(endTimeField.getText());
-
-            event.setStartDate(LocalDateTime.of(date, startTime));
-            event.setEndDate(LocalDateTime.of(date, endTime));
-        }
-
-        return event;
+    /**
+     * Cambia al modo de vista
+     */
+    private void switchToViewMode() {
+        mode = "VIEW";
+        dialogTitle.setText(currentEvent.getTitle());
+        showEventView();
+        loadEventToView(currentEvent);
     }
 
-    private void updateEventFromForm(Event event) {
-        event.setTitle(titleField.getText().trim());
-        event.setDescription(descriptionArea.getText().trim());
-        event.setLocation(locationField.getText().trim());
-
-        // Actualizar ID del calendario si ha cambiado
-        String userId = authService.getCurrentUser().getUserId();
-        String calendarName = calendarComboBox.getValue();
-        String calendarId = eventService.getCalendarIdByName(userId, calendarName);
-        event.setCalendarId(calendarId);
-
-        // Configurar fecha y hora
-        LocalDate date = datePicker.getValue();
-        boolean isAllDay = allDayCheckBox.isSelected();
-
-        // CORRECCIÓN: Convierte boolean a char 'Y'/'N'
-        event.setAllDay(isAllDay ? 'Y' : 'N');
-
-        if (isAllDay) {
-            event.setStartDate(LocalDateTime.of(date, LocalTime.MIN));
-            event.setEndDate(LocalDateTime.of(date, LocalTime.MAX));
-        } else {
-            LocalTime startTime = parseTime(startTimeField.getText());
-            LocalTime endTime = parseTime(endTimeField.getText());
-
-            event.setStartDate(LocalDateTime.of(date, startTime));
-            event.setEndDate(LocalDateTime.of(date, endTime));
-        }
-    }
-
+    /**
+     * Maneja el guardado de un nuevo evento
+     */
     @FXML
     private void handleSave() {
         if (!validateForm()) return;
@@ -371,11 +502,13 @@ public class EventDialogController implements Initializable {
             Event newEvent = createEventFromForm();
 
             if (!isTimeSlotAvailable(newEvent)) {
-                showAlert("Conflicto de horario", "Ya hay un evento en ese horario para este día.", Alert.AlertType.WARNING);
+                showAlert("Conflicto de horario",
+                        "Ya hay un evento en ese horario para este día.",
+                        Alert.AlertType.WARNING);
                 return;
             }
 
-            boolean success = saveEventToDatabase(newEvent);
+            boolean success = eventService.createEvent(newEvent);
             if (success) {
                 showAlert("Éxito", "Evento creado exitosamente", Alert.AlertType.INFORMATION);
                 if (onEventChanged != null) onEventChanged.run();
@@ -389,28 +522,28 @@ public class EventDialogController implements Initializable {
         }
     }
 
+    /**
+     * Maneja la actualización de un evento
+     */
     @FXML
     private void handleUpdate() {
-        if (currentEvent == null) {
-            showAlert("Error", "No hay evento seleccionado para actualizar", Alert.AlertType.WARNING);
-            return;
-        }
-        if (!validateForm()) return;
+        if (currentEvent == null || !validateForm()) return;
 
         try {
             updateEventFromForm(currentEvent);
 
             if (!isTimeSlotAvailable(currentEvent)) {
-                showAlert("Conflicto de horario", "Ya hay un evento en ese horario para este día.", Alert.AlertType.WARNING);
+                showAlert("Conflicto de horario",
+                        "Ya hay un evento en ese horario para este día.",
+                        Alert.AlertType.WARNING);
                 return;
             }
 
-            boolean success = updateEventInDatabase(currentEvent);
+            boolean success = eventService.updateEvent(currentEvent);
             if (success) {
                 showAlert("Éxito", "Evento actualizado exitosamente", Alert.AlertType.INFORMATION);
                 if (onEventChanged != null) onEventChanged.run();
-                loadEventsForDate(selectedDate);
-                clearForm();
+                switchToViewMode();
             } else {
                 showAlert("Error", "No se pudo actualizar el evento", Alert.AlertType.ERROR);
             }
@@ -420,26 +553,29 @@ public class EventDialogController implements Initializable {
         }
     }
 
+    /**
+     * Maneja la eliminación de un evento
+     */
     @FXML
     private void handleDelete() {
         if (currentEvent == null) {
             showAlert("Error", "No hay evento seleccionado para eliminar", Alert.AlertType.WARNING);
             return;
         }
+
         Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
         confirmation.setTitle("Confirmar eliminación");
         confirmation.setHeaderText("¿Eliminar evento?");
         confirmation.setContentText("¿Estás seguro de que quieres eliminar:\n\"" + currentEvent.getTitle() + "\"?");
+
         Optional<ButtonType> result = confirmation.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
             try {
-                boolean success = deleteEventFromDatabase(currentEvent.getEventId());
+                boolean success = eventService.deleteEvent(currentEvent.getEventId());
                 if (success) {
                     showAlert("Éxito", "Evento eliminado exitosamente", Alert.AlertType.INFORMATION);
                     if (onEventChanged != null) onEventChanged.run();
-                    loadEventsForDate(selectedDate);
-                    clearForm();
-                    currentEvent = null;
+                    closeDialog();
                 } else {
                     showAlert("Error", "No se pudo eliminar el evento", Alert.AlertType.ERROR);
                 }
@@ -450,145 +586,131 @@ public class EventDialogController implements Initializable {
         }
     }
 
-    private void handleEditEvent(Event event) {
-        currentEvent = event;
-        modeLabel.setText("Editar Evento - " + event.getTitle());
-        eventFormContainer.setVisible(true);
-        eventListContainer.setVisible(false);
-        saveButton.setVisible(false);
-        updateButton.setVisible(true);
-        deleteButton.setVisible(true);
-
-        loadEventToForm(event);
+    /**
+     * Maneja la funcionalidad de añadir invitados (placeholder)
+     */
+    private void handleAddGuests() {
+        showAlert("Funcionalidad en desarrollo",
+                "La función de añadir invitados estará disponible próximamente.",
+                Alert.AlertType.INFORMATION);
     }
 
-    private void handleDeleteEvent(Event event) {
-        Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmation.setTitle("Confirmar eliminación");
-        confirmation.setHeaderText("¿Eliminar evento?");
-        confirmation.setContentText("¿Estás seguro de que quieres eliminar:\n\"" + event.getTitle() + "\"?");
+    /**
+     * Crea un nuevo evento desde los datos del formulario
+     */
+    private Event createEventFromForm() {
+        Event event = new Event();
+        event.setTitle(titleField.getText().trim());
+        event.setDescription(descriptionArea.getText().trim());
+        event.setLocation(locationField.getText().trim());
 
-        Optional<ButtonType> result = confirmation.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            try {
-                showLoading(true);
-                boolean success = deleteEventFromDatabase(event.getEventId());
-                if (success) {
-                    showAlert("Éxito", "Evento eliminado exitosamente", Alert.AlertType.INFORMATION);
-                    loadEventsForDate(selectedDate);
-                    if (onEventChanged != null) {
-                        onEventChanged.run();
-                    }
-                } else {
-                    showAlert("Error", "No se pudo eliminar el evento", Alert.AlertType.ERROR);
-                }
-                showLoading(false);
-            } catch (Exception e) {
-                System.err.println("Error eliminando evento: " + e.getMessage());
-                showAlert("Error", "No se pudo eliminar el evento: " + e.getMessage(), Alert.AlertType.ERROR);
-                showLoading(false);
-            }
+        // Generar ID único
+        event.setEventId(generateEventId());
+
+        // Configurar calendario
+        String userId = authService.getCurrentUser().getUserId();
+        String calendarName = calendarComboBox.getValue();
+        String calendarId = eventService.getCalendarIdByName(userId, calendarName);
+        event.setCalendarId(calendarId);
+        event.setCreatorId(userId);
+
+        // Configurar fecha y hora
+        setupEventDateTime(event);
+
+        return event;
+    }
+
+    /**
+     * Actualiza un evento con los datos del formulario
+     */
+    private void updateEventFromForm(Event event) {
+        event.setTitle(titleField.getText().trim());
+        event.setDescription(descriptionArea.getText().trim());
+        event.setLocation(locationField.getText().trim());
+
+        // Actualizar calendario
+        String userId = authService.getCurrentUser().getUserId();
+        String calendarName = calendarComboBox.getValue();
+        String calendarId = eventService.getCalendarIdByName(userId, calendarName);
+        event.setCalendarId(calendarId);
+
+        // Configurar fecha y hora
+        setupEventDateTime(event);
+    }
+
+    /**
+     * Configura la fecha y hora del evento
+     */
+    private void setupEventDateTime(Event event) {
+        LocalDate date = datePicker.getValue();
+        boolean isAllDay = allDayCheckBox.isSelected();
+
+        event.setAllDay(isAllDay ? 'Y' : 'N');
+
+        if (isAllDay) {
+            event.setStartDate(LocalDateTime.of(date, LocalTime.MIN));
+            event.setEndDate(LocalDateTime.of(date, LocalTime.MAX));
+        } else {
+            LocalTime startTime = LocalTime.parse(startTimeComboBox.getValue());
+            LocalTime endTime = LocalTime.parse(endTimeComboBox.getValue());
+
+            event.setStartDate(LocalDateTime.of(date, startTime));
+            event.setEndDate(LocalDateTime.of(date, endTime));
         }
     }
 
-    private String generateEventId() {
-        // Generar un ID único para el evento
-        LocalDateTime now = LocalDateTime.now();
-        String timestamp = now.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
-        return "E" + timestamp;
-    }
-
+    /**
+     * Valida los datos del formulario
+     */
     private boolean validateForm() {
         String title = titleField.getText().trim();
         if (title.isEmpty()) {
             showAlert("Error de validación", "El título no puede estar vacío", Alert.AlertType.WARNING);
+            titleField.requestFocus();
             return false;
         }
 
-        try {
-            parseTime(startTimeField.getText());
-        } catch (Exception e) {
-            showAlert("Error de validación", "El formato de la hora de inicio es incorrecto. Use HH:mm", Alert.AlertType.WARNING);
-            return false;
-        }
+        if (!allDayCheckBox.isSelected()) {
+            try {
+                LocalTime startTime = LocalTime.parse(startTimeComboBox.getValue());
+                LocalTime endTime = LocalTime.parse(endTimeComboBox.getValue());
 
-        try {
-            parseTime(endTimeField.getText());
-        } catch (Exception e) {
-            showAlert("Error de validación", "El formato de la hora de fin es incorrecto. Use HH:mm", Alert.AlertType.WARNING);
-            return false;
-        }
-
-        LocalTime startTime = parseTime(startTimeField.getText());
-        LocalTime endTime = parseTime(endTimeField.getText());
-
-        if (!allDayCheckBox.isSelected() && endTime.isBefore(startTime)) {
-            showAlert("Error de validación", "La hora de fin no puede ser anterior a la hora de inicio", Alert.AlertType.WARNING);
-            return false;
+                if (endTime.isBefore(startTime) || endTime.equals(startTime)) {
+                    showAlert("Error de validación",
+                            "La hora de fin debe ser posterior a la hora de inicio",
+                            Alert.AlertType.WARNING);
+                    endTimeComboBox.requestFocus();
+                    return false;
+                }
+            } catch (Exception e) {
+                showAlert("Error de validación",
+                        "Error en la selección de horarios",
+                        Alert.AlertType.WARNING);
+                return false;
+            }
         }
 
         return true;
     }
 
-    private boolean saveEventToDatabase(Event event) {
-        try {
-            showLoading(true);
-            return eventService.createEvent(event);
-        } catch (Exception e) {
-            System.err.println("Error guardando evento: " + e.getMessage());
-            return false;
-        } finally {
-            showLoading(false);
-        }
-    }
-
-    private boolean updateEventInDatabase(Event event) {
-        try {
-            showLoading(true);
-            return eventService.updateEvent(event);
-        } catch (Exception e) {
-            System.err.println("Error actualizando evento: " + e.getMessage());
-            return false;
-        } finally {
-            showLoading(false);
-        }
-    }
-
-    private boolean deleteEventFromDatabase(String eventId) {
-        try {
-            showLoading(true);
-            return eventService.deleteEvent(eventId);
-        } catch (Exception e) {
-            System.err.println("Error eliminando evento: " + e.getMessage());
-            return false;
-        } finally {
-            showLoading(false);
-        }
-    }
-
-    private LocalTime parseTime(String timeStr) {
-        return LocalTime.parse(timeStr, DateTimeFormatter.ofPattern("HH:mm"));
-    }
-
-    private String formatTime(LocalDateTime dateTime) {
-        LocalTime time = dateTime.toLocalTime();
-        return time.format(DateTimeFormatter.ofPattern("HH:mm"));
-    }
-
+    /**
+     * Verifica si el horario está disponible
+     */
     private boolean isTimeSlotAvailable(Event newEvent) {
         try {
             String userId = authService.getCurrentUser().getUserId();
             List<Event> events = eventService.getEventsForDate(userId, newEvent.getStartDate().toLocalDate());
 
             for (Event e : events) {
-                if (mode.equals("UPDATE") && currentEvent != null && e.getEventId().equals(currentEvent.getEventId())) {
+                // Omitir el evento actual al editar
+                if ("EDIT".equals(mode) && currentEvent != null &&
+                        e.getEventId().equals(currentEvent.getEventId())) {
                     continue;
                 }
 
-                System.out.println("Comparando con evento: " + e.getTitle() + " de " + e.getStartDate() + " a " + e.getEndDate());
-
-                if (newEvent.getStartDate().isBefore(e.getEndDate()) && newEvent.getEndDate().isAfter(e.getStartDate())) {
-                    System.out.println("Solapamiento detectado.");
+                // Verificar solapamiento
+                if (newEvent.getStartDate().isBefore(e.getEndDate()) &&
+                        newEvent.getEndDate().isAfter(e.getStartDate())) {
                     return false;
                 }
             }
@@ -599,19 +721,17 @@ public class EventDialogController implements Initializable {
         }
     }
 
-    private void clearForm() {
-        titleField.clear();
-        descriptionArea.clear();
-        locationField.clear();
+    // Métodos de utilidad
+    private String generateEventId() {
+        return "E" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
+    }
 
-        if (calendarComboBox.getItems().size() > 0) {
-            calendarComboBox.setValue(calendarComboBox.getItems().get(0));
-        }
+    private LocalTime parseTime(String timeStr) {
+        return LocalTime.parse(timeStr, DateTimeFormatter.ofPattern("HH:mm"));
+    }
 
-        datePicker.setValue(LocalDate.now());
-        startTimeField.setText("08:00");
-        endTimeField.setText("09:00");
-        allDayCheckBox.setSelected(false);
+    private String formatTime(LocalDateTime dateTime) {
+        return dateTime.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"));
     }
 
     private String formatEventTime(Event event) {
@@ -622,42 +742,26 @@ public class EventDialogController implements Initializable {
         }
     }
 
-    private void showLoading(boolean show) {
-        // Método showLoading simplificado que solo deshabilita los controles durante la carga
-        if (titleField != null) titleField.setDisable(show);
-        if (descriptionArea != null) descriptionArea.setDisable(show);
-        if (locationField != null) locationField.setDisable(show);
-        if (calendarComboBox != null) calendarComboBox.setDisable(show);
-        if (datePicker != null) datePicker.setDisable(show);
-        if (startTimeField != null) startTimeField.setDisable(show);
-        if (endTimeField != null) endTimeField.setDisable(show);
-        if (allDayCheckBox != null) allDayCheckBox.setDisable(show);
-        if (saveButton != null) saveButton.setDisable(show);
-        if (updateButton != null) updateButton.setDisable(show);
-        if (deleteButton != null) deleteButton.setDisable(show);
-        if (cancelButton != null) cancelButton.setDisable(show);
-    }
-
     private void showAlert(String title, String message, Alert.AlertType type) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
 
-        DialogPane dialogPane = alert.getDialogPane();
+        // Aplicar estilos CSS si están disponibles
         try {
+            DialogPane dialogPane = alert.getDialogPane();
             String css = getClass().getResource("/css/alert-style.css").toExternalForm();
             dialogPane.getStylesheets().add(css);
-            System.out.println("CSS cargado: " + css);
-        } catch (Exception ex) {
-            System.err.println("No se pudo cargar el CSS: " + ex.getMessage());
+        } catch (Exception ignored) {
+            // CSS no disponible, continuar sin estilos
         }
 
         alert.showAndWait();
     }
 
     private void closeDialog() {
-        Stage stage = (Stage) cancelButton.getScene().getWindow();
+        Stage stage = (Stage) closeButton.getScene().getWindow();
         stage.close();
     }
 }

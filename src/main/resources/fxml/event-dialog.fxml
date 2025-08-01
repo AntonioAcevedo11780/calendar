@@ -3,94 +3,156 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
 
 <VBox xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.utez.calendario.controllers.EventDialogController"
-      spacing="10" prefWidth="600" prefHeight="500">
+      prefWidth="680" prefHeight="680" minHeight="680" styleClass="event-dialog">
 
-    <padding>
-        <Insets top="15" right="15" bottom="15" left="15" />
-    </padding>
-
-    <!-- Título del diálogo -->
-    <Label fx:id="modeLabel" text="Gestión de Eventos" styleClass="dialog-title" />
-
-    <Separator />
-
-    <!-- Contenedor principal -->
-    <HBox spacing="15" VBox.vgrow="ALWAYS">
-
-        <!-- Lista de eventos (lado izquierdo) -->
-        <VBox fx:id="eventListContainer" spacing="5" prefWidth="250">
-            <Label text="📋 Eventos del día:" styleClass="section-title" />
-            <ListView fx:id="eventListView" VBox.vgrow="ALWAYS" />
-        </VBox>
-
-        <!-- Formulario (lado derecho) -->
-        <VBox fx:id="eventFormContainer" spacing="10" VBox.vgrow="ALWAYS">
-
-            <!-- Título -->
-            <VBox spacing="5">
-                <Label text="📝 Título *" styleClass="field-label" />
-                <TextField fx:id="titleField" promptText="Ej: Clase de Programación Web" />
-            </VBox>
-
-            <!-- Descripción -->
-            <VBox spacing="5">
-                <Label text="📄 Descripción" styleClass="field-label" />
-                <TextArea fx:id="descriptionArea" promptText="Descripción detallada del evento..."
-                          prefRowCount="3" wrapText="true" />
-            </VBox>
-
-            <!-- Fecha y tiempo -->
-            <HBox spacing="10">
-                <VBox spacing="5" HBox.hgrow="ALWAYS">
-                    <Label text="📅 Fecha *" styleClass="field-label" />
-                    <DatePicker fx:id="datePicker" HBox.hgrow="ALWAYS" />
-                </VBox>
-
-                <VBox spacing="5">
-                    <CheckBox fx:id="allDayCheckBox" text="🕐 Todo el día" />
-                </VBox>
-            </HBox>
-
-            <!-- Horarios -->
-            <HBox spacing="10">
-                <VBox spacing="5" HBox.hgrow="ALWAYS">
-                    <Label text="🕐 Hora inicio" styleClass="field-label" />
-                    <TextField fx:id="startTimeField" promptText="08:00" />
-                </VBox>
-
-                <VBox spacing="5" HBox.hgrow="ALWAYS">
-                    <Label text="🕑 Hora fin" styleClass="field-label" />
-                    <TextField fx:id="endTimeField" promptText="10:00" />
-                </VBox>
-            </HBox>
-
-            <!-- Ubicación y calendario -->
-            <HBox spacing="10">
-                <VBox spacing="5" HBox.hgrow="ALWAYS">
-                    <Label text="📍 Ubicación" styleClass="field-label" />
-                    <TextField fx:id="locationField" promptText="Ej: Aula 101, Laboratorio A" />
-                </VBox>
-
-                <VBox spacing="5" HBox.hgrow="ALWAYS">
-                    <Label text="📚 Calendario" styleClass="field-label" />
-                    <ComboBox fx:id="calendarComboBox" HBox.hgrow="ALWAYS" />
-                </VBox>
-            </HBox>
-
-        </VBox>
+    <!-- Header del diálogo -->
+    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="dialog-header">
+        <Label fx:id="dialogTitle" text="Tarea: Terminar los bocetos" styleClass="dialog-title" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Button fx:id="closeButton" text="✕" styleClass="close-btn-modern" />
     </HBox>
 
-    <Separator />
+    <Separator styleClass="header-separator" />
 
-    <!-- Botones de acción -->
-    <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button fx:id="saveButton" text="💾 Guardar" styleClass="primary-button" />
-        <Button fx:id="updateButton" text="📝 Actualizar" styleClass="primary-button" />
-        <Button fx:id="deleteButton" text="🗑️ Eliminar" styleClass="danger-button" />
-        <Button fx:id="cancelButton" text="❌ Cancelar" styleClass="secondary-button" />
+    <!-- VISTA DE EVENTO (cuando se visualiza un evento existente) -->
+    <VBox fx:id="eventViewContainer" spacing="12" styleClass="event-view-container"
+          VBox.vgrow="ALWAYS">
+
+        <!-- Fecha y hora -->
+        <HBox alignment="CENTER_LEFT" spacing="16" styleClass="event-detail-row">
+            <ImageView styleClass="event-detail-icon" fitWidth="22" fitHeight="22"
+                       preserveRatio="true" smooth="true">
+                <Image url="@/images/clock.png" />
+            </ImageView>
+            <Label fx:id="eventTimeLabel" text="Jueves, 6 de junio • 11:59am - 12:00pm"
+                   styleClass="event-detail-text" />
+        </HBox>
+
+        <!-- Ubicación (opcional) -->
+        <HBox fx:id="locationViewRow" alignment="CENTER_LEFT" spacing="16" styleClass="event-detail-row"
+              visible="false" managed="false">
+            <ImageView styleClass="event-detail-icon" fitWidth="22" fitHeight="22"
+                       preserveRatio="true" smooth="true">
+                <Image url="@/images/location.png" />
+            </ImageView>
+            <Label fx:id="eventLocationLabel" text="" styleClass="event-detail-text" />
+        </HBox>
+
+        <!-- Descripción con texto inline -->
+        <HBox fx:id="descriptionViewContainer" alignment="TOP_LEFT" spacing="16" styleClass="event-detail-row">
+            <ImageView styleClass="event-detail-icon" fitWidth="22" fitHeight="22"
+                       preserveRatio="true" smooth="true">
+                <Image url="@/images/description.png" />
+            </ImageView>
+            <Label text="Descripción:" styleClass="event-detail-label" />
+            <Label fx:id="eventDescriptionLabel" text="Lista de tareas..." styleClass="event-description-text-inline"
+                   HBox.hgrow="ALWAYS" />
+        </HBox>
+
+        <!-- Información del calendario/materia -->
+        <HBox alignment="CENTER_LEFT" spacing="16" styleClass="event-detail-row">
+            <ImageView styleClass="event-detail-icon" fitWidth="22" fitHeight="22"
+                       preserveRatio="true" smooth="true">
+                <Image url="@/images/calendar.png" />
+            </ImageView>
+            <VBox spacing="2">
+                <Label fx:id="eventCalendarLabel" text="3C - Tópicos" styleClass="calendar-name-inline" />
+                <Label fx:id="createdByLabel" text="Creado por: Natally Arroyo" styleClass="created-by-inline" />
+            </VBox>
+        </HBox>
+
+        <!-- Espaciador para empujar los botones hacia abajo -->
+        <Region VBox.vgrow="ALWAYS" />
+
+    </VBox>
+
+    <!-- FORMULARIO DE EVENTO (cuando se crea o edita) -->
+    <VBox fx:id="eventFormContainer" spacing="10" styleClass="event-form-container"
+          visible="false" managed="false" VBox.vgrow="ALWAYS">
+
+        <!-- Campo de título -->
+        <TextField fx:id="titleField" promptText="Añade un título" styleClass="title-field" />
+
+        <Separator styleClass="content-separator" />
+
+        <!-- Fecha y hora -->
+        <HBox alignment="CENTER_LEFT" spacing="16" styleClass="form-section">
+            <ImageView styleClass="section-icon" fitWidth="22" fitHeight="22"
+                       preserveRatio="true" smooth="true">
+                <Image url="@/images/clock.png" />
+            </ImageView>
+            <VBox spacing="8" styleClass="date-time-container" HBox.hgrow="ALWAYS">
+                <DatePicker fx:id="datePicker" styleClass="date-picker-field" />
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <ComboBox fx:id="startTimeComboBox" styleClass="time-picker" />
+                    <Label text="–" styleClass="time-separator" />
+                    <ComboBox fx:id="endTimeComboBox" styleClass="time-picker" />
+                    <CheckBox fx:id="allDayCheckBox" text="Todo el día" styleClass="all-day-checkbox" />
+                </HBox>
+            </VBox>
+        </HBox>
+
+        <!-- Añadir invitados -->
+        <HBox alignment="CENTER_LEFT" spacing="16" styleClass="form-section">
+            <ImageView styleClass="section-icon" fitWidth="22" fitHeight="22"
+                       preserveRatio="true" smooth="true">
+                <Image url="@/images/user-add.png" />
+            </ImageView>
+            <Button fx:id="addGuestsFormButton" text="Añadir invitados"
+                    styleClass="add-guests-button" HBox.hgrow="ALWAYS" />
+        </HBox>
+
+        <!-- Ubicación -->
+        <HBox alignment="CENTER_LEFT" spacing="16" styleClass="form-section">
+            <ImageView styleClass="section-icon" fitWidth="22" fitHeight="22"
+                       preserveRatio="true" smooth="true">
+                <Image url="@/images/location.png" />
+            </ImageView>
+            <TextField fx:id="locationField" promptText="Añadir ubicación"
+                       styleClass="location-field" HBox.hgrow="ALWAYS" />
+        </HBox>
+
+        <!-- Descripción -->
+        <HBox alignment="TOP_LEFT" spacing="16" styleClass="form-section">
+            <ImageView styleClass="section-icon" fitWidth="22" fitHeight="22"
+                       preserveRatio="true" smooth="true">
+                <Image url="@/images/description.png" />
+            </ImageView>
+            <TextArea fx:id="descriptionArea" promptText="Añadir descripción"
+                      styleClass="description-area" HBox.hgrow="ALWAYS" />
+        </HBox>
+
+        <!-- Calendario -->
+        <HBox alignment="CENTER_LEFT" spacing="16" styleClass="form-section">
+            <ImageView styleClass="section-icon" fitWidth="22" fitHeight="22"
+                       preserveRatio="true" smooth="true">
+                <Image url="@/images/calendar.png" />
+            </ImageView>
+            <ComboBox fx:id="calendarComboBox" styleClass="calendar-combo" HBox.hgrow="ALWAYS" />
+        </HBox>
+
+    </VBox>
+
+    <!-- Botones de acción para vista -->
+    <HBox fx:id="viewButtonContainer" spacing="12" styleClass="button-container-repositioned">
+        <Region HBox.hgrow="ALWAYS" />
+        <Button fx:id="editButton" text="Editar" styleClass="primary-button" />
+        <Button fx:id="deleteViewButton" text="Eliminar" styleClass="delete-button" />
+    </HBox>
+
+    <!-- Botones de acción para formulario -->
+    <HBox fx:id="formButtonContainer" spacing="12" styleClass="button-container-repositioned"
+          visible="false" managed="false">
+        <Region HBox.hgrow="ALWAYS" />
+        <Button fx:id="cancelButton" text="Cancelar" styleClass="cancel-button" />
+        <Button fx:id="saveButton" text="Guardar" styleClass="save-button" />
+        <Button fx:id="updateButton" text="Actualizar" styleClass="save-button" visible="false" managed="false" />
+        <Button fx:id="deleteFormButton" text="Eliminar" styleClass="delete-button" visible="false" managed="false" />
     </HBox>
 
 </VBox>

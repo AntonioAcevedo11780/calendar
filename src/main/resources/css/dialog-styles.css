@@ -1,0 +1,418 @@
+/* ESTILOS PARA EL DIÁLOGO DE EVENTOS - UTEZ CALENDAR */
+
+.root {
+    -fx-background-color: transparent;
+}
+
+/* Contenedor principal del diálogo */
+.event-dialog {
+    -fx-background-color: white;
+    -fx-background-radius: 16px;
+    -fx-border-radius: 16px;
+    -fx-border-color: #333333;
+    -fx-border-width: 3px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.25), 25, 0, 0, 6);
+    -fx-padding: 0;
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+    -fx-pref-width: 650px;
+    -fx-pref-height: 550px;
+    -fx-max-height: 550px;
+}
+
+/* HEADER DEL DIÁLOGO */
+.dialog-header {
+    -fx-padding: 20 24 16 24;
+    -fx-alignment: CENTER_LEFT;
+    -fx-background-color: white;
+    -fx-background-radius: 16px 16px 0 0;
+    -fx-border-radius: 16px 16px 0 0;
+}
+
+.dialog-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #202124;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* Botón X moderno */
+.close-btn-modern {
+    -fx-background-color: transparent;
+    -fx-text-fill: #2c2c2c;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-padding: 4;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+}
+
+.close-btn-modern:hover {
+    -fx-text-fill: #d32f2f;
+}
+
+.header-separator {
+    -fx-background-color: #e8eaed;
+    -fx-padding: 0;
+    -fx-pref-height: 2px;
+}
+
+/* VISTA DE EVENTO (modo visualización) */
+.event-view-container {
+    -fx-padding: 20 32 12 32;
+    -fx-spacing: 14;
+}
+
+.event-detail-row {
+    -fx-padding: 8 0;
+    -fx-spacing: 20;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.event-detail-icon {
+    -fx-fit-width: 20;
+    -fx-fit-height: 20;
+    -fx-preserve-ratio: true;
+    -fx-smooth: true;
+    -fx-opacity: 0.7;
+    -fx-min-width: 20;
+    -fx-max-width: 20;
+    -fx-min-height: 20;
+    -fx-max-height: 20;
+}
+
+.event-title-display {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #202124;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-padding: 0 0 8 0;
+}
+
+.event-detail-text {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3c4043;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.event-detail-label {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #5f6368;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.event-description-text-inline {
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #3c4043;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-wrap-text: true;
+    -fx-alignment: TOP_LEFT;
+}
+
+.event-description-text {
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #3c4043;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-padding: 0 0 0 40;
+    -fx-wrap-text: true;
+}
+
+.calendar-name-inline {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a73e8;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.created-by-inline {
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #5f6368;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* FORMULARIO DE EVENTO (modo creación/edición) */
+.event-form-container {
+    -fx-padding: 20 32 16 32;
+    -fx-spacing: 12;
+}
+
+/* Campo de título */
+.title-field {
+    -fx-font-size: 18px;
+    -fx-font-weight: 500;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-padding: 12 0;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #1a73e8 transparent;
+    -fx-border-width: 0 0 2 0;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-prompt-text-fill: #9aa0a6;
+    -fx-text-fill: #1a73e8;
+}
+
+.title-field:focused {
+    -fx-border-color: transparent transparent #1a73e8 transparent;
+    -fx-background-color: transparent;
+}
+
+.content-separator {
+    -fx-background-color: #e8eaed;
+    -fx-pref-height: 2px;
+    -fx-max-height: 2px;
+    -fx-padding: 0;
+}
+
+/* Secciones del formulario */
+.form-section {
+    -fx-padding: 6 0;
+    -fx-spacing: 20;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.section-icon {
+    -fx-fit-width: 20;
+    -fx-fit-height: 20;
+    -fx-preserve-ratio: true;
+    -fx-smooth: true;
+    -fx-opacity: 0.7;
+    -fx-min-width: 20;
+    -fx-max-width: 20;
+    -fx-min-height: 20;
+    -fx-max-height: 20;
+}
+
+/* Contenedor de fecha y hora */
+.date-time-container {
+    -fx-spacing: 10;
+}
+
+.date-picker-field {
+    -fx-background-color: white;
+    -fx-border-color: #dadce0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #3c4043;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-padding: 10;
+}
+
+.date-picker-field:focused {
+    -fx-border-color: #1a73e8;
+    -fx-border-width: 2px;
+}
+
+/* ComboBox de hora */
+.time-picker {
+    -fx-background-color: white;
+    -fx-border-color: #dadce0;
+    -fx-border-width: 1px;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #3c4043;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-padding: 8 12;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-pref-width: 120px;
+    -fx-cursor: hand;
+}
+
+.time-picker:focused {
+    -fx-border-color: #1a73e8;
+    -fx-border-width: 2px;
+}
+
+.time-picker:hover {
+    -fx-border-color: #5f6368;
+}
+
+.time-picker .arrow {
+    -fx-background-color: #5f6368;
+}
+
+.time-picker .arrow-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0 6px 6px 0;
+    -fx-border-radius: 0 6px 6px 0;
+    -fx-padding: 0 8 0 0;
+}
+
+.time-picker .arrow-button:hover {
+    -fx-background-color: #f8f9fa;
+}
+
+.time-picker .list-cell {
+    -fx-text-fill: #3c4043;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.time-separator {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #5f6368;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.all-day-checkbox {
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #3c4043;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* Campos de formulario */
+.location-field, .description-area, .calendar-combo {
+    -fx-background-color: white;
+    -fx-border-color: #dadce0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #3c4043;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-padding: 10;
+}
+
+.location-field:focused, .description-area:focused, .calendar-combo:focused {
+    -fx-border-color: #1a73e8;
+    -fx-border-width: 2px;
+}
+
+.location-field:hover, .description-area:hover, .calendar-combo:hover {
+    -fx-border-color: #5f6368;
+}
+
+.description-area {
+    -fx-pref-row-count: 3;
+    -fx-wrap-text: true;
+}
+
+.calendar-combo .arrow {
+    -fx-background-color: #5f6368;
+}
+
+.calendar-combo .arrow-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0 6px 6px 0;
+    -fx-border-radius: 0 6px 6px 0;
+}
+
+.calendar-combo .arrow-button:hover {
+    -fx-background-color: #f8f9fa;
+}
+
+/* Botón añadir invitados */
+.add-guests-button {
+    -fx-background-color: white;
+    -fx-border-color: #dadce0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-text-fill: #1a73e8;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-cursor: hand;
+    -fx-padding: 10;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.add-guests-button:hover {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #1a73e8;
+}
+
+/* BOTONES DE ACCIÓN */
+.button-container-repositioned {
+    -fx-padding: 12 32 20 32;
+    -fx-spacing: 12;
+    -fx-alignment: BOTTOM_RIGHT;
+}
+
+/* Botón editar/guardar (azul) */
+.primary-button, .save-button {
+    -fx-background-color: #4da6ff;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-padding: 10 20;
+    -fx-background-radius: 25px;
+    -fx-border-radius: 25px;
+    -fx-cursor: hand;
+    -fx-border-color: #1a73e8;
+    -fx-border-width: 1px;
+    -fx-min-width: 80px;
+    -fx-effect: dropshadow(three-pass-box, rgba(77,166,255,0.3), 8, 0, 0, 2);
+}
+
+.primary-button:hover, .save-button:hover {
+    -fx-background-color: #66b3ff;
+}
+
+/* Botón eliminar (rojo) */
+.delete-button {
+    -fx-background-color: #ffb3b3;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-padding: 10 20;
+    -fx-background-radius: 25px;
+    -fx-border-radius: 25px;
+    -fx-cursor: hand;
+    -fx-border-color: #ea4335;
+    -fx-border-width: 1px;
+    -fx-min-width: 80px;
+    -fx-effect: dropshadow(three-pass-box, rgba(255,179,179,0.3), 8, 0, 0, 2);
+}
+
+.delete-button:hover {
+    -fx-background-color: #ffcccc;
+}
+
+/* Botón cancelar (blanco) */
+.cancel-button {
+    -fx-background-color: white;
+    -fx-text-fill: #5f6368;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-padding: 10 20;
+    -fx-background-radius: 25px;
+    -fx-border-radius: 25px;
+    -fx-cursor: hand;
+    -fx-border-color: #dadce0;
+    -fx-border-width: 1px;
+    -fx-min-width: 80px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 8, 0, 0, 2);
+}
+
+.cancel-button:hover {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #5f6368;
+}
+
+/* Clases originales para compatibilidad */
+.button-container {
+    -fx-padding: 24 24 20 24;
+    -fx-spacing: 12;
+    -fx-alignment: CENTER_RIGHT;
+}
+
+.button-container-view {
+    -fx-alignment: CENTER_RIGHT;
+    -fx-padding: 24 24 20 24;
+}
