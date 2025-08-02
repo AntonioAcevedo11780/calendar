@@ -16,6 +16,8 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -25,6 +27,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class CalendarWeekController implements Initializable {
@@ -158,6 +161,20 @@ public class CalendarWeekController implements Initializable {
             calendarGrid.getRowConstraints().add(hourRow);
         }
 
+        /*
+        RowConstraints allDayRow = new RowConstraints();
+        allDayRow.setMinHeight(40); // Altura de fila de eventos de todo el día
+        allDayRow.setPrefHeight(40);
+        calendarGrid.getRowConstraints().add(allDayRow);
+
+        for (int i = 0; i < TOTAL_HOURS; i++) {
+            RowConstraints hourRow = new RowConstraints();
+            hourRow.setVgrow(Priority.NEVER);
+            calendarGrid.getRowConstraints().add(hourRow);
+        }*/
+
+
+
         createWeekView();
     }
 
@@ -206,10 +223,71 @@ public class CalendarWeekController implements Initializable {
             }
         }
 
+        for (int day = 0; day < 7; day++) {
+            LocalDate date = startOfWeek.plusDays(day);
+            List<Event> dayEvents = events.get(date);
+            if (dayEvents == null) continue;
+
+            for (Event event : dayEvents) {
+                if (isAllDay(event)) {
+                    // Crear contenedor para evento de todo el día
+                    StackPane allDayEvent = new StackPane();
+                    allDayEvent.getStyleClass().add("event-all-day");
+
+                    String startStr = event.getStartDate().toLocalTime()
+                            .format(DateTimeFormatter.ofPattern("HH:mm"));
+                    String endStr = event.getEndDate().toLocalTime()
+                            .format(DateTimeFormatter.ofPattern("HH:mm"));
+
+                    Label eventLabel = new Label(event.getTitle() + " (" + startStr + " - " + endStr + ")");
+                    eventLabel.getStyleClass().add("event-label-bold");
+                    //eventLabel.setFont(Font.font("System", FontWeight.BOLD, 13.5));
+                    //eventLabel.getStyleClass().addAll("event-label", "event-block");
+
+                    allDayEvent.getChildren().add(eventLabel);
+
+                    // Efecto hover con JavaFX, se puede agregar aquí:
+                    allDayEvent.setOnMouseEntered(e -> allDayEvent.setStyle("-fx-background-color: #777;"));
+                    allDayEvent.setOnMouseExited(e -> allDayEvent.setStyle(""));
+
+                    // Añadir evento de clic para abrir el evento específico
+                    final Event currentEvent = event;
+                    allDayEvent.setOnMouseClicked(e -> openSpecificEvent(currentEvent));
+
+                    // Agregar a la columna correspondiente y fila de todo el día (fila 1)
+                    calendarGrid.add(allDayEvent, day + 1, 1);
+                    GridPane.setRowSpan(allDayEvent, calendarGrid.getRowCount());
+                }
+            }
+        }
+        /*
+        // Fila All-Day
+        for (int day = 0; day < 7; day++) {
+            LocalDate date = startOfWeek.plusDays(day);
+
+            StackPane allDayEvent = new StackPane();
+            allDayEvent.getStyleClass().add("event-all-day"); // usa un estilo diferenciado si quieres
+            allDayEvent.getChildren().add(new Label("Evento Todo el Día")); // opcional, para texto
+
+            // Agrega el evento en la columna correspondiente y la primera fila
+            calendarGrid.add(allDayEvent, day + 1, 1);
+
+            // Hace que ocupe todas las filas (toda la columna del día)
+            GridPane.setRowSpan(allDayEvent, calendarGrid.getRowCount());
+        }*/
+
+
         renderEventsOverlay();
 
         System.out.println("✓ Vista semanal creada con " + TOTAL_HOURS + " horas");
     }
+
+    private boolean isAllDay(Event event) {
+        LocalTime start = event.getStartDate().toLocalTime();
+        LocalTime end = event.getEndDate().toLocalTime();
+        return start.equals(LocalTime.MIDNIGHT) && end.equals(LocalTime.MIDNIGHT);
+    }
+
 
     private VBox createDayHeader(String dayName, LocalDate date) {
         VBox header = new VBox();
@@ -270,7 +348,7 @@ public class CalendarWeekController implements Initializable {
     private void renderEventsOverlay() {
         eventOverlay.getChildren().clear();
 
-        double rowHeight = 60; // altura por hora (asegúrate que coincida con tu CSS)
+        double rowHeight = 60; // altura por hora debe coincidir con los CSS
         double colWidth = (calendarGrid.getWidth() - 60) / 7; // 60 px = columna de horas
 
         for (int day = 0; day < 7; day++) {
@@ -280,6 +358,7 @@ public class CalendarWeekController implements Initializable {
 
             for (Event event : dayEvents) {
                 if (!shouldShowEvent(event)) continue;
+                if (isAllDay(event)) continue;
 
                 LocalTime start = event.getStartDate().toLocalTime();
                 LocalTime end = event.getEndDate().toLocalTime();
@@ -412,6 +491,8 @@ public class CalendarWeekController implements Initializable {
 
     // ========== NAVEGACIÓN ==========
     @FXML private StackPane weekContainer;
+    @FXML
+    private HBox allDayEventsPane;
     @FXML private Pane eventOverlay;
 
     @FXML
