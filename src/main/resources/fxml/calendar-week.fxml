@@ -192,6 +192,14 @@
 
             <!-- Área de calendario - Columnas 3-12 -->
             <VBox styleClass="calendar-area" GridPane.columnIndex="2" GridPane.columnSpan="10" GridPane.vgrow="ALWAYS">
+
+                <!-- NUEVO: Contenedor para eventos de todo el día -->
+                <HBox fx:id="allDayEventsPane"
+                      prefHeight="40"
+                      spacing="5"
+                      alignment="CENTER"
+                      style="-fx-background-color: #f5f5f5; -fx-padding: 5;" />
+
                 <ScrollPane fx:id="weekScrollPane"
                             fitToWidth="false"
                             fitToHeight="true"
@@ -203,9 +211,9 @@
                         <GridPane fx:id="calendarGrid" styleClass="main-calendar-grid"/>
                         <Pane fx:id="eventOverlay" pickOnBounds="false" styleClass="event-overlay"/>
                     </StackPane>
-
                 </ScrollPane>
             </VBox>
+
 
         </GridPane>
     </center>
