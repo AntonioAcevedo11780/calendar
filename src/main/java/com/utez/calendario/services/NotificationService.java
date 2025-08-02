@@ -113,8 +113,22 @@ public class NotificationService {
     }
 
     private boolean checkEventNotifications(String userId, Event event, LocalDateTime now) {
-        long minutesUntilEvent = ChronoUnit.MINUTES.between(now, event.getStartDate());
         boolean sentAny = false;
+
+        long minutesUntilEvent = ChronoUnit.MINUTES.between(now, event.getStartDate());
+        long durationHours = ChronoUnit.HOURS.between(event.getStartDate(), event.getEndDate());
+
+        // Identificar evento de todo el día por duración
+        if (durationHours >= 23) {
+            // Solo enviar notificación de 24 horas ajustada
+            LocalDateTime adjustedTime = event.getStartDate().minusDays(1).withHour(9);
+            long adjustedMinutes = ChronoUnit.MINUTES.between(now, adjustedTime);
+
+            if (Math.abs(adjustedMinutes) <= 72) {
+                return sendNotificationForEvent(userId, event, 1440);
+            }
+            return false;
+        }
 
         for (long interval : NOTIFICATION_INTERVALS) {
             if (shouldSendNotification(minutesUntilEvent, interval)) {
