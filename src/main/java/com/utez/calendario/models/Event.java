@@ -22,6 +22,9 @@ public class Event {
     private char active;
     private LocalDateTime createdDate;
     private LocalDateTime modifiedDate;
+    private String calendarColor;
+
+
 
     // Constructores
     public Event() {}
@@ -39,7 +42,7 @@ public class Event {
         this.createdDate = LocalDateTime.now();
     }
 
-    // ✅ MÉTODO para título formateado
+    //  MÉTODO para título formateado
     public String getDisplayTitle() {
         if (title == null || title.trim().isEmpty()) {
             return "Sin título";
@@ -53,7 +56,7 @@ public class Event {
         return title;
     }
 
-    // ✅ MÉTODO para verificar si es hoy
+    //  MÉTODO para verificar si es hoy
     public boolean isToday() {
         if (startDate == null) return false;
 
@@ -63,14 +66,14 @@ public class Event {
         return eventDate.equals(today);
     }
 
-    // ✅ MÉTODO para verificar si es futuro
+    //  MÉTODO para verificar si es futuro
     public boolean isUpcoming() {
         if (startDate == null) return false;
 
         return startDate.isAfter(LocalDateTime.now());
     }
 
-    // ✅ MÉTODO para verificar si está en curso
+    //  MÉTODO para verificar si está en curso
     public boolean isOngoing() {
         if (startDate == null || endDate == null) return false;
 
@@ -78,7 +81,7 @@ public class Event {
         return !now.isBefore(startDate) && !now.isAfter(endDate);
     }
 
-    // ✅ MÉTODO para duración formateada
+    //  MÉTODO para duración formateada
     public String getFormattedDuration() {
         if (startDate == null || endDate == null) {
             return "Duración no definida";
@@ -101,7 +104,7 @@ public class Event {
         }
     }
 
-    // ✅ MÉTODO para tiempo hasta el evento
+    //  MÉTODO para tiempo hasta el evento
     public String getTimeUntilEvent() {
         if (startDate == null) return "";
 
@@ -125,7 +128,7 @@ public class Event {
         }
     }
 
-    // ✅ MÉTODO para obtener clase CSS según estado
+    //  MÉTODO para obtener clase CSS según estado
     public String getEventColorClass() {
         if (isToday()) {
             return "event-today";
@@ -138,13 +141,15 @@ public class Event {
         }
     }
 
-    // ✅ MÉTODO para validar si el evento es válido
+    //  MÉTODO para validar si el evento es válido
     public boolean isValidEvent() {
         return title != null && !title.trim().isEmpty()
                 && startDate != null
                 && endDate != null
                 && !endDate.isBefore(startDate);
     }
+
+
 
     // Getters y Setters
     public String getEventId() {
@@ -259,6 +264,10 @@ public class Event {
         this.modifiedDate = modifiedDate;
     }
 
+    public String getCalendarColor() { return calendarColor; }
+
+    public void setCalendarColor(String calendarColor) { this.calendarColor = calendarColor; }
+
     // Métodos utilitarios
     public boolean isAllDay() {
         return allDay == 'Y';
@@ -295,5 +304,8 @@ public class Event {
     @Override
     public int hashCode() {
         return eventId != null ? eventId.hashCode() : 0;
+    }
+
+    public void setCustomColor(String color) {
     }
 }

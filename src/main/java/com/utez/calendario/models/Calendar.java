@@ -83,16 +83,15 @@ public class Calendar {
         return events;
     }
 
-    // ✅ MÉTODO para obtener nombre para mostrar
+
     public String getDisplayName() {
         return (name != null && !name.trim().isEmpty()) ? name : "Calendario " + calendarId;
     }
 
-    // ✅ MEJORAR método existente getAllActiveCalendars
+
     public static List<Calendar> getAllActiveCalendars() {
         List<Calendar> calendars = new ArrayList<>();
 
-        // ✅ Consulta mejorada con más campos
         String sql = """
             SELECT CALENDAR_ID, OWNER_ID, NAME, DESCRIPTION, COLOR, 
                    CREATED_DATE, MODIFIED_DATE 
@@ -127,7 +126,7 @@ public class Calendar {
         return calendars;
     }
 
-    // ✅ MÉTODO para contar eventos activos del calendario
+    // MÉTODO para contar eventos activos del calendario
     public int getActiveEventsCount() {
         String sql = "SELECT COUNT(*) FROM EVENTS WHERE CALENDAR_ID = ? AND ACTIVE = 'Y'";
 
@@ -148,7 +147,7 @@ public class Calendar {
         return 0;
     }
 
-    // ✅ MÉTODO para verificar si el calendario tiene eventos
+    //  MÉTODO para verificar si el calendario tiene eventos
     public boolean hasEvents() {
         return getActiveEventsCount() > 0;
     }
@@ -219,6 +218,130 @@ public class Calendar {
         this.modifiedDate = modifiedDate;
     }
 
+    /**
+     * Obtiene el número de calendarios personalizados (no predeterminados) de un usuario
+     */
+    public static int getUserCustomCalendarsCount(String userId) {
+        int count = 0;
+        String sql = """
+        SELECT COUNT(*) 
+        FROM CALENDARS 
+        WHERE OWNER_ID = ? 
+        AND NAME NOT IN ('Mis Clases', 'Tareas y Proyectos', 'Personal', 'Exámenes')
+        AND ACTIVE = 'Y'
+    """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, userId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    count = rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error contando calendarios personalizados: " + e.getMessage());
+        }
+
+        return count;
+    }
+
+    /**
+     * Genera un ID único para un nuevo calendario
+     */
+    public static String generateCalendarId() {
+        // Formato: CAL + 7 caracteres alfanuméricos aleatorios
+        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        StringBuilder builder = new StringBuilder("CAL");
+        Random random = new Random();
+
+        for (int i = 0; i < 7; i++) {
+            int index = random.nextInt(characters.length());
+            builder.append(characters.charAt(index));
+        }
+
+        return builder.toString();
+    }
+
+    /**
+     * Crea un nuevo calendario personalizado para el usuario
+     */
+    public static boolean createCustomCalendar(String userId, String name, String color) {
+        if (getUserCustomCalendarsCount(userId) >= 5) {
+            return false; // Límite alcanzado
+        }
+
+        String calendarId = generateCalendarId();
+        String description = "Calendario personalizado";
+
+        String sql = """
+        INSERT INTO CALENDARS (CALENDAR_ID, OWNER_ID, NAME, DESCRIPTION, COLOR, ACTIVE, CREATED_DATE)
+        VALUES (?, ?, ?, ?, ?, 'Y', CURRENT_TIMESTAMP)
+    """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, calendarId);
+            stmt.setString(2, userId);
+            stmt.setString(3, name);
+            stmt.setString(4, description);
+            stmt.setString(5, color);
+
+            int result = stmt.executeUpdate();
+            return result > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Error creando calendario personalizado: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Obtiene los calendarios personalizados de un usuario
+     */
+    public static List<Calendar> getUserCustomCalendars(String userId) {
+        List<Calendar> customCalendars = new ArrayList<>();
+
+        String sql = """
+        SELECT CALENDAR_ID, OWNER_ID, NAME, DESCRIPTION, COLOR, 
+               CREATED_DATE, MODIFIED_DATE 
+        FROM CALENDARS 
+        WHERE OWNER_ID = ?
+        AND NAME NOT IN ('Mis Clases', 'Tareas y Proyectos', 'Personal', 'Exámenes')
+        AND ACTIVE = 'Y'
+        ORDER BY CREATED_DATE DESC
+    """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, userId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Calendar calendar = new Calendar();
+                    calendar.setCalendarId(rs.getString("CALENDAR_ID"));
+                    calendar.setOwnerId(rs.getString("OWNER_ID"));
+                    calendar.setName(rs.getString("NAME"));
+                    calendar.setDescription(rs.getString("DESCRIPTION"));
+                    calendar.setColor(rs.getString("COLOR"));
+                    calendar.setCreatedDate(rs.getObject("CREATED_DATE", LocalDateTime.class));
+                    calendar.setModifiedDate(rs.getObject("MODIFIED_DATE", LocalDateTime.class));
+                    calendar.setActive('Y');
+
+                    customCalendars.add(calendar);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error obteniendo calendarios personalizados: " + e.getMessage());
+        }
+
+        return customCalendars;
+    }
+
     // Métodos utilitarios
     public boolean isActive() {
         return active == 'Y';
@@ -248,3 +371,4 @@ public class Calendar {
         return calendarId != null ? calendarId.hashCode() : 0;
     }
 }
+

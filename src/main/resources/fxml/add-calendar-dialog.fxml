@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.paint.Color?>
+<?import javafx.scene.text.Font?>
+
+<VBox xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.utez.calendario.controllers.AddCalendarDialogController"
+      styleClass="dialog-container" prefWidth="400" prefHeight="280">
+
+    <!-- Barra de título -->
+    <HBox styleClass="dialog-header">
+        <Label text="Añadir Calendario" styleClass="dialog-title"/>
+        <Region HBox.hgrow="ALWAYS" />
+        <Button fx:id="closeButton" text="×" styleClass="dialog-close-btn" onAction="#handleClose"/>
+    </HBox>
+
+    <!-- Contenido del diálogo -->
+    <VBox styleClass="dialog-content" spacing="15" VBox.vgrow="ALWAYS">
+        <padding>
+            <Insets top="20" right="20" bottom="20" left="20" />
+        </padding>
+
+        <!-- Nombre del calendario -->
+        <VBox spacing="5">
+            <Label text="Nombre del calendario *" styleClass="field-label"/>
+            <TextField fx:id="calendarNameField" promptText="Ingresa un nombre para el calendario"/>
+        </VBox>
+
+        <!-- Color del calendario -->
+        <VBox spacing="5">
+            <Label text="Color" styleClass="field-label"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <fx:define>
+                    <ToggleGroup fx:id="colorGroup"/>
+                </fx:define>
+
+                <RadioButton fx:id="redColorRadio" text="" styleClass="color-radio, color-red"
+                             toggleGroup="$colorGroup" selected="true"/>
+                <RadioButton fx:id="blueColorRadio" text="" styleClass="color-radio, color-blue"
+                             toggleGroup="$colorGroup"/>
+                <RadioButton fx:id="greenColorRadio" text="" styleClass="color-radio, color-green"
+                             toggleGroup="$colorGroup"/>
+                <RadioButton fx:id="purpleColorRadio" text="" styleClass="color-radio, color-purple"
+                             toggleGroup="$colorGroup"/>
+                <RadioButton fx:id="orangeColorRadio" text="" styleClass="color-radio, color-orange"
+                             toggleGroup="$colorGroup"/>
+            </HBox>
+        </VBox>
+
+        <!-- Descripción -->
+        <VBox spacing="5" VBox.vgrow="ALWAYS">
+            <Label text="Descripción (opcional)" styleClass="field-label"/>
+            <TextArea fx:id="descriptionField" promptText="Describe el propósito de este calendario"
+                      wrapText="true" VBox.vgrow="ALWAYS"/>
+        </VBox>
+
+        <!-- Mensaje de error/éxito -->
+        <Label fx:id="messageLabel" styleClass="message-label" visible="false"/>
+
+        <Region VBox.vgrow="ALWAYS" />
+
+        <!-- Botones de acción -->
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <Button fx:id="cancelButton" text="Cancelar" styleClass="dialog-cancel-btn" onAction="#handleCancel"/>
+            <Button fx:id="saveButton" text="Guardar" styleClass="dialog-save-btn" onAction="#handleSave"/>
+        </HBox>
+    </VBox>
+</VBox>

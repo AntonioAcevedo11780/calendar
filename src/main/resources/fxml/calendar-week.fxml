@@ -162,17 +162,27 @@
                     </HBox>
                 </VBox>
 
+                <!-- Sección de otros calendarios con ScrollPane -->
                 <VBox styleClass="calendar-section-modern">
                     <HBox alignment="CENTER_LEFT" spacing="6" styleClass="calendar-section-header-modern">
                         <Label text="▼" styleClass="section-arrow-modern" />
                         <Label text="Otros calendarios" styleClass="section-header-modern" />
                         <Region HBox.hgrow="ALWAYS" />
-                        <ImageView fitHeight="16" fitWidth="16" preserveRatio="true" styleClass="add-calendar-icon">
-                            <image>
-                                <Image url="@/images/plus.png" />
-                            </image>
-                        </ImageView>
+                        <Button fx:id="addCalendarButton" styleClass="add-calendar-icon-btn" onAction="#handleAddCalendar">
+                            <graphic>
+                                <ImageView fitHeight="16" fitWidth="16" preserveRatio="true">
+                                    <image>
+                                        <Image url="@/images/plus.png" />
+                                    </image>
+                                </ImageView>
+                            </graphic>
+                        </Button>
                     </HBox>
+
+                    <!-- ScrollPane para calendarios personalizados -->
+                    <ScrollPane fx:id="customCalendarsScroll" fitToWidth="true" styleClass="calendar-scroll-pane" maxHeight="150">
+                        <VBox fx:id="customCalendarsContainer" spacing="5" />
+                    </ScrollPane>
                 </VBox>
 
                 <Button text="Cerrar Sesión" styleClass="logout-button-modern" onAction="#handleLogout" maxWidth="Infinity" />
