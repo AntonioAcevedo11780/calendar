@@ -2,6 +2,7 @@ package com.utez.calendario.models;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Random; // Añadido el import que faltaba
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -21,11 +22,10 @@ public class Calendar {
     private char active;
     private LocalDateTime createdDate;
     private LocalDateTime modifiedDate;
+    private boolean isDefault; // Añadido para marcar si es calendario predeterminado
 
     private static Connection getConnection() throws SQLException {
-
         return com.utez.calendario.config.DatabaseConfig.getConnection();
-
     }
 
     // Constructores
@@ -114,6 +114,13 @@ public class Calendar {
                 calendar.setCreatedDate(rs.getObject("CREATED_DATE", LocalDateTime.class));
                 calendar.setModifiedDate(rs.getObject("MODIFIED_DATE", LocalDateTime.class));
                 calendar.setActive('Y');
+
+                // Determinar si es un calendario predeterminado
+                String name = calendar.getName();
+                if (name != null && (name.equals("Mis Clases") || name.equals("Tareas y Proyectos") ||
+                        name.equals("Personal") || name.equals("Exámenes"))) {
+                    calendar.setDefault(true);
+                }
 
                 calendars.add(calendar);
             }
@@ -216,6 +223,14 @@ public class Calendar {
 
     public void setModifiedDate(LocalDateTime modifiedDate) {
         this.modifiedDate = modifiedDate;
+    }
+
+    public boolean isDefault() {
+        return isDefault;
+    }
+
+    public void setDefault(boolean isDefault) {
+        this.isDefault = isDefault;
     }
 
     /**
@@ -331,6 +346,7 @@ public class Calendar {
                     calendar.setCreatedDate(rs.getObject("CREATED_DATE", LocalDateTime.class));
                     calendar.setModifiedDate(rs.getObject("MODIFIED_DATE", LocalDateTime.class));
                     calendar.setActive('Y');
+                    calendar.setDefault(false); // No es predeterminado
 
                     customCalendars.add(calendar);
                 }
@@ -340,6 +356,56 @@ public class Calendar {
         }
 
         return customCalendars;
+    }
+
+    /**
+     * Obtiene los calendarios predeterminados de un usuario
+     */
+    public static List<Calendar> getUserDefaultCalendars(String userId) {
+        List<Calendar> defaultCalendars = new ArrayList<>();
+
+        String sql = """
+        SELECT CALENDAR_ID, OWNER_ID, NAME, DESCRIPTION, COLOR, 
+               CREATED_DATE, MODIFIED_DATE 
+        FROM CALENDARS 
+        WHERE OWNER_ID = ?
+        AND NAME IN ('Mis Clases', 'Tareas y Proyectos', 'Personal', 'Exámenes')
+        AND ACTIVE = 'Y'
+        ORDER BY 
+        CASE NAME
+            WHEN 'Mis Clases' THEN 1
+            WHEN 'Tareas y Proyectos' THEN 2
+            WHEN 'Personal' THEN 3
+            WHEN 'Exámenes' THEN 4
+        END
+    """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, userId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Calendar calendar = new Calendar();
+                    calendar.setCalendarId(rs.getString("CALENDAR_ID"));
+                    calendar.setOwnerId(rs.getString("OWNER_ID"));
+                    calendar.setName(rs.getString("NAME"));
+                    calendar.setDescription(rs.getString("DESCRIPTION"));
+                    calendar.setColor(rs.getString("COLOR"));
+                    calendar.setCreatedDate(rs.getObject("CREATED_DATE", LocalDateTime.class));
+                    calendar.setModifiedDate(rs.getObject("MODIFIED_DATE", LocalDateTime.class));
+                    calendar.setActive('Y');
+                    calendar.setDefault(true); // Es predeterminado
+
+                    defaultCalendars.add(calendar);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error obteniendo calendarios predeterminados: " + e.getMessage());
+        }
+
+        return defaultCalendars;
     }
 
     // Métodos utilitarios
@@ -371,4 +437,3 @@ public class Calendar {
         return calendarId != null ? calendarId.hashCode() : 0;
     }
 }
-

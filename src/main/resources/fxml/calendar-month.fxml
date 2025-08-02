@@ -173,7 +173,7 @@
                         <Label text="▼" styleClass="section-arrow-modern" />
                         <Label text="Otros calendarios" styleClass="section-header-modern" />
                         <Region HBox.hgrow="ALWAYS" />
-                        <Button fx:id="addCalendarButton" styleClass="add-calendar-icon-btn" onAction="#handleAddCalendar">
+                        <Button fx:id="addCalendarButton" styleClass="add-calendar-icon-btn" >
                             <graphic>
                                 <ImageView fitHeight="16" fitWidth="16" preserveRatio="true">
                                     <image>
