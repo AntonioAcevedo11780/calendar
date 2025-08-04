@@ -16,6 +16,7 @@ import javafx.geometry.HPos;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.geometry.VPos;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -702,7 +703,17 @@ public class CalendarMonthController implements Initializable {
         Stage dialogStage = new Stage();
         dialogStage.initStyle(StageStyle.UNDECORATED);
         dialogStage.initModality(Modality.WINDOW_MODAL);
-        dialogStage.initOwner(createButton.getScene().getWindow());
+
+        // Obtener la ventana padre de forma más robusta
+        Stage parentStage = null;
+        try {
+            if (createButton != null && createButton.getScene() != null && createButton.getScene().getWindow() != null) {
+                parentStage = (Stage) createButton.getScene().getWindow();
+                dialogStage.initOwner(parentStage);
+            }
+        } catch (Exception e) {
+            System.out.println("No se pudo establecer ventana padre para diálogo de día: " + e.getMessage());
+        }
 
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM 'de' yyyy",
                 Locale.of("es", "ES"));
@@ -787,8 +798,17 @@ public class CalendarMonthController implements Initializable {
 
         dialogStage.setScene(scene);
         dialogStage.setResizable(true);
+        dialogStage.setWidth(500);
+        dialogStage.setHeight(400);
         dialogStage.setMinWidth(500);
         dialogStage.setMinHeight(400);
+        if (parentStage != null) {
+            Stage finalParentStage = parentStage;
+            Platform.runLater(() -> {
+                dialogStage.setX(finalParentStage.getX() + (finalParentStage.getWidth() - dialogStage.getWidth()) / 2);
+                dialogStage.setY(finalParentStage.getY() + (finalParentStage.getHeight() - dialogStage.getHeight()) / 2);
+            });
+        }
 
         // Hacer la ventana arrastrable
         makeDialogDraggable(mainContainer, dialogStage);
@@ -797,25 +817,24 @@ public class CalendarMonthController implements Initializable {
     }
 
     /**
-     * Crea una caja de evento estilizada para el diálogo
+     * Crea una caja de evento estilizada para el diálogo - VERSIÓN CORREGIDA SIN CONFLICTOS
      */
     private VBox createStyledEventBox(Event event, Stage parentStage) {
         VBox eventContainer = new VBox(8);
         eventContainer.setStyle("-fx-padding: 16; -fx-background-color: #f8f9fa; -fx-background-radius: 8; " +
-                "-fx-border-color: #e8eaed; -fx-border-radius: 8; -fx-border-width: 1; " +
-                "-fx-cursor: hand; -fx-margin: 0 0 8 0;");
+                "-fx-border-color: #e8eaed; -fx-border-radius: 8; -fx-border-width: 1;");
 
         // Título del evento
         Label titleLabel = new Label(event.getTitle());
         titleLabel.getStyleClass().add("event-title-display");
-        titleLabel.setStyle("-fx-font-size: 16px; -fx-padding: 0 0 8 0;");
+        titleLabel.setStyle("-fx-font-size: 16px; -fx-padding: 0 0 8 0; -fx-font-weight: bold;");
 
         // Información de fecha y hora
         HBox timeRow = new HBox(12);
         timeRow.getStyleClass().add("event-detail-row");
         timeRow.setAlignment(Pos.CENTER_LEFT);
 
-        // Ícono de tiempo (puedes usar un simple texto o imagen)
+        // Ícono de tiempo
         Label timeIcon = new Label("🕐");
         timeIcon.setStyle("-fx-font-size: 16px;");
 
@@ -875,38 +894,38 @@ public class CalendarMonthController implements Initializable {
 
         calendarRow.getChildren().addAll(colorIndicator, calendarLabel);
 
-        // Botón para ver detalles
+        // Botón de acción - SIMPLIFICADO
         HBox buttonRow = new HBox();
         buttonRow.setAlignment(Pos.CENTER_RIGHT);
         buttonRow.setStyle("-fx-padding: 8 0 0 0;");
 
         Button viewButton = new Button("Ver detalles");
         viewButton.getStyleClass().add("primary-button");
-        viewButton.setStyle("-fx-font-size: 12px; -fx-padding: 6 12;");
+        viewButton.setStyle("-fx-font-size: 12px; -fx-padding: 6 12; -fx-cursor: hand;");
 
-        buttonRow.getChildren().add(viewButton);
-
-        eventContainer.getChildren().addAll(titleLabel, timeRow, descriptionBox, calendarRow, buttonRow);
-
-        // Evento click para toda la caja
-        eventContainer.setOnMouseClicked(e -> {
-            parentStage.close();
-            openSpecificEvent(event);
-        });
-
-        // Evento click específico para el botón
+        // ACCIÓN SIMPLIFICADA DEL BOTÓN - Sin conflictos
         viewButton.setOnAction(e -> {
             parentStage.close();
             openSpecificEvent(event);
         });
 
-        // Efectos hover
+        buttonRow.getChildren().add(viewButton);
+
+        // Agregar todos los elementos al contenedor
+        eventContainer.getChildren().addAll(titleLabel, timeRow, descriptionBox, calendarRow, buttonRow);
+
+        // REMOVER TODOS LOS EVENT HANDLERS DE CLICK DEL CONTENEDOR
+        // Solo mantener efectos visuales suaves sin interactividad
+        final String originalStyle = eventContainer.getStyle();
+        final String hoverStyle = originalStyle.replace("#f8f9fa", "#f0f0f0");
+
+        // Efectos hover MUY suaves - solo cambio de color de fondo
         eventContainer.setOnMouseEntered(e -> {
-            eventContainer.setStyle(eventContainer.getStyle() + "; -fx-background-color: #e8f0fe;");
+            eventContainer.setStyle(hoverStyle);
         });
 
         eventContainer.setOnMouseExited(e -> {
-            eventContainer.setStyle(eventContainer.getStyle().replace("; -fx-background-color: #e8f0fe", ""));
+            eventContainer.setStyle(originalStyle);
         });
 
         return eventContainer;
@@ -970,7 +989,6 @@ public class CalendarMonthController implements Initializable {
 
     /**
      * Método para obtener color basado en el nombre del calendario
-     * Usa este método si tienes acceso al nombre del calendario en el evento
      */
     private String getColorByCalendarName(String calendarId) {
         // Si tienes acceso al objeto Event completo, podrías usar event.getCalendar().getName()
@@ -1482,15 +1500,22 @@ public class CalendarMonthController implements Initializable {
 
             Stage dialogStage = new Stage();
 
-            // ESTAS SON LAS LÍNEAS CRÍTICAS:
-            dialogStage.initStyle(StageStyle.TRANSPARENT); // Cambia de UNDECORATED a TRANSPARENT
+            // Configurar el diálogo sin barra de título pero funcional
+            dialogStage.initStyle(StageStyle.UNDECORATED);
             dialogStage.initModality(Modality.WINDOW_MODAL);
-            dialogStage.initOwner(createButton.getScene().getWindow());
+
+            // Obtener la ventana padre de forma más robusta
+            Stage parentStage = null;
+            try {
+                if (createButton != null && createButton.getScene() != null && createButton.getScene().getWindow() != null) {
+                    parentStage = (Stage) createButton.getScene().getWindow();
+                    dialogStage.initOwner(parentStage);
+                }
+            } catch (Exception e) {
+                System.out.println("No se pudo establecer ventana padre: " + e.getMessage());
+            }
 
             Scene dialogScene = new Scene(dialogRoot);
-
-            // ESTA LÍNEA ES MUY IMPORTANTE:
-            dialogScene.setFill(Color.TRANSPARENT); // Fondo completamente transparente
 
             try {
                 dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
@@ -1499,7 +1524,16 @@ public class CalendarMonthController implements Initializable {
             }
 
             dialogStage.setScene(dialogScene);
-            dialogStage.setResizable(false);
+
+            // Establecer tamaño fijo para evitar problemas de visibilidad
+            dialogStage.setWidth(600);
+            dialogStage.setHeight(500);
+
+            // Centrar el diálogo manualmente
+            if (parentStage != null) {
+                dialogStage.setX(parentStage.getX() + (parentStage.getWidth() - 600) / 2);
+                dialogStage.setY(parentStage.getY() + (parentStage.getHeight() - 500) / 2);
+            }
 
             // Hacer la ventana arrastrable
             makeDialogDraggable(dialogRoot, dialogStage);
@@ -1512,7 +1546,6 @@ public class CalendarMonthController implements Initializable {
             showAlert("Error", "No se pudo abrir el evento:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
-
 
     // ========== MÉTODOS PÚBLICOS ==========
 
