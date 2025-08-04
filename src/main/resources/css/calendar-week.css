@@ -82,7 +82,6 @@
     -fx-alignment: center;
 }
 
-
 /* ========== ENCABEZADOS DE DÍAS -  ========== */
 .day-header {
     -fx-background-color: #f8f9fa;
@@ -99,6 +98,7 @@
     -fx-background-insets: 0;
     -fx-border-insets: 0;
 }
+
 .day-header-first {
     -fx-background-color: #f8f9fa;
     -fx-border-color: #2c2c2c;
@@ -178,6 +178,7 @@
     -fx-background-insets: 0;
     -fx-border-insets: 0;
 }
+
 .hour-cell-first {
     -fx-background-color: white;
     -fx-border-color: #2c2c2c;
@@ -204,51 +205,69 @@
     -fx-border-width: 0 1 1 1;
 }
 
-/* ========== EVENTOS ========== */
+/* ========== EVENTOS - CORREGIDOS ========== */
+/* Contenedor de eventos - no debe tener fondo por defecto */
+.event-container {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+}
+
+.event-container:hover {
+    -fx-scale-x: 1.02;
+    -fx-scale-y: 1.02;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 4, 0, 0, 2);
+}
+
+/* Etiquetas de eventos - sin fondo por defecto */
 .event-label {
     -fx-font-size: 11px;
-    -fx-text-fill: black;
-    -fx-padding: 4 2;
-    -fx-background-radius: 2;
-    -fx-border-radius: 2;
-    -fx-border-color: rgba(0,0,0,0.1);
-    -fx-border-width: 1;
+    -fx-text-fill: white;
+    -fx-padding: 4 6;
+    -fx-background-radius: 3;
+    -fx-border-radius: 3;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 3, 0, 0, 1);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 2, 0, 0, 1);
     -fx-max-width: Double.MAX_VALUE;
     -fx-wrap-text: true;
     -fx-text-overrun: ellipsis;
-    -fx-margin: 1 0;
-}
-/*
-.all-day-cell {
-    -fx-background-color: #777;
-    -fx-border-color: rgba(0,0,0,0.1);
-    -fx-border-width: 1;
-}
-*/
-.event-all-day {
-    -fx-background-color: #777;
-    -fx-font-size: 13.5px;
-    -fx-text-fill: black;
-    -fx-font-weight: bold;
-    -fx-text-fill: black;
-    -fx-alignment: center;
-    -fx-padding: 4 2;
-    -fx-cursor: hand;
-    -fx-background-radius: 2;
-    -fx-border-width: 1;
+    -fx-font-weight: 500;
 }
 
-.event-all-day:hover {
+.event-label:hover {
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 4, 0, 0, 2);
     -fx-scale-x: 1.02;
     -fx-scale-y: 1.02;
 }
 
+/* Eventos de todo el día */
+.event-all-day {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 2, 0, 0, 1);
+}
 
+/* Bloques de eventos en overlay */
+.event-block {
+    -fx-text-fill: white;
+    -fx-padding: 4 6;
+    -fx-background-radius: 3;
+    -fx-border-radius: 3;
+    -fx-font-size: 11px;
+    -fx-font-weight: 500;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 2, 0, 0, 1);
+}
 
+.event-block:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 4, 0, 0, 2);
+    -fx-scale-x: 1.02;
+    -fx-scale-y: 1.02;
+}
 
+/* ========== COLORES DE EVENTOS - SOLO COMO FALLBACK ========== */
+/* Estos colores solo se usarán si no se aplica color dinámico desde Java */
 .event-blue {
     -fx-background-color: #1976d2;
 }
@@ -269,46 +288,13 @@
     -fx-background-color: #8e24aa;
 }
 
+.event-yellow {
+    -fx-background-color: #f2c51f;
+}
+
 .event-default {
     -fx-background-color: #757575;
 }
-
-
-.event-label:hover {
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 4, 0, 0, 2);
-    -fx-scale-x: 1.02;
-    -fx-scale-y: 1.02;
-}
-
-.event-label-bold {
-    -fx-font-size: 13.5px;
-    -fx-font-weight: bold;
-    -fx-text-fill: black;
-}
-
-/*
-.event-label {
-    -fx-font-weight: bold;
-    -fx-font-size: 13.5px;
-    -fx-text-fill: black;
-}
-*/
-
-.event-block {
-    -fx-background-color: #777;
-    -fx-text-fill: black;
-    -fx-padding: 4 2;
-    -fx-background-radius: 0;
-    -fx-border-radius: 0;
-    -fx-font-size: 12px;
-}
-
-/*
-.event-label:hover {
-    -fx-background-color: rgba(70,130,180, 0.9);
-    -fx-cursor: hand;
-}
-*/
 
 /* ========== LÍNEA DE HORA ACTUAL ========== */
 .current-time-line {
@@ -319,7 +305,7 @@
     -fx-effect: dropshadow(gaussian, rgba(234,67,53,0.5), 2, 0, 0, 0);
 }
 
-/* Header Container */
+/* ========== HEADER Y SIDEBAR - SIN CAMBIOS ========== */
 .header-container {
     -fx-background-color: white;
     -fx-padding: 0;
@@ -335,14 +321,12 @@
     -fx-background-color: white;
 }
 
-/* App Title */
 .app-title {
     -fx-text-fill: #2c2c2c;
     -fx-font-size: 18px;
     -fx-font-weight: bold;
 }
 
-/* Botón Today */
 .today-button-modern {
     -fx-background-color: white;
     -fx-text-fill: #2c2c2c;
@@ -363,25 +347,23 @@
     -fx-text-fill: #1976d2;
 }
 
-/* Botones de navegación */
 .nav-arrow-modern {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
     -fx-cursor: hand;
     -fx-padding: 8;
 }
+
 .nav-arrow-modern:hover {
     -fx-text-fill: #1976d2;
 }
 
-/* Título del mes */
 .month-title-modern {
     -fx-text-fill: #2c2c2c;
     -fx-font-size: 22px;
     -fx-font-weight: bold;
 }
 
-/* Botón cerrar */
 .close-btn-modern {
     -fx-background-color: transparent;
     -fx-text-fill: #2c2c2c;
@@ -396,7 +378,6 @@
     -fx-text-fill: #d32f2f;
 }
 
-/* Sidebar */
 .sidebar-modern {
     -fx-background-color: white;
     -fx-padding: 24;
@@ -405,7 +386,6 @@
     -fx-border-width: 0 1 0 0;
 }
 
-/* Botón Crear */
 .create-button-ultra-modern {
     -fx-background-color: white;
     -fx-text-fill: #2c2c2c;
@@ -427,7 +407,6 @@
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 6, 0, 0, 6);
 }
 
-/* View Section */
 .view-section-modern {
     -fx-spacing: 8;
 }
@@ -453,7 +432,6 @@
     -fx-background-radius: 4;
 }
 
-/* Calendar Section */
 .calendar-section-modern {
     -fx-spacing: 12;
 }
@@ -474,7 +452,6 @@
     -fx-font-weight: bold;
 }
 
-/* Calendar Items */
 .calendar-item-modern {
     -fx-spacing: 8;
     -fx-padding: 6;
@@ -485,7 +462,7 @@
     -fx-background-radius: 4;
 }
 
-/* Checkboxes */
+/* ========== CHECKBOXES ========== */
 .calendar-checkbox-books .box {
     -fx-background-color: white;
     -fx-border-color: #1E76E8;
@@ -526,7 +503,7 @@
     -fx-background-color: #f2c51f;
 }
 
-/* Calendar Names */
+/* ========== NOMBRES DE CALENDARIOS ========== */
 .calendar-name-books {
     -fx-text-fill: #1E76E8;
     -fx-font-size: 14px;
@@ -551,7 +528,6 @@
     -fx-font-weight: bold;
 }
 
-/* Logout Button */
 .logout-button-modern {
     -fx-background-color: transparent;
     -fx-text-fill: #e53935;
@@ -567,7 +543,7 @@
     -fx-background-radius: 4;
 }
 
-/* Estilos para el ScrollPane de calendarios */
+/* ========== CALENDARIOS PERSONALIZADOS ========== */
 .calendar-scroll-pane {
     -fx-background-color: transparent;
     -fx-background: transparent;
@@ -594,7 +570,6 @@
     -fx-background-radius: 3;
 }
 
-/* Estilos para calendarios personalizados */
 .calendar-checkbox-custom {
     -fx-cursor: hand;
 }
@@ -603,7 +578,6 @@
     -fx-font-size: 13px;
 }
 
-/* Color picker cuadrado pequeño */
 .calendar-color-indicator {
     -fx-min-width: 14px;
     -fx-max-width: 14px;
@@ -613,6 +587,20 @@
     -fx-border-radius: 2;
     -fx-border-width: 1;
     -fx-border-color: rgba(0, 0, 0, 0.2);
+}
+
+.event-custom {
+    -fx-background-radius: 3;
+    -fx-padding: 4 6;
+    -fx-font-size: 11px;
+    -fx-text-fill: white;
+    -fx-font-weight: 500;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 2, 0, 0, 1);
+}
+
+.calendar-custom-checkbox {
+    -fx-padding: 2 5;
+    -fx-font-size: 12px;
 }
 
 /* ========== RESPONSIVE - MEJORADO ========== */
@@ -631,6 +619,11 @@
 
     .day-header-number {
         -fx-font-size: 15px;
+    }
+
+    .event-label {
+        -fx-font-size: 12px;
+        -fx-padding: 5 7;
     }
 }
 
@@ -653,6 +646,10 @@
         -fx-min-width: 80;
         -fx-pref-width: 80;
         -fx-max-width: 80;
+    }
+
+    .corner-cell, .hour-label {
+        -fx-border-width: 0 2 1 0;
     }
 }
 
@@ -695,12 +692,7 @@
 
     .event-label {
         -fx-font-size: 10px;
-        -fx-padding: 3 6;
-    }
-    @media screen and (max-width: 1400px) {
-        .corner-cell, .hour-label {
-            -fx-border-width: 0 2 1 0;
-        }
+        -fx-padding: 3 5;
     }
 }
 
@@ -729,5 +721,10 @@
         -fx-min-width: 85;
         -fx-min-height: 50;
         -fx-pref-height: 50;
+    }
+
+    .event-label {
+        -fx-font-size: 9px;
+        -fx-padding: 2 4;
     }
 }

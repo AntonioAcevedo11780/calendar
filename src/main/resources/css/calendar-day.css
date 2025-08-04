@@ -225,7 +225,20 @@
     -fx-border-width: 1;
 }
 
+.event-label.all-day-event:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 3, 0, 0, 1); /* mantener efecto original */
+    -fx-scale-x: 1.0; /* sin escala */
+    -fx-scale-y: 1.0; /* sin escala */
+}
 
+/* Eventos de todo el día */
+.event-all-day {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 2, 0, 0, 1);
+}
 
 .event-blue {
     -fx-background-color: #1976d2;
@@ -576,6 +589,20 @@
     -fx-border-radius: 2;
     -fx-border-width: 1;
     -fx-border-color: rgba(0, 0, 0, 0.2);
+}
+/* Estilos para eventos de calendarios personalizados */
+.event-custom {
+    -fx-background-radius: 4;
+    -fx-padding: 2 4;
+    -fx-font-size: 11px;
+    -fx-text-fill: white;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 2, 0, 0, 1);
+}
+
+/* Estilos adicionales para checkboxes de calendarios personalizados */
+.calendar-custom-checkbox {
+    -fx-padding: 2 5;
+    -fx-font-size: 12px;
 }
 
 /* ========== RESPONSIVE ========== */

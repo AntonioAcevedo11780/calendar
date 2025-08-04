@@ -491,6 +491,21 @@
     -fx-border-color: rgba(0, 0, 0, 0.2);
 }
 
+/* Estilos para eventos de calendarios personalizados */
+.event-custom {
+    -fx-background-radius: 4;
+    -fx-padding: 2 4;
+    -fx-font-size: 11px;
+    -fx-text-fill: white;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 2, 0, 0, 1);
+}
+
+/* Estilos adicionales para checkboxes de calendarios personalizados */
+.calendar-custom-checkbox {
+    -fx-padding: 2 5;
+    -fx-font-size: 12px;
+}
+
 /* Responsividad para títulos en diferentes tamaños */
 @media screen and (min-width: 1200px) {
     .mini-month-title {

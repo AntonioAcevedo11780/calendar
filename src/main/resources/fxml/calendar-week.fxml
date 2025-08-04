@@ -100,13 +100,15 @@
 
             <!-- Sidebar - Columnas 1-2 -->
             <VBox styleClass="sidebar-modern" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.vgrow="ALWAYS">
+
+                <!-- BOTÓN CREAR MODERNO -->
                 <Button fx:id="createButton"
                         text="Crear"
                         styleClass="create-button-ultra-modern"
                         alignment="CENTER"
                         onAction="#handleCreateButton" />
 
-                <!-- Opciones de vista -->
+                <!-- Opciones de vista del calendario -->
                 <VBox styleClass="view-section-modern">
                     <Label text="Día" styleClass="view-option-modern" onMouseClicked="#handleDayView" />
                     <Label text="Semana" styleClass="view-option-active-modern" onMouseClicked="#handleWeekView" />
@@ -114,61 +116,70 @@
                     <Label text="Año" styleClass="view-option-modern" onMouseClicked="#handleYearView" />
                 </VBox>
 
-                <!-- Lista de calendarios -->
+                <!-- Lista de calendarios del usuario -->
                 <VBox styleClass="calendar-section-modern">
                     <HBox alignment="CENTER_LEFT" spacing="6" styleClass="calendar-section-header-modern">
                         <Label text="▼" styleClass="section-arrow-modern" />
                         <Label text="Mis calendarios" styleClass="section-header-modern" />
                     </HBox>
 
-                    <HBox styleClass="calendar-item-modern" alignment="CENTER_LEFT" spacing="8">
+                    <!-- Mis Clases -->
+                    <HBox styleClass="calendar-item-modern calendar-item-predefined" alignment="CENTER_LEFT" spacing="6">
                         <CheckBox fx:id="userCalendarCheck" selected="true" styleClass="calendar-checkbox-books" />
-                        <ImageView fitHeight="21" fitWidth="21" preserveRatio="true">
+                        <ImageView fitHeight="18" fitWidth="18" preserveRatio="true">
                             <image>
                                 <Image url="@/images/books.png" />
                             </image>
                         </ImageView>
-                        <Label text="Mis Clases" styleClass="calendar-name-books" />
+                        <Label text="Mis Clases" styleClass="calendar-name-books" maxWidth="Infinity" />
+                        <!-- Reducir el espacio reservado para el botón -->
+                        <Region minWidth="20" maxWidth="20" />
                     </HBox>
 
-                    <HBox styleClass="calendar-item-modern" alignment="CENTER_LEFT" spacing="8">
+                    <!-- Tareas y Proyectos -->
+                    <HBox styleClass="calendar-item-modern calendar-item-predefined" alignment="CENTER_LEFT" spacing="6">
                         <CheckBox fx:id="tasksCalendarCheck" selected="true" styleClass="calendar-checkbox-tasks" />
-                        <ImageView fitHeight="21" fitWidth="21" preserveRatio="true">
+                        <ImageView fitHeight="18" fitWidth="18" preserveRatio="true">
                             <image>
                                 <Image url="@/images/school.png" />
                             </image>
                         </ImageView>
-                        <Label text="Tareas" styleClass="calendar-name-tasks" />
+                        <Label text="Tareas" styleClass="calendar-name-tasks" maxWidth="Infinity" />
+                        <Region minWidth="20" maxWidth="20" />
                     </HBox>
 
-                    <HBox styleClass="calendar-item-modern" alignment="CENTER_LEFT" spacing="8">
+                    <!-- Personal -->
+                    <HBox styleClass="calendar-item-modern calendar-item-predefined" alignment="CENTER_LEFT" spacing="6">
                         <CheckBox fx:id="personalCalendarCheck" selected="true" styleClass="calendar-checkbox-personal" />
-                        <ImageView fitHeight="21" fitWidth="21" preserveRatio="true">
+                        <ImageView fitHeight="18" fitWidth="18" preserveRatio="true">
                             <image>
                                 <Image url="@/images/person.png" />
                             </image>
                         </ImageView>
-                        <Label text="Personal" styleClass="calendar-name-personal" />
+                        <Label text="Personal" styleClass="calendar-name-personal" maxWidth="Infinity" />
+                        <Region minWidth="20" maxWidth="20" />
                     </HBox>
 
-                    <HBox styleClass="calendar-item-modern" alignment="CENTER_LEFT" spacing="8">
+                    <!-- Exámenes -->
+                    <HBox styleClass="calendar-item-modern calendar-item-predefined" alignment="CENTER_LEFT" spacing="6">
                         <CheckBox fx:id="examsCalendarCheck" selected="true" styleClass="calendar-checkbox-exams" />
-                        <ImageView fitHeight="21" fitWidth="21" preserveRatio="true">
+                        <ImageView fitHeight="18" fitWidth="18" preserveRatio="true">
                             <image>
                                 <Image url="@/images/exam.png" />
                             </image>
                         </ImageView>
-                        <Label text="Exámenes" styleClass="calendar-name-exams" />
+                        <Label text="Exámenes" styleClass="calendar-name-exams" maxWidth="Infinity" />
+                        <Region minWidth="20" maxWidth="20" />
                     </HBox>
                 </VBox>
 
-                <!-- Sección de otros calendarios con ScrollPane -->
+                <!-- Sección de otros calendarios CON ScrollPane sutil -->
                 <VBox styleClass="calendar-section-modern">
                     <HBox alignment="CENTER_LEFT" spacing="6" styleClass="calendar-section-header-modern">
                         <Label text="▼" styleClass="section-arrow-modern" />
                         <Label text="Otros calendarios" styleClass="section-header-modern" />
                         <Region HBox.hgrow="ALWAYS" />
-                        <Button fx:id="addCalendarButton" styleClass="add-calendar-icon-btn">
+                        <Button fx:id="addCalendarButton" styleClass="add-calendar-icon-btn" onAction="#handleAddCalendar">
                             <graphic>
                                 <ImageView fitHeight="16" fitWidth="16" preserveRatio="true">
                                     <image>
@@ -179,15 +190,21 @@
                         </Button>
                     </HBox>
 
-                    <!-- ScrollPane para calendarios personalizados -->
-                    <ScrollPane fx:id="customCalendarsScroll" fitToWidth="true" styleClass="calendar-scroll-pane" maxHeight="150">
-                        <VBox fx:id="customCalendarsContainer" spacing="5" />
+                    <!-- ScrollPane SUTIL solo para los calendarios personalizados -->
+                    <ScrollPane fx:id="customCalendarsScroll"
+                                fitToWidth="true"
+                                styleClass="custom-calendar-scroll-pane"
+                                maxHeight="320"
+                                minHeight="50">
+                        <VBox fx:id="customCalendarsContainer" spacing="5" styleClass="custom-calendars-container" />
                     </ScrollPane>
                 </VBox>
 
-                <Button text="Cerrar Sesión" styleClass="logout-button-modern" onAction="#handleLogout" maxWidth="Infinity" />
-
+                <!-- Espaciador para empujar contenido hacia arriba -->
                 <Region VBox.vgrow="ALWAYS" />
+
+                <!-- Botón de logout -->
+                <Button text="Cerrar Sesión" styleClass="logout-button-modern" onAction="#handleLogout" maxWidth="Infinity" />
             </VBox>
 
             <!-- Área de calendario - Columnas 3-12 -->

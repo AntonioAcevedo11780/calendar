@@ -1,5 +1,6 @@
 package com.utez.calendario.controllers;
 
+import com.utez.calendario.models.Calendar;
 import com.utez.calendario.models.Event;
 import com.utez.calendario.models.User;
 import com.utez.calendario.services.AuthService;
@@ -8,6 +9,7 @@ import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -31,8 +33,17 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class CalendarYearController implements Initializable {
+
+    // Colores para calendarios predeterminados
+    private static final String COLOR_CLASSES = "#1E76E8";  // Color para Mis Clases
+    private static final String COLOR_TASKS = "#2c2c2c";    // Color para Tareas y Proyectos
+    private static final String COLOR_PERSONAL = "#53C925"; // Color para Personal
+    private static final String COLOR_EXAMS = "#f2c51f";    // Color para Exámenes
+    private static final String COLOR_HOLIDAYS = "#FF6B35"; // Color para Días Festivos
+    private static final String COLOR_UTEZ = "#8B5CF6";     // Color para UTEZ
 
     // ========== FXML ELEMENTS ==========
     @FXML private Label yearLabel;
@@ -47,11 +58,16 @@ public class CalendarYearController implements Initializable {
     @FXML private CheckBox tasksCalendarCheck;
     @FXML private CheckBox personalCalendarCheck;
     @FXML private CheckBox examsCalendarCheck;
+    @FXML private CheckBox holidaysCalendarCheck;
+    @FXML private CheckBox utezCalendarCheck;
+    @FXML private ScrollPane customCalendarsScroll;
+    @FXML private VBox customCalendarsContainer;
+    @FXML private Button addCalendarButton;
 
     // ========== VARIABLES DE ESTADO ==========
     private int currentYear;
     private LocalDate selectedDate;
-    private Map<LocalDate, List<String>> events;
+    private Map<LocalDate, List<Event>> events; // Cambiado para almacenar objetos Event
     private List<String> viewModes = Arrays.asList("Día", "Semana", "Mes", "Año");
     private int currentViewMode = 3; // Año por defecto
 
@@ -60,6 +76,13 @@ public class CalendarYearController implements Initializable {
 
     private double xOffset = 0;
     private double yOffset = 0;
+
+    // Cache para calendarios personalizados
+    private List<Calendar> customCalendarsCache = new ArrayList<>();
+    private List<Calendar> allCalendarsCache = new ArrayList<>(); // Cache para TODOS los calendarios
+    private volatile boolean isLoadingEvents = false;
+    private Map<String, CheckBox> customCalendarCheckboxes = new HashMap<>();
+    private Map<String, Button> customCalendarDeleteButtons = new HashMap<>();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -78,11 +101,12 @@ public class CalendarYearController implements Initializable {
 
         initializeYearView();
         setupAnimations();
+        setupCalendarCheckboxes();
         updateStatusBar();
 
         Platform.runLater(() -> {
             setupYearGridConstraints();
-            loadEventsFromDatabase();
+            loadCustomCalendarsAsync(); // Cargar calendarios personalizados de forma asíncrona
         });
 
         System.out.println("Vista anual inicializada correctamente");
@@ -105,6 +129,299 @@ public class CalendarYearController implements Initializable {
         }
     }
 
+    private void setupCalendarCheckboxes() {
+        // Configurar checkboxes por defecto como seleccionados
+        if (userCalendarCheck != null) {
+            userCalendarCheck.setSelected(true);
+            userCalendarCheck.setOnAction(e -> refreshCalendarDisplayAsync());
+        }
+        if (tasksCalendarCheck != null) {
+            tasksCalendarCheck.setSelected(true);
+            tasksCalendarCheck.setOnAction(e -> refreshCalendarDisplayAsync());
+        }
+        if (personalCalendarCheck != null) {
+            personalCalendarCheck.setSelected(true);
+            personalCalendarCheck.setOnAction(e -> refreshCalendarDisplayAsync());
+        }
+        if (examsCalendarCheck != null) {
+            examsCalendarCheck.setSelected(true);
+            examsCalendarCheck.setOnAction(e -> refreshCalendarDisplayAsync());
+        }
+        if (holidaysCalendarCheck != null) {
+            holidaysCalendarCheck.setSelected(true);
+            holidaysCalendarCheck.setOnAction(e -> refreshCalendarDisplayAsync());
+        }
+        if (utezCalendarCheck != null) {
+            utezCalendarCheck.setSelected(true);
+            utezCalendarCheck.setOnAction(e -> refreshCalendarDisplayAsync());
+        }
+    }
+
+    private void refreshCalendarDisplayAsync() {
+        if (isLoadingEvents) {
+            return; // Evitar múltiples cargas simultáneas
+        }
+
+        CompletableFuture.runAsync(() -> {
+            Platform.runLater(() -> {
+                loadEventsFromDatabase();
+            });
+        });
+    }
+
+    // Método actualizado para determinar si mostrar un evento
+    private boolean shouldShowEvent(Event event) {
+        String calendarId = event.getCalendarId();
+
+        // Buscar el calendario en cache para obtener su nombre
+        String calendarName = "";
+        for (Calendar cal : allCalendarsCache) {
+            if (cal.getCalendarId().equals(calendarId)) {
+                calendarName = cal.getName().toLowerCase();
+                break;
+            }
+        }
+
+        // Si no se encuentra en cache, intentar obtenerlo de la BD
+        if (calendarName.isEmpty()) {
+            try {
+                Calendar cal = Calendar.getCalendarById(calendarId);
+                if (cal != null) {
+                    calendarName = cal.getName().toLowerCase();
+                }
+            } catch (Exception e) {
+                System.err.println("Error obteniendo calendario: " + e.getMessage());
+            }
+        }
+
+        // Mapear por nombre del calendario a checkbox
+        if (calendarName.contains("clase") || calendarName.contains("class")) {
+            return userCalendarCheck != null && userCalendarCheck.isSelected();
+        } else if (calendarName.contains("tarea") || calendarName.contains("proyecto") || calendarName.contains("task")) {
+            return tasksCalendarCheck != null && tasksCalendarCheck.isSelected();
+        } else if (calendarName.contains("personal")) {
+            return personalCalendarCheck != null && personalCalendarCheck.isSelected();
+        } else if (calendarName.contains("examen") || calendarName.contains("exam")) {
+            return examsCalendarCheck != null && examsCalendarCheck.isSelected();
+        } else if (calendarName.contains("festivo") || calendarName.contains("holiday")) {
+            return holidaysCalendarCheck != null && holidaysCalendarCheck.isSelected();
+        } else if (calendarName.contains("utez")) {
+            return utezCalendarCheck != null && utezCalendarCheck.isSelected();
+        }
+
+        // Fallback: verificar IDs fijos (por compatibilidad)
+        switch (calendarId) {
+            case "CAL0000001": // Mis Clases
+                return userCalendarCheck != null && userCalendarCheck.isSelected();
+            case "CAL0000002": // Tareas y Proyectos
+                return tasksCalendarCheck != null && tasksCalendarCheck.isSelected();
+            case "CAL0000003": // Personal
+                return personalCalendarCheck != null && personalCalendarCheck.isSelected();
+            case "CAL0000004": // Exámenes
+                return examsCalendarCheck != null && examsCalendarCheck.isSelected();
+            case "CAL0000005": // Días Festivos
+                return holidaysCalendarCheck != null && holidaysCalendarCheck.isSelected();
+            case "CAL0000006": // UTEZ
+                return utezCalendarCheck != null && utezCalendarCheck.isSelected();
+            default:
+                // Verificar si es un calendario personalizado
+                if (customCalendarCheckboxes != null && customCalendarCheckboxes.containsKey(calendarId)) {
+                    CheckBox checkBox = customCalendarCheckboxes.get(calendarId);
+                    return checkBox != null && checkBox.isSelected();
+                }
+
+                // Mostrar por defecto si no se puede determinar
+                System.out.println(" No se pudo determinar visibilidad para calendario: " + calendarName + " (ID: " + calendarId + ")");
+                return true;
+        }
+    }
+
+    // Método asíncrono para cargar calendarios personalizados
+    private void loadCustomCalendarsAsync() {
+        CompletableFuture.supplyAsync(() -> {
+            if (authService.getCurrentUser() != null) {
+                String userId = authService.getCurrentUser().getUserId();
+                // Cargar TODOS los calendarios del usuario (predeterminados + personalizados)
+                List<Calendar> allCalendars = Calendar.getAllUserCalendars(userId); // Necesitas este método en tu modelo
+                List<Calendar> customCalendars = Calendar.getUserCustomCalendars(userId);
+
+                Map<String, Object> result = new HashMap<>();
+                result.put("all", allCalendars);
+                result.put("custom", customCalendars);
+                return result;
+            }
+            return new HashMap<String, Object>();
+        }).thenAccept(result -> {
+            Platform.runLater(() -> {
+                @SuppressWarnings("unchecked")
+                List<Calendar> allCalendars = (List<Calendar>) result.get("all");
+                @SuppressWarnings("unchecked")
+                List<Calendar> customCalendars = (List<Calendar>) result.get("custom");
+
+                if (allCalendars != null) {
+                    allCalendarsCache = allCalendars;
+                    System.out.println(" Calendarios cargados:");
+                    for (Calendar cal : allCalendars) {
+                        System.out.println("  - " + cal.getName() + " (ID: " + cal.getCalendarId() + ", Color: " + cal.getColor() + ")");
+                    }
+                }
+
+                if (customCalendars != null) {
+                    customCalendarsCache = customCalendars;
+                }
+
+                loadCustomCalendarsUI();
+                loadEventsFromDatabase();
+            });
+        }).exceptionally(throwable -> {
+            System.err.println("Error cargando calendarios: " + throwable.getMessage());
+            Platform.runLater(() -> {
+                // Fallback: crear mapeo manual si no existe el método getAllUserCalendars
+                createManualCalendarMapping();
+                loadEventsFromDatabase();
+            });
+            return null;
+        });
+    }
+
+    /**
+     * Método fallback para crear mapeo manual de calendarios
+     * Úsalo si no tienes el método getAllUserCalendars en tu modelo Calendar
+     */
+    private void createManualCalendarMapping() {
+        System.out.println("Creando mapeo manual de calendarios...");
+
+        // Obtener los calendarios personalizados que sí funcionan
+        if (authService.getCurrentUser() != null) {
+            String userId = authService.getCurrentUser().getUserId();
+            customCalendarsCache = Calendar.getUserCustomCalendars(userId);
+
+            // Crear calendarios predeterminados ficticios para el mapeo
+            allCalendarsCache = new ArrayList<>(customCalendarsCache);
+
+            // Agregar calendarios predeterminados al cache
+            allCalendarsCache.add(new Calendar("CAL0000001", "Mis Clases", COLOR_CLASSES, userId));
+            allCalendarsCache.add(new Calendar("CAL0000002", "Tareas y Proyectos", COLOR_TASKS, userId));
+            allCalendarsCache.add(new Calendar("CAL0000003", "Personal", COLOR_PERSONAL, userId));
+            allCalendarsCache.add(new Calendar("CAL0000004", "Exámenes", COLOR_EXAMS, userId));
+            allCalendarsCache.add(new Calendar("CAL0000005", "Días Festivos", COLOR_HOLIDAYS, userId));
+            allCalendarsCache.add(new Calendar("CAL0000006", "UTEZ", COLOR_UTEZ, userId));
+
+            System.out.println("Mapeo manual creado con " + allCalendarsCache.size() + " calendarios");
+        }
+
+        loadCustomCalendarsUI();
+    }
+
+    // Método para actualizar la UI con los calendarios personalizados
+    private void loadCustomCalendarsUI() {
+        // Limpiar los checkboxes existentes
+        if (customCalendarCheckboxes != null) {
+            customCalendarCheckboxes.clear();
+        } else {
+            customCalendarCheckboxes = new HashMap<>();
+        }
+
+        if (customCalendarDeleteButtons != null) {
+            customCalendarDeleteButtons.clear();
+        } else {
+            customCalendarDeleteButtons = new HashMap<>();
+        }
+
+        // Obtener el contenedor donde se agregarán los checkboxes
+        if (customCalendarsContainer != null) {
+            // Limpiar el contenedor
+            customCalendarsContainer.getChildren().clear();
+
+            System.out.println("Cargando " + customCalendarsCache.size() + " calendarios personalizados");
+
+            for (Calendar cal : customCalendarsCache) {
+                // Crear contenedor horizontal para checkbox y botón eliminar
+                HBox calendarRow = new HBox();
+                calendarRow.setSpacing(5);
+                calendarRow.setAlignment(Pos.CENTER_LEFT);
+
+                // Crear checkbox para el calendario
+                CheckBox checkBox = new CheckBox(cal.getName());
+                checkBox.setSelected(true); // Por defecto activado
+
+                // Aplicar estilo de color al checkbox
+                String colorHex = cal.getColor();
+                String colorStyle = String.format("-fx-text-fill: %s;", colorHex);
+                checkBox.setStyle(colorStyle);
+
+                // Guardar referencia al checkbox con su ID de calendario
+                customCalendarCheckboxes.put(cal.getCalendarId(), checkBox);
+
+                // Añadir listener para actualizar la vista al cambiar la selección
+                checkBox.setOnAction(e -> refreshCalendarDisplayAsync());
+
+                // Crear botón para eliminar calendario
+                Button deleteButton = new Button("🗑");
+                deleteButton.getStyleClass().add("delete-calendar-button");
+                deleteButton.setStyle("-fx-background-color: #ff4444; -fx-text-fill: white; -fx-font-size: 10px; -fx-padding: 2 6 2 6;");
+                deleteButton.setTooltip(new Tooltip("Eliminar calendario"));
+
+                // Guardar referencia al botón
+                customCalendarDeleteButtons.put(cal.getCalendarId(), deleteButton);
+
+                // Añadir acción para eliminar calendario
+                deleteButton.setOnAction(e -> {
+                    Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+                    confirmAlert.setTitle("Eliminar Calendario");
+                    confirmAlert.setHeaderText("¿Estás seguro?");
+                    confirmAlert.setContentText("¿Deseas eliminar el calendario '" + cal.getName() + "'?\nEsta acción no se puede deshacer.");
+
+                    Optional<ButtonType> result = confirmAlert.showAndWait();
+                    if (result.isPresent() && result.get() == ButtonType.OK) {
+                        deleteCustomCalendarAsync(cal.getCalendarId());
+                    }
+                });
+
+                // Región que crece para empujar el botón hacia la derecha
+                Region spacer = new Region();
+                HBox.setHgrow(spacer, Priority.ALWAYS);
+
+                deleteButton.setMinWidth(32);
+                deleteButton.setMaxWidth(32);
+
+                calendarRow.getChildren().addAll(checkBox, spacer, deleteButton);
+
+                // Agregar al contenedor principal
+                customCalendarsContainer.getChildren().add(calendarRow);
+
+                System.out.println("Añadido calendario: " + cal.getName() + " con color: " + colorHex);
+            }
+        } else {
+            System.err.println("Error: customCalendarsContainer es null");
+        }
+    }
+
+    /**
+     * Elimina un calendario personalizado de forma asíncrona
+     */
+    private void deleteCustomCalendarAsync(String calendarId) {
+        CompletableFuture.supplyAsync(() -> {
+            return Calendar.deleteCalendar(calendarId);
+        }).thenAccept(deleted -> {
+            Platform.runLater(() -> {
+                if (deleted) {
+                    System.out.println("Calendario eliminado correctamente: " + calendarId);
+                    loadCustomCalendarsAsync(); // Recargar calendarios
+                    showAlert("Éxito", "Calendario eliminado correctamente", Alert.AlertType.INFORMATION);
+                } else {
+                    showAlert("Error", "No se pudo eliminar el calendario", Alert.AlertType.ERROR);
+                }
+            });
+        }).exceptionally(throwable -> {
+            Platform.runLater(() -> {
+                System.err.println("Error al eliminar calendario: " + throwable.getMessage());
+                showAlert("Error", "Error al eliminar el calendario: " + throwable.getMessage(), Alert.AlertType.ERROR);
+            });
+            return null;
+        });
+    }
+
     private void loadEventsFromDatabase() {
         if (authService.getCurrentUser() != null) {
             String userId = authService.getCurrentUser().getUserId();
@@ -122,9 +439,12 @@ public class CalendarYearController implements Initializable {
                 List<Event> yearEvents = eventService.getEventsForDateRange(userId, startOfYear, endOfYear);
                 events.clear();
 
+                // Filtrar eventos según la configuración de visibilidad de calendarios
                 for (Event event : yearEvents) {
-                    LocalDate eventDate = event.getStartDate().toLocalDate();
-                    events.computeIfAbsent(eventDate, k -> new ArrayList<>()).add(event.getTitle());
+                    if (shouldShowEvent(event)) {
+                        LocalDate eventDate = event.getStartDate().toLocalDate();
+                        events.computeIfAbsent(eventDate, k -> new ArrayList<>()).add(event);
+                    }
                 }
 
                 updateYearView();
@@ -376,10 +696,13 @@ public class CalendarYearController implements Initializable {
                 userInfo = " | " + user.getDisplayId() + " (" + user.getRole().getDisplayName() + ")";
             }
 
+            // Contar eventos totales en cache
+            int totalEvents = events.values().stream().mapToInt(List::size).sum();
+
             String status = String.format("Vista: %s | Año: %d | Eventos: %d%s",
                     viewModes.get(currentViewMode),
                     currentYear,
-                    events.size(),
+                    totalEvents,
                     userInfo);
             statusLabel.setText(status);
         }
@@ -415,6 +738,49 @@ public class CalendarYearController implements Initializable {
         }
     }
 
+    // Método para añadir calendarios personalizados
+    @FXML
+    private void handleAddCalendar() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/add-calendar-dialog.fxml"));
+            Parent dialogRoot = loader.load();
+            AddCalendarDialogController controller = loader.getController();
+
+            Stage dialogStage = new Stage();
+            dialogStage.initStyle(StageStyle.UNDECORATED);
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(yearGrid.getScene().getWindow());
+
+            controller.setDialogStage(dialogStage);
+
+            Scene dialogScene = new Scene(dialogRoot);
+
+            try {
+                dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
+            } catch (Exception ignored) {
+                System.out.println("No se pudo cargar el CSS para el diálogo");
+            }
+
+            dialogStage.setScene(dialogScene);
+            dialogStage.setResizable(false);
+
+            // Hacer la ventana arrastrable
+            makeDialogDraggable(dialogRoot, dialogStage);
+
+            dialogStage.showAndWait();
+
+            if (controller.isCalendarCreated()) {
+                // Recargar los calendarios personalizados
+                loadCustomCalendarsAsync();
+            }
+
+        } catch (IOException e) {
+            System.err.println("Error abriendo diálogo: " + e.getMessage());
+            e.printStackTrace();
+            showAlert("Error", "No se pudo abrir el diálogo para crear calendario", Alert.AlertType.ERROR);
+        }
+    }
+
     private void openEventDialog(String mode, LocalDate date) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/event-dialog.fxml"));
@@ -434,7 +800,7 @@ public class CalendarYearController implements Initializable {
 
             Stage dialogStage = new Stage();
 
-           //Remover decoraciones de la ventana
+            //Remover decoraciones de la ventana
             dialogStage.initStyle(StageStyle.UNDECORATED);
 
             dialogStage.initModality(Modality.WINDOW_MODAL);

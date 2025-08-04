@@ -2,7 +2,7 @@ package com.utez.calendario.models;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Random; // Añadido el import que faltaba
+import java.util.Random;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -37,6 +37,16 @@ public class Calendar {
         this.name = name;
         this.description = description;
         this.color = color;
+        this.active = 'Y';
+        this.createdDate = LocalDateTime.now();
+    }
+
+    // Constructor adicional para el controlador
+    public Calendar(String calendarId, String name, String color, String ownerId) {
+        this.calendarId = calendarId;
+        this.name = name;
+        this.color = color;
+        this.ownerId = ownerId;
         this.active = 'Y';
         this.createdDate = LocalDateTime.now();
     }
@@ -83,11 +93,9 @@ public class Calendar {
         return events;
     }
 
-
     public String getDisplayName() {
         return (name != null && !name.trim().isEmpty()) ? name : "Calendario " + calendarId;
     }
-
 
     public static List<Calendar> getAllActiveCalendars() {
         List<Calendar> calendars = new ArrayList<>();
@@ -133,6 +141,119 @@ public class Calendar {
         return calendars;
     }
 
+    /**
+     * NUEVO MÉTODO requerido por el controlador
+     * Obtiene TODOS los calendarios de un usuario específico (predeterminados + personalizados)
+     */
+    public static List<Calendar> getAllUserCalendars(String userId) {
+        List<Calendar> calendars = new ArrayList<>();
+
+        String sql = """
+            SELECT CALENDAR_ID, OWNER_ID, NAME, DESCRIPTION, COLOR, 
+                   CREATED_DATE, MODIFIED_DATE 
+            FROM CALENDARS 
+            WHERE OWNER_ID = ? 
+            AND ACTIVE = 'Y'
+            ORDER BY 
+            CASE 
+                WHEN NAME IN ('Mis Clases', 'Tareas y Proyectos', 'Personal', 'Exámenes') THEN 0
+                ELSE 1
+            END,
+            CASE NAME
+                WHEN 'Mis Clases' THEN 1
+                WHEN 'Tareas y Proyectos' THEN 2
+                WHEN 'Personal' THEN 3
+                WHEN 'Exámenes' THEN 4
+                ELSE 5
+            END,
+            CREATED_DATE DESC
+        """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, userId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Calendar calendar = new Calendar();
+                    calendar.setCalendarId(rs.getString("CALENDAR_ID"));
+                    calendar.setOwnerId(rs.getString("OWNER_ID"));
+                    calendar.setName(rs.getString("NAME"));
+                    calendar.setDescription(rs.getString("DESCRIPTION"));
+                    calendar.setColor(rs.getString("COLOR"));
+                    calendar.setCreatedDate(rs.getObject("CREATED_DATE", LocalDateTime.class));
+                    calendar.setModifiedDate(rs.getObject("MODIFIED_DATE", LocalDateTime.class));
+                    calendar.setActive('Y');
+
+                    // Determinar si es predeterminado o personalizado
+                    String name = calendar.getName();
+                    boolean isDefault = name != null && (name.equals("Mis Clases") ||
+                            name.equals("Tareas y Proyectos") ||
+                            name.equals("Personal") ||
+                            name.equals("Exámenes"));
+                    calendar.setDefault(isDefault);
+
+                    calendars.add(calendar);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error obteniendo todos los calendarios del usuario " + userId + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return calendars;
+    }
+
+    /**
+     * NUEVO MÉTODO requerido por el controlador
+     * Obtiene un calendario específico por su ID
+     */
+    public static Calendar getCalendarById(String calendarId) {
+        String sql = """
+            SELECT CALENDAR_ID, OWNER_ID, NAME, DESCRIPTION, COLOR, 
+                   CREATED_DATE, MODIFIED_DATE 
+            FROM CALENDARS 
+            WHERE CALENDAR_ID = ? 
+            AND ACTIVE = 'Y'
+        """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, calendarId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Calendar calendar = new Calendar();
+                    calendar.setCalendarId(rs.getString("CALENDAR_ID"));
+                    calendar.setOwnerId(rs.getString("OWNER_ID"));
+                    calendar.setName(rs.getString("NAME"));
+                    calendar.setDescription(rs.getString("DESCRIPTION"));
+                    calendar.setColor(rs.getString("COLOR"));
+                    calendar.setCreatedDate(rs.getObject("CREATED_DATE", LocalDateTime.class));
+                    calendar.setModifiedDate(rs.getObject("MODIFIED_DATE", LocalDateTime.class));
+                    calendar.setActive('Y');
+
+                    // Determinar si es predeterminado
+                    String name = calendar.getName();
+                    boolean isDefault = name != null && (name.equals("Mis Clases") ||
+                            name.equals("Tareas y Proyectos") ||
+                            name.equals("Personal") ||
+                            name.equals("Exámenes"));
+                    calendar.setDefault(isDefault);
+
+                    return calendar;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error obteniendo calendario por ID " + calendarId + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
     // MÉTODO para contar eventos activos del calendario
     public int getActiveEventsCount() {
         String sql = "SELECT COUNT(*) FROM EVENTS WHERE CALENDAR_ID = ? AND ACTIVE = 'Y'";
@@ -158,7 +279,6 @@ public class Calendar {
     public boolean hasEvents() {
         return getActiveEventsCount() > 0;
     }
-
 
     // Getters y Setters
     public String getCalendarId() {
@@ -406,6 +526,147 @@ public class Calendar {
         }
 
         return defaultCalendars;
+    }
+
+    /**
+     * Elimina un calendario personalizado (solo marca como inactivo)
+     * No permite eliminar calendarios predeterminados
+     */
+    public static boolean deleteCalendar(String calendarId) {
+        // Verificar que no sea un calendario predeterminado
+        if (calendarId.startsWith("CAL000000")) {
+            System.err.println("No se pueden eliminar calendarios predeterminados");
+            return false;
+        }
+
+        String sql = """
+        UPDATE CALENDARS 
+        SET ACTIVE = 'N', MODIFIED_DATE = CURRENT_TIMESTAMP 
+        WHERE CALENDAR_ID = ? 
+        AND ACTIVE = 'Y'
+        AND NAME NOT IN ('Mis Clases', 'Tareas y Proyectos', 'Personal', 'Exámenes')
+    """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, calendarId);
+
+            int rowsAffected = stmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                System.out.println("Calendario " + calendarId + " marcado como inactivo");
+                return true;
+            } else {
+                System.err.println("No se pudo eliminar el calendario " + calendarId +
+                        " (posiblemente no existe o es predeterminado)");
+                return false;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error eliminando calendario " + calendarId + ": " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Elimina permanentemente un calendario personalizado de la base de datos
+     * CUIDADO: Esta operación no se puede deshacer
+     */
+    public static boolean deleteCalendarPermanently(String calendarId) {
+        // Verificar que no sea un calendario predeterminado
+        if (calendarId.startsWith("CAL000000")) {
+            System.err.println("No se pueden eliminar calendarios predeterminados");
+            return false;
+        }
+
+        // Primero eliminar todos los eventos asociados
+        String deleteEventsSQL = """
+        DELETE FROM EVENTS 
+        WHERE CALENDAR_ID = ?
+    """;
+
+        // Luego eliminar el calendario
+        String deleteCalendarSQL = """
+        DELETE FROM CALENDARS 
+        WHERE CALENDAR_ID = ? 
+        AND NAME NOT IN ('Mis Clases', 'Tareas y Proyectos', 'Personal', 'Exámenes')
+    """;
+
+        try (Connection conn = getConnection()) {
+            // Desactivar auto-commit para usar transacción
+            conn.setAutoCommit(false);
+
+            try {
+                // Eliminar eventos primero
+                try (PreparedStatement eventsStmt = conn.prepareStatement(deleteEventsSQL)) {
+                    eventsStmt.setString(1, calendarId);
+                    int eventsDeleted = eventsStmt.executeUpdate();
+                    System.out.println("Eliminados " + eventsDeleted + " eventos del calendario " + calendarId);
+                }
+
+                // Eliminar calendario
+                try (PreparedStatement calendarStmt = conn.prepareStatement(deleteCalendarSQL)) {
+                    calendarStmt.setString(1, calendarId);
+                    int calendarsDeleted = calendarStmt.executeUpdate();
+
+                    if (calendarsDeleted > 0) {
+                        conn.commit(); // Confirmar transacción
+                        System.out.println("Calendario " + calendarId + " eliminado permanentemente");
+                        return true;
+                    } else {
+                        conn.rollback(); // Revertir cambios
+                        System.err.println("No se pudo eliminar el calendario " + calendarId);
+                        return false;
+                    }
+                }
+
+            } catch (SQLException e) {
+                conn.rollback(); // Revertir en caso de error
+                throw e;
+            } finally {
+                conn.setAutoCommit(true); // Restaurar auto-commit
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error eliminando permanentemente el calendario " + calendarId + ": " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Reactiva un calendario que fue marcado como inactivo
+     */
+    public static boolean reactivateCalendar(String calendarId) {
+        String sql = """
+        UPDATE CALENDARS 
+        SET ACTIVE = 'Y', MODIFIED_DATE = CURRENT_TIMESTAMP 
+        WHERE CALENDAR_ID = ? 
+        AND ACTIVE = 'N'
+    """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, calendarId);
+
+            int rowsAffected = stmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                System.out.println("Calendario " + calendarId + " reactivado");
+                return true;
+            } else {
+                System.err.println("No se pudo reactivar el calendario " + calendarId);
+                return false;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error reactivando calendario " + calendarId + ": " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
     }
 
     // Métodos utilitarios

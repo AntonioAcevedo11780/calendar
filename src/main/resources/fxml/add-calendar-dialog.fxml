@@ -1,71 +1,71 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.paint.Color?>
-<?import javafx.scene.text.Font?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.utez.calendario.controllers.AddCalendarDialogController"
-      styleClass="dialog-container" prefWidth="400" prefHeight="280">
-
-    <!-- Barra de título -->
-    <HBox styleClass="dialog-header">
-        <Label text="Añadir Calendario" styleClass="dialog-title"/>
-        <Region HBox.hgrow="ALWAYS" />
-        <Button fx:id="closeButton" text="×" styleClass="dialog-close-btn" onAction="#handleClose"/>
-    </HBox>
-
-    <!-- Contenido del diálogo -->
-    <VBox styleClass="dialog-content" spacing="15" VBox.vgrow="ALWAYS">
-        <padding>
-            <Insets top="20" right="20" bottom="20" left="20" />
-        </padding>
-
-        <!-- Nombre del calendario -->
-        <VBox spacing="5">
-            <Label text="Nombre del calendario *" styleClass="field-label"/>
-            <TextField fx:id="calendarNameField" promptText="Ingresa un nombre para el calendario"/>
-        </VBox>
-
-        <!-- Color del calendario -->
-        <VBox spacing="5">
-            <Label text="Color" styleClass="field-label"/>
-            <HBox spacing="10" alignment="CENTER_LEFT">
-                <fx:define>
-                    <ToggleGroup fx:id="colorGroup"/>
-                </fx:define>
-
-                <RadioButton fx:id="redColorRadio" text="" styleClass="color-radio, color-red"
-                             toggleGroup="$colorGroup" selected="true"/>
-                <RadioButton fx:id="blueColorRadio" text="" styleClass="color-radio, color-blue"
-                             toggleGroup="$colorGroup"/>
-                <RadioButton fx:id="greenColorRadio" text="" styleClass="color-radio, color-green"
-                             toggleGroup="$colorGroup"/>
-                <RadioButton fx:id="purpleColorRadio" text="" styleClass="color-radio, color-purple"
-                             toggleGroup="$colorGroup"/>
-                <RadioButton fx:id="orangeColorRadio" text="" styleClass="color-radio, color-orange"
-                             toggleGroup="$colorGroup"/>
-            </HBox>
-        </VBox>
-
-        <!-- Descripción -->
-        <VBox spacing="5" VBox.vgrow="ALWAYS">
-            <Label text="Descripción (opcional)" styleClass="field-label"/>
-            <TextArea fx:id="descriptionField" promptText="Describe el propósito de este calendario"
-                      wrapText="true" VBox.vgrow="ALWAYS"/>
-        </VBox>
-
-        <!-- Mensaje de error/éxito -->
-        <Label fx:id="messageLabel" styleClass="message-label" visible="false"/>
-
-        <Region VBox.vgrow="ALWAYS" />
-
-        <!-- Botones de acción -->
-        <HBox spacing="10" alignment="CENTER_RIGHT">
-            <Button fx:id="cancelButton" text="Cancelar" styleClass="dialog-cancel-btn" onAction="#handleCancel"/>
-            <Button fx:id="saveButton" text="Guardar" styleClass="dialog-save-btn" onAction="#handleSave"/>
+<AnchorPane id="AnchorPane" prefHeight="350.0" prefWidth="450.0" styleClass="dialog-container" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.utez.calendario.controllers.AddCalendarDialogController">
+    <children>
+        <!-- Header con botón cerrar -->
+        <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="10.0" spacing="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+            <children>
+                <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Añadir Calendario" HBox.hgrow="ALWAYS" />
+                <Button fx:id="closeButton" mnemonicParsing="false" onAction="#handleClose" styleClass="close-button-modern" text="✕" />
+            </children>
         </HBox>
-    </VBox>
-</VBox>
+
+        <!-- Contenido principal -->
+        <VBox layoutX="14.0" layoutY="45.0" spacing="15.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="45.0">
+            <children>
+                <!-- Campo Nombre -->
+                <VBox spacing="5.0">
+                    <children>
+                        <Label text="Nombre del calendario:" />
+                        <TextField fx:id="nameField" promptText="Ingresa el nombre del calendario..." />
+                    </children>
+                </VBox>
+
+                <!-- Selección de Color -->
+                <VBox spacing="5.0">
+                    <children>
+                        <Label text="Color del calendario:" />
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <children>
+                                <ComboBox fx:id="predefinedColorBox" prefWidth="200.0" promptText="Seleccionar color predefinido" />
+                                <Label text="o" />
+                                <ColorPicker fx:id="colorPicker" prefWidth="80.0" />
+                            </children>
+                        </HBox>
+                        <Label fx:id="colorPreviewLabel" style="-fx-font-size: 12px; -fx-text-fill: #666666;" text="Vista previa del color seleccionado" />
+                    </children>
+                </VBox>
+
+                <!-- Campo Descripción -->
+                <VBox spacing="5.0">
+                    <children>
+                        <Label text="Descripción (opcional):" />
+                        <TextArea fx:id="descriptionField" prefHeight="80.0" prefWidth="200.0" promptText="Describe el propósito de este calendario..." wrapText="true" />
+                    </children>
+                </VBox>
+
+                <!-- Botones de acción -->
+                <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                    <children>
+                        <Button fx:id="cancelButton" mnemonicParsing="false" onAction="#handleCancel" styleClass="cancel-button" text="Cancelar" />
+                        <Button fx:id="saveButton" defaultButton="true" mnemonicParsing="false" onAction="#handleSave" styleClass="save-button" text="Guardar Calendario" />
+                    </children>
+                </HBox>
+            </children>
+            <padding>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+            </padding>
+        </VBox>
+    </children>
+</AnchorPane>
