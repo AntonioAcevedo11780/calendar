@@ -13,6 +13,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 
+import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -45,18 +46,15 @@ public class ShareCalendarDialogController {
 
     @FXML
     private void initialize() {
-<<<<<<< Updated upstream
+        System.out.println("🚀 Inicializando diálogo de compartir calendario: " +
+                TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+
         setupUI();
         setupProgressIndicators();
     }
 
     private void setupUI() {
-=======
-        System.out.println("Inicializando diálogo de compartir calendario: " +
-                TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-
         // Configuración para emails
->>>>>>> Stashed changes
         emailListView.setItems(emailList);
         emailErrorLabel.setVisible(false);
         emailErrorLabel.setManaged(false);
@@ -65,7 +63,6 @@ public class ShareCalendarDialogController {
         saveButton.setText("Guardar");
     }
 
-<<<<<<< Updated upstream
     private void setupProgressIndicators() {
         if (progressBar != null) {
             progressBar.setVisible(false);
@@ -79,14 +76,10 @@ public class ShareCalendarDialogController {
 
     public void setCalendar(Calendar calendar) {
         this.calendar = calendar;
-=======
-    public void setCalendar(Calendar calendar) {
-        this.calendar = calendar;
         loadCalendarData();
     }
 
     private void loadCalendarData() {
->>>>>>> Stashed changes
         if (calendar != null) {
             calendarNameField.setText(calendar.getName());
         }
@@ -94,7 +87,6 @@ public class ShareCalendarDialogController {
 
     public void setMailService(MailService mailService) {
         if (mailService != null) {
-<<<<<<< Updated upstream
             System.out.println("✅ MailService recibido correctamente");
             this.mailService = mailService;
         } else {
@@ -104,17 +96,6 @@ public class ShareCalendarDialogController {
                 System.out.println("✅ MailService obtenido desde MainApp");
             } catch (Exception e) {
                 System.err.println("❌ Error obteniendo MailService: " + e.getMessage());
-=======
-            System.out.println("MailService recibido correctamente");
-            this.mailService = mailService;
-        } else {
-            System.err.println("¡MailService es null!");
-            try {
-                this.mailService = MainApp.getEmailService();
-                System.out.println("Obtenido MailService desde Singleton directamente");
-            } catch (Exception e) {
-                System.err.println("Error obteniendo MailService: " + e.getMessage());
->>>>>>> Stashed changes
             }
         }
     }
@@ -151,24 +132,16 @@ public class ShareCalendarDialogController {
         emailErrorLabel.setText(message);
         emailErrorLabel.setVisible(true);
         emailErrorLabel.setManaged(true);
-<<<<<<< Updated upstream
     }
 
     private void hideEmailError() {
         emailErrorLabel.setVisible(false);
         emailErrorLabel.setManaged(false);
-=======
->>>>>>> Stashed changes
     }
 
     @FXML
     private void handleSendInvitations() {
-<<<<<<< Updated upstream
         // Validaciones rápidas
-=======
-        CalendarSharingService sharingService = new CalendarSharingService();
-
->>>>>>> Stashed changes
         if (emailList.isEmpty()) {
             showMessage("Debes agregar al menos un email", true);
             return;
@@ -179,7 +152,6 @@ public class ShareCalendarDialogController {
             return;
         }
 
-<<<<<<< Updated upstream
         if (calendar == null) {
             showMessage("Error: No hay calendario seleccionado", true);
             return;
@@ -201,7 +173,12 @@ public class ShareCalendarDialogController {
         long startTime = System.currentTimeMillis();
         AtomicInteger processedCount = new AtomicInteger(0);
 
-        CalendarSharingService sharingService = new CalendarSharingService();
+        // Usar el patrón Singleton para el servicio
+        CalendarSharingService sharingService = CalendarSharingService.getInstance();
+
+        System.out.println("📊 Enviando invitaciones a " + emails.size() +
+                " correos electrónicos a las " +
+                TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
 
         // 🔥 FASE 1: Compartir calendarios
         sharingService.shareCalendarWithMultipleUsersOptimized(calendarId, emails)
@@ -314,38 +291,9 @@ public class ShareCalendarDialogController {
         StringBuilder message = new StringBuilder();
 
         if (!result.getCompleteSuccesses().isEmpty()) {
-            message.append("Correo(s) enviados con exito a: (").append(result.getCompleteSuccesses().size()).append("):\n");
+            message.append("✅ Correo(s) enviado(s) con éxito a (").append(result.getCompleteSuccesses().size()).append("):\n");
             result.getCompleteSuccesses().forEach(email ->
                     message.append("  • ").append(email).append("\n"));
-=======
-        try {
-            System.out.println("Enviando invitaciones a " + emailList.size() +
-                    " correos electrónicos a las " +
-                    TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
-
-            for (String email : emailList) {
-                String calendarID = calendar.getCalendarId();
-                sharingService.shareCalendar(calendarID, email);
-                mailService.sendCalendarInvitation(
-                        email,
-                        calendar.getName()
-                );
-            }
-
-            showMessage("Invitaciones enviadas exitosamente", false);
-            emailList.clear();
-        } catch (SQLException e) {
-            showMessage("Error al compartir: " + e.getMessage(), true);
-        } catch (RuntimeException | MessagingException e) {
-            showMessage(e.getMessage(), true);
-        }
-    }
-
-    @FXML
-    private void handleSave() {
-        if (dialogStage != null){
-            handleClose();
->>>>>>> Stashed changes
         }
 
         if (!result.getPartialSuccesses().isEmpty()) {
@@ -360,6 +308,8 @@ public class ShareCalendarDialogController {
                     message.append("  • ").append(email).append(": ").append(error).append("\n"));
         }
 
+        message.append("\n⚡ Procesado en ").append(timeMs).append("ms");
+
         boolean hasErrors = !result.getShareErrors().isEmpty();
         showMessage(message.toString(), hasErrors);
 
@@ -370,13 +320,42 @@ public class ShareCalendarDialogController {
 
     private void handleProcessError(Throwable throwable) {
         hideStatus();
-        String message = "";
+        String message = "❌ Error en el proceso: ";
         if (throwable.getCause() != null) {
             message += throwable.getCause().getMessage();
         } else {
             message += throwable.getMessage();
         }
         showMessage(message, true);
+    }
+
+    // ============= MÉTODOS ALTERNATIVOS (COMPATIBILIDAD) =============
+
+    /**
+     * Método alternativo más simple para enviar invitaciones
+     * Útil si hay problemas con el método optimizado
+     */
+    private void handleSendInvitationsSimple() {
+        CalendarSharingService sharingService = CalendarSharingService.getInstance();
+
+        try {
+            System.out.println("📊 Enviando invitaciones (modo simple) a " + emailList.size() +
+                    " correos electrónicos a las " +
+                    TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+
+            for (String email : emailList) {
+                String calendarID = calendar.getCalendarId();
+                sharingService.shareCalendar(calendarID, email);
+                mailService.sendCalendarInvitation(email, calendar.getName());
+            }
+
+            showMessage("✅ Invitaciones enviadas exitosamente", false);
+            emailList.clear();
+        } catch (SQLException e) {
+            showMessage("❌ Error al compartir: " + e.getMessage(), true);
+        } catch (RuntimeException | MessagingException e) {
+            showMessage("❌ Error: " + e.getMessage(), true);
+        }
     }
 
     // ============= MÉTODOS DE UI =============
@@ -415,20 +394,43 @@ public class ShareCalendarDialogController {
         }
     }
 
-    // ============= RESTO DE MÉTODOS =============
+    // ============= MÉTODOS DE CONTROL =============
 
-    @FXML private void handleSave() { if (dialogStage != null) handleClose(); }
-    @FXML private void handleCancel() { handleClose(); }
-    @FXML private void handleClose() { if (dialogStage != null) dialogStage.close(); }
+    @FXML
+    private void handleSave() {
+        if (dialogStage != null) {
+            handleClose();
+        }
+    }
 
-    public void setDialogStage(Stage dialogStage) { this.dialogStage = dialogStage; }
+    @FXML
+    private void handleCancel() {
+        handleClose();
+    }
+
+    @FXML
+    private void handleClose() {
+        if (dialogStage != null) {
+            dialogStage.close();
+        }
+    }
+
+    // ============= SETTERS =============
+
+    public void setDialogStage(Stage dialogStage) {
+        this.dialogStage = dialogStage;
+    }
+
+    // ============= MÉTODOS AUXILIARES =============
 
     private void showMessage(String message, boolean isError) {
         Alert alert = new Alert(isError ? Alert.AlertType.ERROR : Alert.AlertType.INFORMATION);
         alert.setTitle(isError ? "Error" : "Información");
         alert.setHeaderText(null);
         alert.setContentText(message);
-        if (dialogStage != null) alert.initOwner(dialogStage);
+        if (dialogStage != null) {
+            alert.initOwner(dialogStage);
+        }
         alert.showAndWait();
     }
 
@@ -439,12 +441,28 @@ public class ShareCalendarDialogController {
         private final Map<String, String> partialSuccesses = new HashMap<>();
         private final Map<String, String> shareErrors = new HashMap<>();
 
-        public void addCompleteSuccess(String email) { completeSuccesses.add(email); }
-        public void addPartialSuccess(String email, String reason) { partialSuccesses.put(email, reason); }
-        public void addShareError(String email, String error) { shareErrors.put(email, error); }
+        public void addCompleteSuccess(String email) {
+            completeSuccesses.add(email);
+        }
 
-        public List<String> getCompleteSuccesses() { return completeSuccesses; }
-        public Map<String, String> getPartialSuccesses() { return partialSuccesses; }
-        public Map<String, String> getShareErrors() { return shareErrors; }
+        public void addPartialSuccess(String email, String reason) {
+            partialSuccesses.put(email, reason);
+        }
+
+        public void addShareError(String email, String error) {
+            shareErrors.put(email, error);
+        }
+
+        public List<String> getCompleteSuccesses() {
+            return completeSuccesses;
+        }
+
+        public Map<String, String> getPartialSuccesses() {
+            return partialSuccesses;
+        }
+
+        public Map<String, String> getShareErrors() {
+            return shareErrors;
+        }
     }
 }

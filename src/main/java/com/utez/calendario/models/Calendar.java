@@ -177,13 +177,15 @@ public class Calendar {
         return calendars;
     }
 
+    //  Usar patrón Singleton
     public static List<Calendar> getSharedCalendars(String userId) throws SQLException {
-        CalendarSharingService service = new CalendarSharingService();
+        CalendarSharingService service = CalendarSharingService.getInstance();
         return service.getSharedCalendarsForUser(userId);
     }
 
+    //  Usar patrón Singleton
     public static void shareCalendar(String calendarId, String recipientEmail) throws SQLException {
-        CalendarSharingService service = new CalendarSharingService();
+        CalendarSharingService service = CalendarSharingService.getInstance();
         service.shareCalendar(calendarId, recipientEmail);
     }
 
@@ -399,9 +401,14 @@ public class Calendar {
         this.isDefault = isDefault;
     }
 
-    public boolean isShared() { return isShared; }
+    public boolean isShared() {
+        return isShared;
+    }
 
-    public void setShared(boolean isShared) { this.isShared = isShared; }
+    public void setShared(boolean isShared) {
+        this.isShared = isShared;
+    }
+
     /**
      * Obtiene el número de calendarios personalizados (no predeterminados) de un usuario
      */

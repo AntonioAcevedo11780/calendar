@@ -1,7 +1,7 @@
 package com.utez.calendario.services;
 
 import com.utez.calendario.models.Calendar;
-import com.utez.calendario.utils.TimeService;
+import com.utez.calendario.services.TimeService;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

@@ -114,7 +114,7 @@ public class CalendarYearController implements Initializable {
 
         eventService = EventService.getInstance();
         authService = AuthService.getInstance();
-        sharingService = new CalendarSharingService();
+        CalendarSharingService sharingService = CalendarSharingService.getInstance();
 
         // Inicializar calendarios predeterminados
         String userId = authService.getCurrentUser() != null ?

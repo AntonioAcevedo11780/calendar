@@ -105,7 +105,7 @@ public class CalendarWeekController implements Initializable {
 
         eventService = EventService.getInstance();
         authService = AuthService.getInstance();
-        sharingService = new CalendarSharingService();
+        sharingService = CalendarSharingService.getInstance();
 
         // Inicializar calendarios predeterminados
         String userId = authService.getCurrentUser() != null ?
@@ -296,12 +296,13 @@ public class CalendarWeekController implements Initializable {
                 List<Calendar> customCalendars = Calendar.getUserCustomCalendars(userId);
                 result.put("custom", customCalendars != null ? customCalendars : new ArrayList<>());
 
-                // Calendarios compartidos usando el nuevo servicio
+                // Calendarios compartidos usando el servicio singleton
                 try {
-                    List<Calendar> sharedCalendars = sharingService.getSharedCalendarsForUser(userId);
+                    List<Calendar> sharedCalendars = CalendarSharingService.getInstance().getSharedCalendarsForUser(userId);
                     result.put("shared", sharedCalendars != null ? sharedCalendars : new ArrayList<>());
                 } catch (Exception e) {
                     result.put("shared", new ArrayList<Calendar>());
+                    System.err.println("Error obteniendo calendarios compartidos: " + e.getMessage());
                 }
 
                 // Lista combinada manual
@@ -351,9 +352,10 @@ public class CalendarWeekController implements Initializable {
             }
 
             try {
-                sharedCalendarsCache = sharingService.getSharedCalendarsForUser(userId);
+                sharedCalendarsCache = CalendarSharingService.getInstance().getSharedCalendarsForUser(userId);
             } catch (Exception e) {
                 sharedCalendarsCache = new ArrayList<>();
+                System.err.println("Error obteniendo calendarios compartidos en fallback: " + e.getMessage());
             }
 
             allCalendarsCache = new ArrayList<>();

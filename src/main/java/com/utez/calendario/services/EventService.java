@@ -761,21 +761,24 @@ public class EventService {
             allEvents.addAll(ownEvents);
             System.out.println("✅ Eventos propios obtenidos: " + ownEvents.size());
 
-            // ✅ CAMBIO: Usar instancia normal en lugar de Singleton
-            CalendarSharingService sharingService = new CalendarSharingService();
+            // ✅ CORRECCIÓN: Usar getInstance() en lugar de new
+            CalendarSharingService sharingService = CalendarSharingService.getInstance();
             List<com.utez.calendario.models.Calendar> sharedCalendars = sharingService.getSharedCalendarsForUser(userId);
             System.out.println("✅ Calendarios compartidos encontrados: " + sharedCalendars.size());
 
+            // Obtener eventos de calendarios compartidos
             for (Calendar sharedCalendar : sharedCalendars) {
                 try {
                     List<Event> sharedEvents = getEventsForCalendar(sharedCalendar.getCalendarId(), startDate, endDate);
                     allEvents.addAll(sharedEvents);
+                    System.out.println("✅ Eventos del calendario compartido '" + sharedCalendar.getName() + "': " + sharedEvents.size());
                 } catch (SQLException e) {
                     System.err.println("❌ Error obteniendo eventos del calendario " + sharedCalendar.getName() + ": " + e.getMessage());
+                    // No lanzar excepción aquí, solo registrar el error y continuar
                 }
             }
 
-            System.out.println("✅ Total eventos cargados: " + allEvents.size());
+            System.out.println("✅ Total eventos cargados (propios + compartidos): " + allEvents.size());
             return allEvents;
 
         } catch (Exception e) {
