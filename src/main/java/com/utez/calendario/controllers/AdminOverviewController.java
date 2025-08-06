@@ -4,6 +4,7 @@ import com.utez.calendario.models.Calendar;
 import com.utez.calendario.models.Event;
 import com.utez.calendario.services.AuthService;
 import com.utez.calendario.models.User;
+import com.utez.calendario.services.TimeService;
 
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
@@ -45,7 +46,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.time.LocalTime;
 import java.time.LocalDate;
-
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
@@ -58,7 +59,6 @@ import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 
 public class AdminOverviewController implements Initializable {
 
@@ -742,7 +742,7 @@ public class AdminOverviewController implements Initializable {
                 }
 
                 Platform.runLater(() -> {
-                    updateOptimizedCalendarView(calendarView, YearMonth.now(), eventsByDate);
+                    updateOptimizedCalendarView(calendarView, YearMonth.from(TimeService.getInstance().now()), eventsByDate);
                     updateCalendarStatusLabel(calendarView, "Eventos cargados: " + events.size());
                 });
 
@@ -801,7 +801,7 @@ public class AdminOverviewController implements Initializable {
         cell.setMaxHeight(Double.MAX_VALUE);
 
         boolean isCurrentMonth = date.getMonth() == yearMonth.getMonth() && date.getYear() == yearMonth.getYear();
-        boolean isToday = date.equals(LocalDate.now());
+        boolean isToday = date.equals(TimeService.getInstance().now().toLocalDate());
         boolean isWeekend = date.getDayOfWeek().getValue() >= 6;
 
         // ✅ Aplicar clases CSS según estado
@@ -875,7 +875,7 @@ public class AdminOverviewController implements Initializable {
         cell.setMaxHeight(Double.MAX_VALUE);
 
         boolean isCurrentMonth = date.getMonth() == yearMonth.getMonth() && date.getYear() == yearMonth.getYear();
-        boolean isToday = date.equals(LocalDate.now());
+        boolean isToday = date.equals(TimeService.getInstance().now().toLocalDate());
 
         if (!isCurrentMonth) cell.getStyleClass().add("calendar-cell-other-month");
         if (isToday) cell.getStyleClass().add("calendar-cell-today");
@@ -1051,7 +1051,8 @@ public class AdminOverviewController implements Initializable {
 
     private void updateClock() {
         if (clockLabel != null) {
-            Platform.runLater(() -> clockLabel.setText(LocalTime.now().format(timeFormatter)));
+            LocalTime time = TimeService.getInstance().now().toLocalTime();
+            Platform.runLater(() -> clockLabel.setText(time.format(timeFormatter)));
         }
     }
 

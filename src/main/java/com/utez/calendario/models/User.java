@@ -12,6 +12,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
+import com.utez.calendario.services.TimeService;
 
 public class User {
     private String userId;
@@ -276,7 +277,7 @@ public class User {
         this.password = password;
         this.role = role;
         this.active = 'Y';
-        this.createdDate = LocalDateTime.now();
+        this.createdDate = TimeService.getInstance().now();
     }
 
     // Getters y Setters

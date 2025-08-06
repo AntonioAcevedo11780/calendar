@@ -5,6 +5,7 @@ import com.utez.calendario.models.Event;
 import com.utez.calendario.models.User;
 import com.utez.calendario.services.AuthService;
 import com.utez.calendario.services.EventService;
+import com.utez.calendario.services.TimeService;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -429,7 +430,7 @@ public class EventDialogController implements Initializable {
     private void setupComponents() {
         // Configurar DatePicker
         if (datePicker != null) {
-            datePicker.setValue(LocalDate.now());
+            datePicker.setValue(TimeService.getInstance().now().toLocalDate());
         }
 
         // Configurar ComboBox de tiempo
@@ -1336,7 +1337,7 @@ public class EventDialogController implements Initializable {
      * Configura la fecha y hora del evento
      */
     private void setupEventDateTime(Event event) {
-        LocalDate date = datePicker != null ? datePicker.getValue() : LocalDate.now();
+        LocalDate date = datePicker != null ? datePicker.getValue() : TimeService.getInstance().now().toLocalDate();
         boolean isAllDay = allDayCheckBox != null && allDayCheckBox.isSelected();
 
         event.setAllDay(isAllDay ? 'Y' : 'N');
@@ -1452,7 +1453,7 @@ public class EventDialogController implements Initializable {
 
     // Métodos de utilidad
     private String generateEventId() {
-        return "E" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
+        return "E" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
     }
 
     private LocalTime parseTime(String timeStr) {

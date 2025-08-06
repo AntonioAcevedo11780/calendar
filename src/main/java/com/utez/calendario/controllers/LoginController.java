@@ -3,6 +3,7 @@ package com.utez.calendario.controllers;
 import com.utez.calendario.services.AuthService;
 import com.utez.calendario.models.User;
 import com.utez.calendario.services.EventService;
+import com.utez.calendario.services.TimeService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -41,7 +42,7 @@ public class LoginController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         System.out.println("=== UTEZ CALENDAR - SISTEMA DE LOGIN ===");
-        System.out.println("Fecha/Hora: " + LocalDateTime.now());
+        System.out.println("Fecha/Hora: " + TimeService.getInstance().now());
         System.out.println("========================================");
 
         authService = AuthService.getInstance();
@@ -128,7 +129,7 @@ public class LoginController implements Initializable {
             try {
                 System.out.println("\n--- PROCESANDO LOGIN ---");
                 System.out.println("Email: " + email);
-                System.out.println("Hora: " + LocalDateTime.now());
+                System.out.println("Hora: " + TimeService.getInstance().now());
 
                 // Verificar si las credenciales son correctas pero la cuenta está desactivada
                 if (authService.authenticateOnly(email, password)) {
@@ -255,7 +256,7 @@ public class LoginController implements Initializable {
             System.out.println("Email: " + user.getEmail());
             System.out.println("ID: " + user.getDisplayId());
             System.out.println("Rol: " + user.getRole().getDisplayName());
-            System.out.println("Hora login: " + LocalDateTime.now());
+            System.out.println("Hora login: " + TimeService.getInstance().now());
             System.out.println("----------------------\n");
 
             // Inicializar los calendarios para el usuario

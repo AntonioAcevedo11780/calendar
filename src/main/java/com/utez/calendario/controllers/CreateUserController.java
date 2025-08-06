@@ -5,6 +5,7 @@ import com.utez.calendario.MainApp;
 import com.utez.calendario.models.User;
 import com.utez.calendario.services.AuthService;
 import com.utez.calendario.services.MailService;
+import com.utez.calendario.services.TimeService;
 import jakarta.mail.MessagingException;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -76,7 +77,7 @@ public class CreateUserController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         System.out.println("=== UTEZ CALENDAR - SISTEMA DE CREACION DE USUARIO ===");
-        System.out.println("Fecha/Hora: " + LocalDateTime.now());
+        System.out.println("Fecha/Hora: " + TimeService.getInstance().now());
         System.out.println("========================================");
 
         //Inicializa los servicios
@@ -147,10 +148,9 @@ public class CreateUserController implements Initializable {
             errorAlert.setHeaderText("No se pudo cargar el login");
             errorAlert.setContentText("Error: " + e.getMessage());
             errorAlert.showAndWait();
-
-
         }
     }
+
     // Manejador para el botón "Crear cuenta"
     @FXML
     private void handleCreateAccount() {
@@ -202,7 +202,6 @@ public class CreateUserController implements Initializable {
 
                 // Actualizar UI en el hilo de JavaFX
                 Platform.runLater(() -> {
-
                     firstNamesField.setVisible(false);
                     lastNameField.setVisible(false);
                     emailField.setVisible(false);
@@ -219,7 +218,6 @@ public class CreateUserController implements Initializable {
                     code1.requestFocus();
 
                     verificationContainer.requestLayout();
-
                 });
 
             } catch (MessagingException e) {
@@ -240,7 +238,6 @@ public class CreateUserController implements Initializable {
             // Código correcto: Registrar usuario
             registerUser();
         } else {
-
             showError("Código de verificación incorrecto");
 
             firstNamesField.setVisible(true);
@@ -260,7 +257,6 @@ public class CreateUserController implements Initializable {
             code3.clear();
             code4.clear();
             code1.requestFocus();
-
         }
     }
 
@@ -296,7 +292,6 @@ public class CreateUserController implements Initializable {
     }
 
     private void registerUser() {
-
         String firstName = firstNamesField.getText();
         String lastName = lastNameField.getText();
         String email = emailField.getText();
@@ -333,6 +328,4 @@ public class CreateUserController implements Initializable {
             e.printStackTrace();
         }
     }
-
-
 }

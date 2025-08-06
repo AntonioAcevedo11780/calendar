@@ -38,6 +38,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import com.utez.calendario.services.TimeService;
 
 public class CalendarMonthController implements Initializable {
 
@@ -101,7 +102,7 @@ public class CalendarMonthController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         System.out.println("\n=== INICIANDO CALENDARIO UTEZ ===");
-        System.out.println("Fecha/Hora UTC: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        System.out.println("Fecha/Hora UTC: " + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         eventService = EventService.getInstance();
         authService = AuthService.getInstance();
@@ -145,8 +146,8 @@ public class CalendarMonthController implements Initializable {
     }
 
     private void initializeCalendar() {
-        currentYearMonth = YearMonth.now();
-        selectedDate = LocalDate.now();
+        currentYearMonth = YearMonth.from(TimeService.getInstance().now());
+        selectedDate = TimeService.getInstance().now().toLocalDate();
         eventCache.clear();
         updateCalendarView();
     }
@@ -216,7 +217,7 @@ public class CalendarMonthController implements Initializable {
             for (Calendar cal : allCalendarsCache) {
                 if (cal.getCalendarId().equals(calendarId)) {
                     calendarName = cal.getName().toLowerCase();
-                    System.out.println("   ✅ Encontrado en cache propio: " + cal.getName());
+                    System.out.println("  Encontrado en cache propio: " + cal.getName());
                     break;
                 }
             }
@@ -228,29 +229,28 @@ public class CalendarMonthController implements Initializable {
                 if (cal.getCalendarId().equals(calendarId)) {
                     calendarName = cal.getName().toLowerCase();
                     isSharedCalendar = true;
-                    System.out.println("   ✅ Encontrado en cache compartido: " + cal.getName());
+                    System.out.println(" Encontrado en cache compartido: " + cal.getName());
                     break;
                 }
             }
         }
 
         if (calendarName.isEmpty()) {
-            System.out.println("   ❌ Calendario no encontrado en caches para ID: " + calendarId);
-            // Intentar obtener de BD como última opción
+            System.out.println("   Calendario no encontrado en caches para ID: " + calendarId);
             try {
                 Calendar cal = Calendar.getCalendarById(calendarId);
                 if (cal != null) {
                     calendarName = cal.getName().toLowerCase();
-                    System.out.println("   ✅ Obtenido de BD: " + cal.getName());
+                    System.out.println("Obtenido de BD: " + cal.getName());
                 }
             } catch (Exception e) {
-                System.err.println("   ❌ Error obteniendo calendario de BD: " + e.getMessage());
+                System.err.println("Error obteniendo calendario de BD: " + e.getMessage());
             }
         }
 
         boolean shouldShow = shouldShowCalendarByName(calendarName, calendarId);
 
-        System.out.println("   📊 Resultado:");
+        System.out.println("  Resultado:");
         System.out.println("      - Nombre calendario: " + calendarName);
         System.out.println("      - Es compartido: " + isSharedCalendar);
         System.out.println("      - Mostrar evento: " + shouldShow);
@@ -543,7 +543,7 @@ public class CalendarMonthController implements Initializable {
         isLoadingEvents = true;
         String userId = authService.getCurrentUser().getUserId();
 
-        System.out.println("\n[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+        System.out.println("\n[" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                 "Cargando eventos mensuales (incluyendo compartidos) de forma asíncrona...");
         System.out.println("Usuario ID: " + userId);
         System.out.println("Mes actual: " + currentYearMonth.getMonth() + " " + currentYearMonth.getYear());
@@ -552,18 +552,17 @@ public class CalendarMonthController implements Initializable {
         Task<List<Event>> loadEventsTask = new Task<List<Event>>() {
             @Override
             protected List<Event> call() throws Exception {
-                System.out.println("📋 [Background Thread] Iniciando carga de eventos mensuales...");
+                System.out.println("[Background Thread] Iniciando carga de eventos mensuales...");
 
                 // Calcular rango del mes actual
                 LocalDate startOfMonth = currentYearMonth.atDay(1);
                 LocalDate endOfMonth = currentYearMonth.atEndOfMonth();
 
-                System.out.println("📅 [Background Thread] Rango mensual: " + startOfMonth + " a " + endOfMonth);
+                System.out.println(" [Background Thread] Rango mensual: " + startOfMonth + " a " + endOfMonth);
 
-                // ¡CAMBIO IMPORTANTE! Usar el método que incluye eventos compartidos
                 List<Event> monthEvents = eventService.getEventsForDateRangeIncludingShared(userId, startOfMonth, endOfMonth);
 
-                System.out.println("✅ [Background Thread] Eventos mensuales cargados: " + monthEvents.size());
+                System.out.println(" [Background Thread] Eventos mensuales cargados: " + monthEvents.size());
                 return monthEvents;
             }
         };
@@ -573,7 +572,7 @@ public class CalendarMonthController implements Initializable {
 
             Platform.runLater(() -> {
                 try {
-                    System.out.println("🔄 [UI Thread] Procesando eventos mensuales cargados...");
+                    System.out.println("  Procesando eventos mensuales cargados...");
 
                     eventCache.clear();
 
@@ -591,12 +590,12 @@ public class CalendarMonthController implements Initializable {
                         }
                     }
 
-                    System.out.println("📊 [UI Thread] Eventos mostrados: " + shownEvents + ", ocultos: " + hiddenEvents);
+                    System.out.println(" Eventos mostrados: " + shownEvents + ", ocultos: " + hiddenEvents);
 
                     updateCalendarView();
 
-                    System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
-                            "✅ Eventos mensuales cargados correctamente (Asíncrono) - Total: " + monthEvents.size());
+                    System.out.println("[" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                            " Eventos mensuales cargados correctamente (Asíncrono) - Total: " + monthEvents.size());
 
                 } finally {
                     isLoadingEvents = false;
@@ -608,8 +607,8 @@ public class CalendarMonthController implements Initializable {
             Platform.runLater(() -> {
                 try {
                     Throwable exception = loadEventsTask.getException();
-                    System.err.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
-                            "❌ Error cargando eventos mensuales (Asíncrono): " + exception.getMessage());
+                    System.err.println("[" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                            " Error cargando eventos mensuales (Asíncrono): " + exception.getMessage());
                     exception.printStackTrace();
 
                     showAlert("Error de Conexión",
@@ -715,7 +714,7 @@ public class CalendarMonthController implements Initializable {
         cell.setMaxHeight(Double.MAX_VALUE);
 
         boolean isCurrentMonth = date.getMonth() == currentYearMonth.getMonth() && date.getYear() == currentYearMonth.getYear();
-        boolean isToday = date.equals(LocalDate.now());
+        boolean isToday = date.equals(TimeService.getInstance().now().toLocalDate());
         boolean isSelected = date.equals(selectedDate);
 
         // Aplicar estilos CSS
@@ -1365,8 +1364,8 @@ public class CalendarMonthController implements Initializable {
 
     @FXML
     private void handleTodayClick() {
-        currentYearMonth = YearMonth.now();
-        selectedDate = LocalDate.now();
+        currentYearMonth = YearMonth.from(TimeService.getInstance().now());
+        selectedDate = TimeService.getInstance().now().toLocalDate();
         loadEventsFromDatabaseAsync();
     }
 
@@ -1385,7 +1384,7 @@ public class CalendarMonthController implements Initializable {
     @FXML
     private void handleCreateButton() {
         if (authService.getCurrentUser() != null) {
-            LocalDate dateToUse = selectedDate != null ? selectedDate : LocalDate.now();
+            LocalDate dateToUse = selectedDate != null ? selectedDate : TimeService.getInstance().now().toLocalDate();
             openEventDialog("CREATE", dateToUse);
         } else {
             showAlert("Error", "No hay usuario logueado", Alert.AlertType.ERROR);
@@ -1404,11 +1403,10 @@ public class CalendarMonthController implements Initializable {
         openEventDialog("READ", date);
     }
 
-    //wbd pa compartir calendario XDD y si ven esto cópienlo en los demás controllers que tengan una vista XD
+//wbd pa compartir calendario
+
     private void handleShareCalendar(Calendar selectedCalendar) {
-
         try {
-
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/share-calendar-dialog.fxml"));
             Parent dialogRoot = loader.load();
             ShareCalendarDialogController dialogController = loader.getController();
@@ -1446,9 +1444,7 @@ public class CalendarMonthController implements Initializable {
             e.printStackTrace();
             showAlert("Error", "No se pudo abrir el diálogo para compartir calendario", Alert.AlertType.ERROR);
         }
-
     }
-
 
     private void openEventDialog(String mode, LocalDate date) {
         try {
@@ -1457,7 +1453,7 @@ public class CalendarMonthController implements Initializable {
             EventDialogController dialogController = loader.getController();
 
             Runnable onEventChanged = () -> {
-                System.out.println("✓ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                System.out.println("✓ [" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                         "Recargando eventos tras cambio");
                 loadEventsFromDatabaseAsync();
             };
@@ -1538,7 +1534,7 @@ public class CalendarMonthController implements Initializable {
 
         // Navegar a la vista diaria
         try {
-            System.out.println("\n[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+            System.out.println("\n[" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                     "Navegando a vista diaria...");
 
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/calendar-day.fxml"));
@@ -1576,11 +1572,11 @@ public class CalendarMonthController implements Initializable {
                 Platform.runLater(() -> stage.centerOnScreen());
             }
 
-            System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+            System.out.println("[" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                     "Vista diaria cargada correctamente con dimensiones: " + currentWidth + "x" + currentHeight);
 
         } catch (IOException e) {
-            System.err.println("✗ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+            System.err.println("✗ [" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                     "Error cargando vista diaria: " + e.getMessage());
             e.printStackTrace();
             showAlert("Error", "No se pudo cargar la vista diaria:\n" + e.getMessage(), Alert.AlertType.ERROR);
@@ -1594,7 +1590,7 @@ public class CalendarMonthController implements Initializable {
 
         // Navegar a la vista semanal
         try {
-            System.out.println("\n[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+            System.out.println("\n[" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                     "Navegando a vista semanal...");
 
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/calendar-week.fxml"));
@@ -1632,11 +1628,11 @@ public class CalendarMonthController implements Initializable {
                 Platform.runLater(() -> stage.centerOnScreen());
             }
 
-            System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+            System.out.println("[" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                     "Vista semanal cargada correctamente con dimensiones: " + currentWidth + "x" + currentHeight);
 
         } catch (IOException e) {
-            System.err.println("✗ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+            System.err.println("✗ [" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                     "Error cargando vista semanal: " + e.getMessage());
             e.printStackTrace();
             showAlert("Error", "No se pudo cargar la vista semanal:\n" + e.getMessage(), Alert.AlertType.ERROR);
@@ -1657,7 +1653,7 @@ public class CalendarMonthController implements Initializable {
 
         // Navegar a la vista anual
         try {
-            System.out.println("\n[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+            System.out.println("\n[" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                     "Navegando a vista anual...");
 
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/calendar-year.fxml"));
@@ -1698,11 +1694,11 @@ public class CalendarMonthController implements Initializable {
                 Platform.runLater(() -> stage.centerOnScreen());
             }
 
-            System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+            System.out.println("[" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                     "Vista anual cargada correctamente con dimensiones: " + currentWidth + "x" + currentHeight);
 
         } catch (IOException e) {
-            System.err.println("✗ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+            System.err.println("✗ [" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                     "Error cargando vista anual: " + e.getMessage());
             e.printStackTrace();
             showAlert("Error", "No se pudo cargar la vista anual:\n" + e.getMessage(), Alert.AlertType.ERROR);
@@ -1784,7 +1780,7 @@ public class CalendarMonthController implements Initializable {
             EventDialogController dialogController = loader.getController();
 
             Runnable onEventChanged = () -> {
-                System.out.println("✓ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                System.out.println("✓ [" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                         "Recargando eventos tras cambio");
                 loadEventsFromDatabaseAsync();
             };
@@ -1833,8 +1829,7 @@ public class CalendarMonthController implements Initializable {
         }
     }
 
-    // Esto es lo q si alguno de usteddes lo ve, lo copie en los demás controllers q tengan una vista Xd
-    // 1. Manejador para calendarios predeterminados
+    // Manejador para calendarios predeterminados
     @FXML
     public void handleCalendarNameClick(ActionEvent event) {
         if (!(event.getSource() instanceof Button clickedButton)) return;
@@ -1849,7 +1844,7 @@ public class CalendarMonthController implements Initializable {
         }
     }
 
-    // 2. Método común para ambos
+    // Método común para ambos
     private void handleCalendarSelection(Calendar calendar) {
         if (calendar == null) {
             System.err.println("Intento de editar calendario nulo");
@@ -1861,7 +1856,6 @@ public class CalendarMonthController implements Initializable {
         handleShareCalendar(calendar);
     }
 
-    //Hasta acá XD
     private Calendar findCalendarByName(String buttonText) {
         if (buttonText == null || buttonText.trim().isEmpty()) {
             return null;

@@ -1,14 +1,20 @@
 package com.utez.calendario.services;
 
 import com.utez.calendario.models.Calendar;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+<<<<<<< Updated upstream
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
+=======
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+>>>>>>> Stashed changes
 
 public class CalendarSharingService {
 
@@ -16,6 +22,7 @@ public class CalendarSharingService {
     private static final ExecutorService DATABASE_EXECUTOR =
             ForkJoinPool.commonPool();
 
+<<<<<<< Updated upstream
     // ✅ Connection pooling simulado con ThreadLocal para evitar conflictos
     private static final ThreadLocal<Connection> CONNECTION_CACHE = new ThreadLocal<>();
 
@@ -26,6 +33,11 @@ public class CalendarSharingService {
     // ✅ Constructor simple (sin Singleton)
     public CalendarSharingService() {
         System.out.println("🚀 CalendarSharingService inicializado");
+=======
+    public static CalendarSharingService getInstance() {
+        if (instance == null) instance = new CalendarSharingService();
+        return instance;
+>>>>>>> Stashed changes
     }
 
     // ============= MÉTODOS SÚPER OPTIMIZADOS =============
@@ -201,7 +213,13 @@ public class CalendarSharingService {
     private Map<String, ValidationResult> batchValidateUsersForCalendar(
             String calendarId, List<String> emails, Map<String, String> emailToUserIdMap) {
 
+<<<<<<< Updated upstream
         Map<String, ValidationResult> results = new ConcurrentHashMap<>();
+=======
+        // Usar TimeService para la fecha de modificación
+        LocalDateTime now = TimeService.getInstance().now();
+        String sql = "UPDATE CALENDAR_PERMISSIONS SET ACTIVE = 'N', MODIFIED_DATE = ? WHERE CALENDAR_ID = ? AND USER_ID = ? AND ACTIVE = 'Y'";
+>>>>>>> Stashed changes
 
         if (emails.isEmpty()) return results;
 
@@ -222,9 +240,19 @@ public class CalendarSharingService {
         try (Connection conn = getOptimizedConnection();
              PreparedStatement stmt = conn.prepareStatement(ownerSql)) {
 
+<<<<<<< Updated upstream
             stmt.setString(1, calendarId);
             for (int i = 0; i < userIds.size(); i++) {
                 stmt.setString(i + 2, userIds.get(i));
+=======
+            stmt.setTimestamp(1, Timestamp.valueOf(now));
+            stmt.setString(2, calendarId);
+            stmt.setString(3, userId);
+            int rowsAffected = stmt.executeUpdate();
+
+            if (rowsAffected == 0) {
+                throw new RuntimeException("No se encontró el permiso a revocar");
+>>>>>>> Stashed changes
             }
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -289,17 +317,47 @@ public class CalendarSharingService {
 
         if (emails.isEmpty()) return;
 
+<<<<<<< Updated upstream
         String sql = """
             INSERT INTO CALENDAR_PERMISSIONS (
                 PERMISSION_ID, CALENDAR_ID, USER_ID, 
                 PERMISSION_TYPE, SHARED_DATE, ACTIVE
             ) VALUES (?, ?, ?, 'VIEW', SYSTIMESTAMP, 'Y')
         """;
+=======
+    private boolean permissionExists(String calendarId, String userId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM CALENDAR_PERMISSIONS " +
+                "WHERE CALENDAR_ID = ? AND USER_ID = ? AND ACTIVE = 'Y'";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, calendarId);
+            stmt.setString(2, userId);
+            ResultSet rs = stmt.executeQuery();
+            return rs.next() && rs.getInt(1) > 0;
+        }
+    }
+
+    private void insertCalendarPermission(String calendarId, String userId) throws SQLException {
+        String permissionId = generatePermissionId();
+
+        // Usar TimeService para la fecha de compartición
+        LocalDateTime now = TimeService.getInstance().now();
+        String sql = "INSERT INTO CALENDAR_PERMISSIONS (PERMISSION_ID, CALENDAR_ID, USER_ID, PERMISSION_TYPE, SHARED_DATE, ACTIVE) VALUES (?, ?, ?, 'VIEW', ?, 'Y')";
+>>>>>>> Stashed changes
 
         try (Connection conn = getOptimizedConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
+<<<<<<< Updated upstream
             conn.setAutoCommit(false); // ✅ Transacción para mejor performance
+=======
+            stmt.setString(1, permissionId);
+            stmt.setString(2, calendarId);
+            stmt.setString(3, userId);
+            stmt.setTimestamp(4, Timestamp.valueOf(now));
+            int rowsAffected = stmt.executeUpdate();
+>>>>>>> Stashed changes
 
             for (String email : emails) {
                 String userId = emailToUserIdMap.get(email);
@@ -445,6 +503,15 @@ public class CalendarSharingService {
     }
 
     private String generatePermissionId() {
+<<<<<<< Updated upstream
         return "PERM" + System.currentTimeMillis() + ThreadLocalRandom.current().nextInt(1000, 9999);
+=======
+        // Usar TimeService para obtener el tiempo actual para el ID
+        return "PERM" + TimeService.getInstance().now().toEpochSecond(java.time.ZoneOffset.UTC) + (int)(Math.random() * 1000);
+    }
+
+    private static Connection getConnection() throws SQLException {
+        return com.utez.calendario.config.DatabaseConfig.getConnection();
+>>>>>>> Stashed changes
     }
 }

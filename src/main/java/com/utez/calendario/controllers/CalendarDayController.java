@@ -31,6 +31,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import com.utez.calendario.services.TimeService;
 
 public class CalendarDayController implements Initializable {
 
@@ -92,7 +93,7 @@ public class CalendarDayController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         System.out.println("\n=== INICIANDO VISTA DIARIA ===");
-        System.out.println("Fecha/Hora: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        System.out.println("Fecha/Hora: " + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         eventService = EventService.getInstance();
         authService = AuthService.getInstance();
@@ -113,7 +114,7 @@ public class CalendarDayController implements Initializable {
     }
 
     private void initializeCalendar() {
-        currentDate = LocalDate.now();
+        currentDate = TimeService.getInstance().now().toLocalDate();
         events = new ArrayList<>();
         updateCalendarView();
     }
@@ -455,7 +456,7 @@ public class CalendarDayController implements Initializable {
         isLoadingEvents = true;
         String userId = authService.getCurrentUser().getUserId();
 
-        System.out.println("\n[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+        System.out.println("\n[" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                 "Cargando eventos desde BD de forma asíncrona...");
         System.out.println("Usuario ID: " + userId);
         System.out.println("Día actual: " + currentDate);
@@ -485,7 +486,7 @@ public class CalendarDayController implements Initializable {
                     }
 
                     createDayView();
-                    System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                    System.out.println("[" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                             "Eventos cargados correctamente desde BD (Asíncrono)");
 
                 } finally {
@@ -498,7 +499,7 @@ public class CalendarDayController implements Initializable {
             Platform.runLater(() -> {
                 try {
                     Throwable exception = loadEventsTask.getException();
-                    System.err.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                    System.err.println("[" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                             "Error cargando eventos (Asíncrono): " + exception.getMessage());
                     exception.printStackTrace();
                     showAlert("Error de Conexión",
@@ -645,7 +646,7 @@ public class CalendarDayController implements Initializable {
         }
 
         // Agregar línea de hora actual si es hoy
-        if (currentDate.equals(LocalDate.now())) {
+        if (currentDate.equals(TimeService.getInstance().now().toLocalDate())) {
             addCurrentTimeLine();
         }
 
@@ -771,7 +772,7 @@ public class CalendarDayController implements Initializable {
         dateLabel.getStyleClass().add("day-header-number");
 
         // Marcar día actual
-        if (currentDate.equals(LocalDate.now())) {
+        if (currentDate.equals(TimeService.getInstance().now().toLocalDate())) {
             dateLabel.getStyleClass().add("day-header-today");
         }
 
@@ -820,7 +821,7 @@ public class CalendarDayController implements Initializable {
     }
 
     private void addCurrentTimeLine() {
-        LocalTime now = LocalTime.now();
+        LocalTime now = TimeService.getInstance().now().toLocalTime();
         int currentHour = now.getHour();
         int currentMinute = now.getMinute();
 
@@ -930,7 +931,7 @@ public class CalendarDayController implements Initializable {
 
     @FXML
     private void handleTodayClick() {
-        currentDate = LocalDate.now();
+        currentDate = TimeService.getInstance().now().toLocalDate();
         updateCalendarView();
         loadEventsFromDatabaseAsync();
     }

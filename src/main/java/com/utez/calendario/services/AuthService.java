@@ -32,7 +32,7 @@ public class AuthService {
     public boolean login(String email, String password) {
         System.out.println("=== INTENTO DE LOGIN ===");
         System.out.println("Email: " + email);
-        System.out.println("Fecha: " + LocalDateTime.now());
+        System.out.println("Fecha: " + TimeService.getInstance().now());
 
         // Validar formato UTEZ
         if (!email.endsWith("@utez.edu.mx")) {
@@ -135,6 +135,8 @@ public class AuthService {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            pstmt.setString(2, userId);
+            pstmt.executeUpdate();   pstmt.setTimestamp(1, Timestamp.valueOf(TimeService.getInstance().now()));
             pstmt.setString(2, userId);
             pstmt.executeUpdate();
 

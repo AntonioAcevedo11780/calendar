@@ -34,6 +34,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import com.utez.calendario.services.TimeService;
 
 public class CalendarWeekController implements Initializable {
 
@@ -100,7 +101,7 @@ public class CalendarWeekController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         System.out.println("\n=== INICIANDO VISTA SEMANAL ===");
-        System.out.println("Fecha/Hora: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        System.out.println("Fecha/Hora: " + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         eventService = EventService.getInstance();
         authService = AuthService.getInstance();
@@ -137,11 +138,12 @@ public class CalendarWeekController implements Initializable {
     }
 
     private void initializeCalendar() {
-        selectedDate = LocalDate.now();
+        selectedDate = TimeService.getInstance().now().toLocalDate();
         startOfWeek = getStartOfWeek(selectedDate);
         events = new HashMap<>();
         updateCalendarView();
     }
+
     private LocalDate getStartOfWeek(LocalDate date) {
         int dayOfWeek = date.getDayOfWeek().getValue(); // 1=Monday, 7=Sunday
         int daysToSubtract = dayOfWeek % 7; // Si es domingo será 0
@@ -531,7 +533,7 @@ public class CalendarWeekController implements Initializable {
         isLoadingEvents = true;
         String userId = authService.getCurrentUser().getUserId();
 
-        System.out.println("\n[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+        System.out.println("\n[" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                 "Cargando eventos semanales (incluyendo compartidos) de forma asíncrona...");
         System.out.println("Usuario ID: " + userId);
         System.out.println("Semana actual: " + startOfWeek + " a " + startOfWeek.plusDays(6));
@@ -583,7 +585,7 @@ public class CalendarWeekController implements Initializable {
 
                     createWeekView();
 
-                    System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                    System.out.println("[" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                             "✅ Eventos semanales cargados correctamente (Asíncrono) - Total: " + weekEvents.size());
 
                 } finally {
@@ -596,7 +598,7 @@ public class CalendarWeekController implements Initializable {
             Platform.runLater(() -> {
                 try {
                     Throwable exception = loadEventsTask.getException();
-                    System.err.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                    System.err.println("[" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                             "❌ Error cargando eventos semanales (Asíncrono): " + exception.getMessage());
                     exception.printStackTrace();
 
@@ -881,7 +883,7 @@ public class CalendarWeekController implements Initializable {
         dateLabel.getStyleClass().add("day-header-number");
 
         // Marcar día actual
-        if (date.equals(LocalDate.now())) {
+        if (date.equals(TimeService.getInstance().now().toLocalDate())) {
             dateLabel.getStyleClass().add("day-header-today");
         }
 
@@ -1032,7 +1034,7 @@ public class CalendarWeekController implements Initializable {
 
     @FXML
     private void handleTodayClick() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = TimeService.getInstance().now().toLocalDate();
         selectedDate = today;
         startOfWeek = getStartOfWeek(today);
         updateCalendarView();
@@ -1209,11 +1211,8 @@ public class CalendarWeekController implements Initializable {
         }
     }
 
-    //wbd pa compartir calendario XDD y si ven esto cópienlo en los demás controllers que tengan una vista XD
     private void handleShareCalendar(Calendar selectedCalendar) {
-
         try {
-
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/share-calendar-dialog.fxml"));
             Parent dialogRoot = loader.load();
             ShareCalendarDialogController dialogController = loader.getController();
@@ -1251,7 +1250,6 @@ public class CalendarWeekController implements Initializable {
             e.printStackTrace();
             showAlert("Error", "No se pudo abrir el diálogo para compartir calendario", Alert.AlertType.ERROR);
         }
-
     }
 
     // Método para añadir calendarios personalizados
@@ -1313,8 +1311,7 @@ public class CalendarWeekController implements Initializable {
         });
     }
 
-    // Esto es lo q si alguno de usteddes lo ve, lo copie en los demás controllers q tengan una vista Xd
-    // 1. Manejador para calendarios predeterminados
+    // Manejador para calendarios predeterminados
     @FXML
     public void handleCalendarNameClick(ActionEvent event) {
         if (!(event.getSource() instanceof Button clickedButton)) return;
@@ -1329,7 +1326,7 @@ public class CalendarWeekController implements Initializable {
         }
     }
 
-    // 2. Método común para ambos
+    // Método común para ambos
     private void handleCalendarSelection(Calendar calendar) {
         if (calendar == null) {
             System.err.println("Intento de editar calendario nulo");
@@ -1341,7 +1338,6 @@ public class CalendarWeekController implements Initializable {
         handleShareCalendar(calendar);
     }
 
-    //Hasta acá XD
     private Calendar findCalendarByName(String buttonText) {
         if (buttonText == null || buttonText.trim().isEmpty()) {
             return null;
@@ -1463,11 +1459,10 @@ public class CalendarWeekController implements Initializable {
             System.err.println("Error al cerrar sesión: " + e.getMessage());
             setStatus("Error al cerrar sesión");
         }
+
     }
 
     // ========== UTILIDADES ==========
-
-
     private void showAlert(String title, String message, Alert.AlertType type) {
         Platform.runLater(() -> {
             Alert alert = new Alert(type);

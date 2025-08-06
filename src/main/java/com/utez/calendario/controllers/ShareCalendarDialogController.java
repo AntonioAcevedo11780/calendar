@@ -4,6 +4,7 @@ import com.utez.calendario.MainApp;
 import com.utez.calendario.models.Calendar;
 import com.utez.calendario.services.CalendarSharingService;
 import com.utez.calendario.services.MailService;
+import com.utez.calendario.services.TimeService;
 import jakarta.mail.MessagingException;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -44,11 +45,18 @@ public class ShareCalendarDialogController {
 
     @FXML
     private void initialize() {
+<<<<<<< Updated upstream
         setupUI();
         setupProgressIndicators();
     }
 
     private void setupUI() {
+=======
+        System.out.println("Inicializando diálogo de compartir calendario: " +
+                TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+
+        // Configuración para emails
+>>>>>>> Stashed changes
         emailListView.setItems(emailList);
         emailErrorLabel.setVisible(false);
         emailErrorLabel.setManaged(false);
@@ -57,6 +65,7 @@ public class ShareCalendarDialogController {
         saveButton.setText("Guardar");
     }
 
+<<<<<<< Updated upstream
     private void setupProgressIndicators() {
         if (progressBar != null) {
             progressBar.setVisible(false);
@@ -70,6 +79,14 @@ public class ShareCalendarDialogController {
 
     public void setCalendar(Calendar calendar) {
         this.calendar = calendar;
+=======
+    public void setCalendar(Calendar calendar) {
+        this.calendar = calendar;
+        loadCalendarData();
+    }
+
+    private void loadCalendarData() {
+>>>>>>> Stashed changes
         if (calendar != null) {
             calendarNameField.setText(calendar.getName());
         }
@@ -77,6 +94,7 @@ public class ShareCalendarDialogController {
 
     public void setMailService(MailService mailService) {
         if (mailService != null) {
+<<<<<<< Updated upstream
             System.out.println("✅ MailService recibido correctamente");
             this.mailService = mailService;
         } else {
@@ -86,6 +104,17 @@ public class ShareCalendarDialogController {
                 System.out.println("✅ MailService obtenido desde MainApp");
             } catch (Exception e) {
                 System.err.println("❌ Error obteniendo MailService: " + e.getMessage());
+=======
+            System.out.println("MailService recibido correctamente");
+            this.mailService = mailService;
+        } else {
+            System.err.println("¡MailService es null!");
+            try {
+                this.mailService = MainApp.getEmailService();
+                System.out.println("Obtenido MailService desde Singleton directamente");
+            } catch (Exception e) {
+                System.err.println("Error obteniendo MailService: " + e.getMessage());
+>>>>>>> Stashed changes
             }
         }
     }
@@ -122,16 +151,24 @@ public class ShareCalendarDialogController {
         emailErrorLabel.setText(message);
         emailErrorLabel.setVisible(true);
         emailErrorLabel.setManaged(true);
+<<<<<<< Updated upstream
     }
 
     private void hideEmailError() {
         emailErrorLabel.setVisible(false);
         emailErrorLabel.setManaged(false);
+=======
+>>>>>>> Stashed changes
     }
 
     @FXML
     private void handleSendInvitations() {
+<<<<<<< Updated upstream
         // Validaciones rápidas
+=======
+        CalendarSharingService sharingService = new CalendarSharingService();
+
+>>>>>>> Stashed changes
         if (emailList.isEmpty()) {
             showMessage("Debes agregar al menos un email", true);
             return;
@@ -142,6 +179,7 @@ public class ShareCalendarDialogController {
             return;
         }
 
+<<<<<<< Updated upstream
         if (calendar == null) {
             showMessage("Error: No hay calendario seleccionado", true);
             return;
@@ -279,6 +317,35 @@ public class ShareCalendarDialogController {
             message.append("Correo(s) enviados con exito a: (").append(result.getCompleteSuccesses().size()).append("):\n");
             result.getCompleteSuccesses().forEach(email ->
                     message.append("  • ").append(email).append("\n"));
+=======
+        try {
+            System.out.println("Enviando invitaciones a " + emailList.size() +
+                    " correos electrónicos a las " +
+                    TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+
+            for (String email : emailList) {
+                String calendarID = calendar.getCalendarId();
+                sharingService.shareCalendar(calendarID, email);
+                mailService.sendCalendarInvitation(
+                        email,
+                        calendar.getName()
+                );
+            }
+
+            showMessage("Invitaciones enviadas exitosamente", false);
+            emailList.clear();
+        } catch (SQLException e) {
+            showMessage("Error al compartir: " + e.getMessage(), true);
+        } catch (RuntimeException | MessagingException e) {
+            showMessage(e.getMessage(), true);
+        }
+    }
+
+    @FXML
+    private void handleSave() {
+        if (dialogStage != null){
+            handleClose();
+>>>>>>> Stashed changes
         }
 
         if (!result.getPartialSuccesses().isEmpty()) {

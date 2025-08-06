@@ -1,6 +1,8 @@
 package com.utez.calendario.services;
 
 import com.utez.calendario.models.Event;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.mail.*;
 import jakarta.mail.internet.*;
 import java.io.UnsupportedEncodingException;
@@ -24,6 +26,13 @@ public class MailService {
     private final String senderName;
     private final Properties props;
 
+    // Referencia al servicio offline
+    private final OfflineMailService offlineMailService;
+
+    // Jackson ObjectMapper para serialización
+    private static final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule());
+
     // Cache para evitar envíos duplicados
     private static final Set<String> sentVerificationEmails = ConcurrentHashMap.newKeySet();
     private static final ScheduledExecutorService cooldownScheduler = Executors.newScheduledThreadPool(2);
@@ -43,8 +52,18 @@ public class MailService {
         props.put("mail.smtp.ssl.protocols", "TLSv1.2");
         props.put("mail.smtp.connectiontimeout", "5000");
         props.put("mail.smtp.timeout", "5000");
+
+        // Obtener instancia del servicio offline y configurarlo
+        this.offlineMailService = OfflineMailService.getInstance();
+        this.offlineMailService.setMailService(this);
+        this.offlineMailService.startProcessing();
+
+        System.out.println("Servicio de correo inicializado (con soporte offline)");
     }
 
+    /**
+     * Enviar correo de verificación con soporte offline
+     */
     public void sendVerificationEmail(String recipient, String verificationCode) throws MessagingException {
         // Validaciones robustas
         if (recipient == null || recipient.isBlank()) {
@@ -61,10 +80,30 @@ public class MailService {
 
         // Verificar si ya se envió recientemente
         if (sentVerificationEmails.contains(recipient)) {
-            System.out.println("⏳ Correo de verificación ya enviado recientemente a " + recipient);
+            System.out.println("Correo de verificación ya enviado recientemente a " + recipient);
             return;
         }
 
+        try {
+            // Intentar envío directo
+            sendVerificationEmailDirect(recipient, verificationCode);
+            System.out.println("Email de verificación enviado directamente a: " + recipient);
+        } catch (MessagingException e) {
+            if (isConnectionError(e)) {
+                // En caso de error de conexión, encolar para modo offline
+                System.out.println("📶 Sin conexión, encolando email para: " + recipient);
+                offlineMailService.queueVerificationEmail(recipient, verificationCode);
+            } else {
+                // Otro tipo de error, propagar excepción
+                throw e;
+            }
+        }
+    }
+
+    /**
+     * Método interno para envío directo de verificación (sin modo offline)
+     */
+    private void sendVerificationEmailDirect(String recipient, String verificationCode) throws MessagingException {
         Session session = Session.getInstance(props, new Authenticator() {
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
@@ -116,7 +155,7 @@ public class MailService {
             // Programar eliminación después del tiempo de enfriamiento
             cooldownScheduler.schedule(() -> {
                 sentVerificationEmails.remove(recipient);
-                System.out.println("✅ Cooldown completado para " + recipient);
+                System.out.println("Cooldown completado para " + recipient);
             }, VERIFICATION_COOLDOWN_MINUTES, TimeUnit.MINUTES);
 
         } catch (UnsupportedEncodingException e) {
@@ -132,6 +171,9 @@ public class MailService {
         return String.format("%04d", (int) (Math.random() * 10000));
     }
 
+    /**
+     * Enviar recordatorio de evento con soporte offline
+     */
     public void sendEventReminder(String recipient, Event event, long minutesBefore) throws MessagingException {
         if (recipient == null || recipient.isBlank()) {
             throw new IllegalArgumentException("El destinatario no puede estar vacío");
@@ -145,6 +187,26 @@ public class MailService {
             throw new IllegalArgumentException("El evento no puede ser nulo");
         }
 
+        try {
+            // Intentar envío directo
+            sendEventReminderDirect(recipient, event, minutesBefore);
+            System.out.println("✓ Recordatorio enviado a " + recipient + " para evento: " + event.getTitle());
+        } catch (MessagingException e) {
+            if (isConnectionError(e)) {
+                // Convertir evento a JSON para encolarlo
+                String eventJson = convertEventToJson(event);
+                offlineMailService.queueEventReminder(recipient, eventJson, minutesBefore);
+                System.out.println("Sin conexión, encolando recordatorio para: " + recipient);
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    /**
+     * Método interno para enviar recordatorio directo
+     */
+    private void sendEventReminderDirect(String recipient, Event event, long minutesBefore) throws MessagingException {
         Session session = Session.getInstance(props, new Authenticator() {
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
@@ -205,7 +267,6 @@ public class MailService {
 
             message.setContent(htmlContent, "text/html; charset=utf-8");
             Transport.send(message);
-            System.out.println("✓ Recordatorio enviado a " + recipient + " para evento: " + event.getTitle());
 
         } catch (UnsupportedEncodingException e) {
             throw new MessagingException("Error en codificación del nombre del remitente", e);
@@ -215,6 +276,9 @@ public class MailService {
         }
     }
 
+    /**
+     * Enviar invitación a calendario con soporte offline
+     */
     public void sendCalendarInvitation(String recipient, String calendarName)
             throws MessagingException {
 
@@ -226,6 +290,25 @@ public class MailService {
             throw new IllegalArgumentException("Formato de email inválido: " + recipient);
         }
 
+        try {
+            // Intentar envío directo
+            sendCalendarInvitationDirect(recipient, calendarName);
+            System.out.println("✓ Invitación enviada a " + recipient + " para calendario: " + calendarName);
+        } catch (MessagingException e) {
+            if (isConnectionError(e)) {
+                // En caso de error de conexión, encolar para modo offline
+                offlineMailService.queueCalendarInvitation(recipient, calendarName);
+                System.out.println("Sin conexión, encolando invitación a calendario para: " + recipient);
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    /**
+     * Método interno para enviar invitación a calendario directo
+     */
+    private void sendCalendarInvitationDirect(String recipient, String calendarName) throws MessagingException {
         Session session = Session.getInstance(props, new Authenticator() {
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
@@ -263,13 +346,41 @@ public class MailService {
 
             message.setContent(htmlContent, "text/html; charset=utf-8");
             Transport.send(message);
-            System.out.println("✓ Invitación enviada a " + recipient + " para calendario: " + calendarName);
 
         } catch (UnsupportedEncodingException e) {
             throw new MessagingException("Error en codificación del nombre del remitente", e);
         } catch (MessagingException e) {
             System.err.println("Error enviando invitación a " + recipient + ": " + e.getMessage());
             throw new MessagingException("No se pudo enviar la invitación", e);
+        }
+    }
+
+    /**
+     * Determinar si es un error de conexión para modo offline
+     */
+    private boolean isConnectionError(Exception e) {
+        String msg = e.getMessage().toLowerCase();
+        return msg.contains("could not connect") ||
+                msg.contains("connection timed out") ||
+                msg.contains("network") ||
+                msg.contains("connection refused") ||
+                msg.contains("host") ||
+                e.getCause() instanceof java.net.UnknownHostException ||
+                e.getCause() instanceof java.net.ConnectException;
+    }
+
+    /**
+     * Convertir objeto Event a JSON para almacenamiento offline
+     */
+    private String convertEventToJson(Event event) {
+        try {
+            return objectMapper.writeValueAsString(event);
+        } catch (Exception e) {
+            System.err.println("Error serializando evento: " + e.getMessage());
+            // Fallback básico en caso de error con Jackson
+            return "{\"eventId\":\"" + event.getEventId() +
+                    "\", \"title\":\"" + event.getTitle() +
+                    "\", \"startDate\":\"" + event.getStartDate() + "\"}";
         }
     }
 
@@ -280,9 +391,11 @@ public class MailService {
             if (!cooldownScheduler.awaitTermination(5, TimeUnit.SECONDS)) {
                 cooldownScheduler.shutdownNow();
             }
+            System.out.println("MailService: scheduler detenido");
         } catch (InterruptedException e) {
             cooldownScheduler.shutdownNow();
             Thread.currentThread().interrupt();
+            System.out.println("MailService: interrupción al detener scheduler");
         }
     }
 }

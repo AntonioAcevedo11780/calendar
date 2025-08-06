@@ -7,6 +7,7 @@ import com.utez.calendario.models.User;
 import com.utez.calendario.services.AuthService;
 import com.utez.calendario.services.CalendarSharingService;
 import com.utez.calendario.services.EventService;
+import com.utez.calendario.services.TimeService;
 import com.utez.calendario.services.MailService;
 import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
@@ -30,6 +31,7 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
+
 
 import java.io.IOException;
 import java.net.URL;
@@ -108,7 +110,7 @@ public class CalendarYearController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         System.out.println("\n=== INICIANDO VISTA ANUAL ===");
-        System.out.println("Fecha/Hora UTC: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        System.out.println("Fecha/Hora UTC: " + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         eventService = EventService.getInstance();
         authService = AuthService.getInstance();
@@ -151,8 +153,8 @@ public class CalendarYearController implements Initializable {
     }
 
     private void initializeYearView() {
-        currentYear = LocalDate.now().getYear();
-        selectedDate = LocalDate.now();
+        currentYear = TimeService.getInstance().now().getYear();
+        selectedDate = TimeService.getInstance().now().toLocalDate();
         events = new HashMap<>();
         updateYearView();
     }
@@ -535,7 +537,7 @@ public class CalendarYearController implements Initializable {
         if (authService.getCurrentUser() != null) {
             String userId = authService.getCurrentUser().getUserId();
 
-            System.out.println("\n[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+            System.out.println("\n[" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                     "Cargando eventos anuales (incluyendo compartidos)...");
             System.out.println("Usuario ID: " + userId);
             System.out.println("Año actual: " + currentYear);
@@ -558,7 +560,7 @@ public class CalendarYearController implements Initializable {
                 }
 
                 updateYearView();
-                System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                System.out.println("[" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                         "Eventos anuales (incluyendo compartidos) cargados: " + yearEvents.size());
 
             } catch (Exception e) {
@@ -715,7 +717,7 @@ public class CalendarYearController implements Initializable {
                     dayLabel.getStyleClass().add("mini-day");
 
                     // Destacar día actual
-                    if (dayDate.equals(LocalDate.now())) {
+                    if (dayDate.equals(TimeService.getInstance().now().toLocalDate())) {
                         dayLabel.getStyleClass().add("mini-day-today");
                     }
 
@@ -816,8 +818,8 @@ public class CalendarYearController implements Initializable {
 
     @FXML
     private void handleTodayClick() {
-        currentYear = LocalDate.now().getYear();
-        selectedDate = LocalDate.now();
+        currentYear = TimeService.getInstance().now().getYear();
+        selectedDate = TimeService.getInstance().now().toLocalDate();
         loadEventsFromDatabase();
     }
 
@@ -836,7 +838,7 @@ public class CalendarYearController implements Initializable {
     @FXML
     private void handleCreateButton() {
         if (authService.getCurrentUser() != null) {
-            openEventDialog("CREATE", selectedDate != null ? selectedDate : LocalDate.now());
+            openEventDialog("CREATE", selectedDate != null ? selectedDate : TimeService.getInstance().now().toLocalDate());
         } else {
             showAlert("Error", "No hay usuario logueado", Alert.AlertType.ERROR);
         }
@@ -885,11 +887,8 @@ public class CalendarYearController implements Initializable {
         }
     }
 
-    //wbd pa compartir calendario XDD y si ven esto cópienlo en los demás controllers que tengan una vista XD
     private void handleShareCalendar(Calendar selectedCalendar) {
-
         try {
-
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/share-calendar-dialog.fxml"));
             Parent dialogRoot = loader.load();
             ShareCalendarDialogController dialogController = loader.getController();
@@ -927,7 +926,6 @@ public class CalendarYearController implements Initializable {
             e.printStackTrace();
             showAlert("Error", "No se pudo abrir el diálogo para compartir calendario", Alert.AlertType.ERROR);
         }
-
     }
 
     private void openEventDialog(String mode, LocalDate date) {
@@ -937,7 +935,7 @@ public class CalendarYearController implements Initializable {
             EventDialogController dialogController = loader.getController();
 
             Runnable onEventChanged = () -> {
-                System.out.println("✓ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                System.out.println("✓ [" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                         "Recargando eventos tras cambio");
                 loadEventsFromDatabase();
             };
@@ -1034,8 +1032,7 @@ public class CalendarYearController implements Initializable {
         updateYearView();
     }
 
-    // Esto es lo q si alguno de usteddes lo ve, lo copie en los demás controllers q tengan una vista Xd
-    // 1. Manejador para calendarios predeterminados
+    // Manejador para calendarios predeterminados
     @FXML
     public void handleCalendarNameClick(ActionEvent event) {
         if (!(event.getSource() instanceof Button clickedButton)) return;
@@ -1050,7 +1047,7 @@ public class CalendarYearController implements Initializable {
         }
     }
 
-    // 2. Método común para ambos
+    // Método común para ambos
     private void handleCalendarSelection(Calendar calendar) {
         if (calendar == null) {
             System.err.println("Intento de editar calendario nulo");
@@ -1062,7 +1059,6 @@ public class CalendarYearController implements Initializable {
         handleShareCalendar(calendar);
     }
 
-    //Hasta acá XD
     private Calendar findCalendarByName(String buttonText) {
         if (buttonText == null || buttonText.trim().isEmpty()) {
             return null;
@@ -1107,7 +1103,7 @@ public class CalendarYearController implements Initializable {
 
     private void navigateToView(String view) {
         try {
-            System.out.println("\n[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+            System.out.println("\n[" + TimeService.getInstance().now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
                     "Navegando a vista: " + view);
 
             String fxmlFile = "/fxml/calendar-" + view + ".fxml";

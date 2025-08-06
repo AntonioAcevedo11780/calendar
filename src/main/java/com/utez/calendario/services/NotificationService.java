@@ -61,7 +61,7 @@ public class NotificationService {
     private void checkAndSendNotifications() {
         if (!isRunning.get()) return;
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TimeService.getInstance().now();
         LocalDateTime endRange = now.plusDays(2);
 
         System.out.printf("\n🔍 [%s] Revisando notificaciones...%n",
@@ -276,7 +276,7 @@ public class NotificationService {
      */
     private void cleanNotificationCache() {
         System.out.println("\n🧹 Iniciando limpieza de caché...");
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TimeService.getInstance().now();
         int initialKeys = sentNotifications.values().stream().mapToInt(Set::size).sum();
 
         // Limpiar notificaciones de eventos que ya pasaron
