@@ -152,6 +152,16 @@ public class EventDialogController implements Initializable {
         showEventView();
         loadEventToView(event);
     }
+    /// /inicializa el dialogo para solo ver el evento
+    public void initializeForView(Event event, Runnable onEventChanged) {
+        this.mode = "READ";
+        this.currentEvent = event;
+        this.selectedDate = event.getStartDate().toLocalDate();
+        this.onEventChanged = onEventChanged;
+        dialogTitle.setText(event.getTitle());
+        showEventView();
+        loadEventToView(event);
+    }
 
     /**
      * Inicializa el diálogo para editar un evento
@@ -337,8 +347,8 @@ public class EventDialogController implements Initializable {
             saveButton.setManaged(false);
             updateButton.setVisible(true);
             updateButton.setManaged(true);
-            deleteFormButton.setVisible(true);
-            deleteFormButton.setManaged(true);
+            deleteFormButton.setVisible(false);
+            deleteFormButton.setManaged(false);
         }
     }
 
@@ -357,6 +367,11 @@ public class EventDialogController implements Initializable {
         eventViewContainer.setManaged(true);
         viewButtonContainer.setVisible(true);
         viewButtonContainer.setManaged(true);
+        if ("READ".equals(mode)) {
+            // Mostrar apartado de los botones
+            viewButtonContainer.setVisible(false);
+            viewButtonContainer.setManaged(false);
+        }
     }
 
     /**

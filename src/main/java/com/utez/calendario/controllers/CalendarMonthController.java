@@ -798,10 +798,6 @@ public class CalendarMonthController implements Initializable {
 
         dialogStage.setScene(scene);
         dialogStage.setResizable(true);
-        dialogStage.setWidth(500);
-        dialogStage.setHeight(400);
-        dialogStage.setMinWidth(500);
-        dialogStage.setMinHeight(400);
         if (parentStage != null) {
             Stage finalParentStage = parentStage;
             Platform.runLater(() -> {
@@ -1193,6 +1189,7 @@ public class CalendarMonthController implements Initializable {
             authService.logout();
         }
         Platform.exit();
+        System.exit(0);
     }
 
     @FXML
@@ -1524,15 +1521,16 @@ public class CalendarMonthController implements Initializable {
             }
 
             dialogStage.setScene(dialogScene);
+            dialogStage.setResizable(false);
 
             // Establecer tamaño fijo para evitar problemas de visibilidad
             dialogStage.setWidth(600);
-            dialogStage.setHeight(500);
+            dialogStage.setHeight(690);
 
             // Centrar el diálogo manualmente
             if (parentStage != null) {
                 dialogStage.setX(parentStage.getX() + (parentStage.getWidth() - 600) / 2);
-                dialogStage.setY(parentStage.getY() + (parentStage.getHeight() - 500) / 2);
+                dialogStage.setY(parentStage.getY() + (parentStage.getHeight() - 690) / 2);
             }
 
             // Hacer la ventana arrastrable
