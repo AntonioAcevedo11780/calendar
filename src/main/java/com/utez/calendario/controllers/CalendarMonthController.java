@@ -576,7 +576,7 @@ public class CalendarMonthController implements Initializable {
         }
     }
 
-    // Método actualizado createCalendarCell para manejar múltiples eventos
+    // Método para manejar múltiples eventos
     private VBox createCalendarCell(LocalDate date, String dayHeader) {
         VBox cell = new VBox();
         cell.getStyleClass().add("calendar-cell");
@@ -609,6 +609,9 @@ public class CalendarMonthController implements Initializable {
         List<Event> dayEvents = eventCache.getOrDefault(date, new ArrayList<>());
         int maxEventsToShow = 3;
 
+        // Variable para controlar si hay eventos clickeables
+        boolean hasClickableEvents = false;
+
         // Mostrar eventos - TODOS son clickeables individualmente
         for (int i = 0; i < Math.min(dayEvents.size(), maxEventsToShow); i++) {
             Event event = dayEvents.get(i);
@@ -638,7 +641,7 @@ public class CalendarMonthController implements Initializable {
                 openSpecificEvent(event);
             });
 
-            // Efectos hover para mejor UX
+            // Efectos hover
             eventLabel.setOnMouseEntered(e -> {
                 eventLabel.setStyle(baseStyle + "; -fx-opacity: 0.8;");
             });
@@ -648,9 +651,10 @@ public class CalendarMonthController implements Initializable {
             });
 
             cell.getChildren().add(eventLabel);
+            hasClickableEvents = true; // Marcamos que hay eventos clickeables
         }
 
-        // Indicador de "más eventos" - AHORA CLICKEABLE
+        // Indicador de "más eventos"
         if (dayEvents.size() > maxEventsToShow) {
             Label moreLabel = new Label("+" + (dayEvents.size() - maxEventsToShow) + " más");
             moreLabel.getStyleClass().add("more-events-label");
@@ -673,12 +677,27 @@ public class CalendarMonthController implements Initializable {
             });
 
             cell.getChildren().add(moreLabel);
+            hasClickableEvents = true; // También marcamos esto como clickeable
         }
 
-        // Event handlers para la celda (solo para seleccionar fecha)
+        // Solo abrir diálogo de día si NO hay eventos o si se hace clic en área vacía
         cell.setOnMouseClicked(e -> {
-            if (e.getTarget() == cell || e.getTarget() == dayNumber) {
-                handleDateClick(date);
+            if ((e.getTarget() == cell || e.getTarget() == dayNumber)) {
+                if (dayEvents.isEmpty()) {
+                    // Si no hay eventos, crear uno nuevo
+                    openEventDialog("CREATE", date);
+                } else {
+                    // Si hay eventos, mostrar la vista de día completa
+                    openDayEventsDialog(date, dayEvents);
+                }
+                // Actualizar fecha seleccionada
+                selectedDate = date;
+                if (date.getMonth() != currentYearMonth.getMonth() || date.getYear() != currentYearMonth.getYear()) {
+                    currentYearMonth = YearMonth.from(date);
+                    loadEventsFromDatabaseAsync();
+                } else {
+                    updateCalendarView();
+                }
             }
         });
 
@@ -798,10 +817,17 @@ public class CalendarMonthController implements Initializable {
 
         dialogStage.setScene(scene);
         dialogStage.setResizable(true);
-        dialogStage.setWidth(500);
-        dialogStage.setHeight(400);
-        dialogStage.setMinWidth(500);
-        dialogStage.setMinHeight(400);
+
+
+        dialogStage.setWidth(600);        // TAMAÑO INICIAL DE ANCHO
+        dialogStage.setHeight(700);       // TAMAÑO INICIAL DE ALTO
+
+        // Límites mínimos y máximos
+        dialogStage.setMinWidth(600);
+        dialogStage.setMinHeight(500);
+        dialogStage.setMaxWidth(900);
+        dialogStage.setMaxHeight(800);
+
         if (parentStage != null) {
             Stage finalParentStage = parentStage;
             Platform.runLater(() -> {
@@ -817,7 +843,7 @@ public class CalendarMonthController implements Initializable {
     }
 
     /**
-     * Crea una caja de evento estilizada para el diálogo - VERSIÓN CORREGIDA SIN CONFLICTOS
+     * Crea una caja de evento estilizada para el diálogo
      */
     private VBox createStyledEventBox(Event event, Stage parentStage) {
         VBox eventContainer = new VBox(8);
@@ -834,7 +860,6 @@ public class CalendarMonthController implements Initializable {
         timeRow.getStyleClass().add("event-detail-row");
         timeRow.setAlignment(Pos.CENTER_LEFT);
 
-        // Ícono de tiempo
         Label timeIcon = new Label("🕐");
         timeIcon.setStyle("-fx-font-size: 16px;");
 
@@ -850,7 +875,6 @@ public class CalendarMonthController implements Initializable {
 
         Label timeLabel = new Label(timeText);
         timeLabel.getStyleClass().add("event-detail-text");
-
         timeRow.getChildren().addAll(timeIcon, timeLabel);
 
         // Descripción si existe
@@ -877,7 +901,6 @@ public class CalendarMonthController implements Initializable {
         calendarRow.getStyleClass().add("event-detail-row");
         calendarRow.setAlignment(Pos.CENTER_LEFT);
 
-        // Indicador de color del calendario
         Region colorIndicator = new Region();
         colorIndicator.setPrefWidth(16);
         colorIndicator.setPrefHeight(16);
@@ -887,48 +910,185 @@ public class CalendarMonthController implements Initializable {
         colorIndicator.setStyle("-fx-background-color: " + (calendarColor != null ? calendarColor : "#808080") +
                 "; -fx-background-radius: 8;");
 
-        // Nombre del calendario
         String calendarName = getCalendarNameById(event.getCalendarId());
         Label calendarLabel = new Label(calendarName);
         calendarLabel.getStyleClass().add("calendar-name-inline");
-
         calendarRow.getChildren().addAll(colorIndicator, calendarLabel);
 
-        // Botón de acción - SIMPLIFICADO
-        HBox buttonRow = new HBox();
+        // Botones de acción
+        HBox buttonRow = new HBox(8);
         buttonRow.setAlignment(Pos.CENTER_RIGHT);
         buttonRow.setStyle("-fx-padding: 8 0 0 0;");
 
+        // Botón Ver detalles (solo lectura)
         Button viewButton = new Button("Ver detalles");
-        viewButton.getStyleClass().add("primary-button");
-        viewButton.setStyle("-fx-font-size: 12px; -fx-padding: 6 12; -fx-cursor: hand;");
+        viewButton.getStyleClass().add("secondary-button");
+        viewButton.setStyle("-fx-font-size: 12px; -fx-padding: 6 12; -fx-cursor: hand; -fx-background-color: #f0f0f0; -fx-text-fill: #333;");
 
-        // ACCIÓN SIMPLIFICADA DEL BOTÓN - Sin conflictos
+        // para Ver detalles
         viewButton.setOnAction(e -> {
-            parentStage.close();
-            openSpecificEvent(event);
+            parentStage.close(); // Cerrar el diálogo actual
+            Platform.runLater(() -> {
+                openEventInReadOnlyMode(event); // Abrir en modo solo lectura
+            });
         });
 
-        buttonRow.getChildren().add(viewButton);
+        // Botón Editar - CORREGIDO
+        Button editButton = new Button("Editar");
+        editButton.getStyleClass().add("primary-button");
+        editButton.setStyle("-fx-font-size: 12px; -fx-padding: 6 12; -fx-cursor: hand; -fx-background-color: #007ACC; -fx-text-fill: white;");
+
+        // ACCIÓN CORREGIDA para Editar
+        editButton.setOnAction(e -> {
+            parentStage.close();
+            // Agregar un pequeño delay para asegurar que la ventana anterior se cierre completamente
+            Platform.runLater(() -> {
+                Platform.runLater(() -> { // Doble runLater
+                    openEventInEditMode(event);
+                });
+            });
+        });
+
+        buttonRow.getChildren().addAll(viewButton, editButton);
 
         // Agregar todos los elementos al contenedor
         eventContainer.getChildren().addAll(titleLabel, timeRow, descriptionBox, calendarRow, buttonRow);
 
-        // REMOVER TODOS LOS EVENT HANDLERS DE CLICK DEL CONTENEDOR
-        // Solo mantener efectos visuales suaves sin interactividad
+        // Efectos hover suaves
         final String originalStyle = eventContainer.getStyle();
         final String hoverStyle = originalStyle.replace("#f8f9fa", "#f0f0f0");
 
-        // Efectos hover MUY suaves - solo cambio de color de fondo
-        eventContainer.setOnMouseEntered(e -> {
-            eventContainer.setStyle(hoverStyle);
-        });
-
-        eventContainer.setOnMouseExited(e -> {
-            eventContainer.setStyle(originalStyle);
-        });
+        eventContainer.setOnMouseEntered(e -> eventContainer.setStyle(hoverStyle));
+        eventContainer.setOnMouseExited(e -> eventContainer.setStyle(originalStyle));
 
         return eventContainer;
+    }
+    /**
+     * Abre un evento en modo solo lectura
+     */
+    private void openEventInReadOnlyMode(Event event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/event-dialog.fxml"));
+            Parent dialogRoot = loader.load();
+            EventDialogController dialogController = loader.getController();
+
+            // Callback para recargar eventos
+            Runnable onEventChanged = () -> {
+                System.out.println("✓ Recargando eventos tras cambio");
+                loadEventsFromDatabaseAsync();
+            };
+
+            // USAR EL MÉTODO CORRECTO para modo solo lectura
+            dialogController.initializeForViewEvent(event, onEventChanged);
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Detalles del Evento - " + event.getTitle());
+            dialogStage.initStyle(StageStyle.UNDECORATED);
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+
+            // Establecer ventana padre
+            if (createButton != null && createButton.getScene() != null && createButton.getScene().getWindow() != null) {
+                dialogStage.initOwner((Stage) createButton.getScene().getWindow());
+            }
+
+            Scene dialogScene = new Scene(dialogRoot);
+
+            // Cargar CSS
+            try {
+                dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
+            } catch (Exception ignored) {
+                System.out.println("No se pudo cargar CSS para el diálogo");
+            }
+
+            dialogStage.setScene(dialogScene);
+
+            // Configurar tamaño fijo para evitar ventanas vacías
+            dialogStage.setWidth(600);
+            dialogStage.setHeight(690);
+            dialogStage.setResizable(true);
+
+            // Centrar el diálogo
+            Stage parentStage = (Stage) createButton.getScene().getWindow();
+            dialogStage.setX(parentStage.getX() + (parentStage.getWidth() - 600) / 2);
+            dialogStage.setY(parentStage.getY() + (parentStage.getHeight() - 690) / 2);
+
+            // Hacer la ventana arrastrable
+            makeDialogDraggable(dialogRoot, dialogStage);
+
+            dialogStage.showAndWait();
+
+        } catch (Exception e) {
+            System.err.println("Error abriendo evento en modo lectura: " + e.getMessage());
+            e.printStackTrace();
+            showAlert("Error", "No se pudo abrir los detalles del evento:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    /**
+     * Abre un evento en modo edición
+     */
+    private void openEventInEditMode(Event event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/event-dialog.fxml"));
+            Parent dialogRoot = loader.load();
+            EventDialogController dialogController = loader.getController();
+
+            // Callback para recargar eventos
+            Runnable onEventChanged = () -> {
+                System.out.println("✓ Recargando eventos tras cambio");
+                loadEventsFromDatabaseAsync();
+            };
+
+            // USAR EL MÉTODO CORRECTO para modo edición
+            dialogController.initializeForEdit(event, onEventChanged);
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Editar Evento - " + event.getTitle());
+            dialogStage.initStyle(StageStyle.UNDECORATED);
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+
+            // Establecer ventana padre
+            if (createButton != null && createButton.getScene() != null && createButton.getScene().getWindow() != null) {
+                dialogStage.initOwner((Stage) createButton.getScene().getWindow());
+            }
+
+            // ===== SOLUCIÓN NUCLEAR: Scene con dimensiones fijas en constructor =====
+            Scene dialogScene = new Scene(dialogRoot, 600, 700); // FORZAR dimensiones desde constructor
+
+            // Cargar CSS
+            try {
+                dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
+            } catch (Exception ignored) {
+                System.out.println("No se pudo cargar CSS para el diálogo");
+            }
+
+            dialogStage.setScene(dialogScene);
+
+
+            // Configurar límites
+            dialogStage.setResizable(true);
+            dialogStage.setMinWidth(600);
+            dialogStage.setMinHeight(700);
+            dialogStage.setMaxWidth(900);
+            dialogStage.setMaxHeight(800);
+
+            // Centrar el diálogo
+            if (createButton != null && createButton.getScene() != null && createButton.getScene().getWindow() != null) {
+                Stage parentStage = (Stage) createButton.getScene().getWindow();
+                dialogStage.setX(parentStage.getX() + (parentStage.getWidth() - 600) / 2);
+                dialogStage.setY(parentStage.getY() + (parentStage.getHeight() - 750) / 2);
+            }
+
+            // Hacer la ventana arrastrable
+            makeDialogDraggable(dialogRoot, dialogStage);
+
+            dialogStage.showAndWait();
+
+        } catch (Exception e) {
+            System.err.println("Error abriendo evento en modo edición: " + e.getMessage());
+            e.printStackTrace();
+            showAlert("Error", "No se pudo abrir el editor del evento:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
     }
 
     /**
@@ -1486,65 +1646,8 @@ public class CalendarMonthController implements Initializable {
      * Abre el diálogo para visualizar un evento específico
      */
     public void openSpecificEvent(Event event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/event-dialog.fxml"));
-            Parent dialogRoot = loader.load();
-            EventDialogController dialogController = loader.getController();
-
-            Runnable onEventChanged = () -> {
-                System.out.println("✓ Recargando eventos tras cambio");
-                loadEventsFromDatabaseAsync();
-            };
-
-            dialogController.initializeForViewEvent(event, onEventChanged);
-
-            Stage dialogStage = new Stage();
-
-            // Configurar el diálogo sin barra de título pero funcional
-            dialogStage.initStyle(StageStyle.UNDECORATED);
-            dialogStage.initModality(Modality.WINDOW_MODAL);
-
-            // Obtener la ventana padre de forma más robusta
-            Stage parentStage = null;
-            try {
-                if (createButton != null && createButton.getScene() != null && createButton.getScene().getWindow() != null) {
-                    parentStage = (Stage) createButton.getScene().getWindow();
-                    dialogStage.initOwner(parentStage);
-                }
-            } catch (Exception e) {
-                System.out.println("No se pudo establecer ventana padre: " + e.getMessage());
-            }
-
-            Scene dialogScene = new Scene(dialogRoot);
-
-            try {
-                dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
-            } catch (Exception ignored) {
-                System.out.println("No se pudo cargar CSS para el diálogo");
-            }
-
-            dialogStage.setScene(dialogScene);
-
-            // Establecer tamaño fijo para evitar problemas de visibilidad
-            dialogStage.setWidth(600);
-            dialogStage.setHeight(500);
-
-            // Centrar el diálogo manualmente
-            if (parentStage != null) {
-                dialogStage.setX(parentStage.getX() + (parentStage.getWidth() - 600) / 2);
-                dialogStage.setY(parentStage.getY() + (parentStage.getHeight() - 500) / 2);
-            }
-
-            // Hacer la ventana arrastrable
-            makeDialogDraggable(dialogRoot, dialogStage);
-
-            dialogStage.showAndWait();
-
-        } catch (IOException e) {
-            System.err.println("Error abriendo evento específico: " + e.getMessage());
-            e.printStackTrace();
-            showAlert("Error", "No se pudo abrir el evento:\n" + e.getMessage(), Alert.AlertType.ERROR);
-        }
+        // Por defecto abre en modo de solo lectura
+        openEventInReadOnlyMode(event);
     }
 
     // ========== MÉTODOS PÚBLICOS ==========
