@@ -10,6 +10,7 @@ import javafx.animation.ScaleTransition;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -37,6 +38,15 @@ import java.util.concurrent.CompletableFuture;
 
 public class CalendarYearController implements Initializable {
 
+    //========= CALENDARIOS PREDETERMINADOS ==========
+    private Calendar calMisClases;
+    private Calendar calTareas;
+    private Calendar calPersonal;
+    private Calendar calExamenes;
+
+    // ========== CONSTANTES ==========
+    private final Map<String, Calendar> buttonCalendarMap  = new HashMap<>();
+
     // Colores para calendarios predeterminados
     private static final String COLOR_CLASSES = "#1E76E8";  // Color para Mis Clases
     private static final String COLOR_TASKS = "#2c2c2c";    // Color para Tareas y Proyectos
@@ -63,6 +73,11 @@ public class CalendarYearController implements Initializable {
     @FXML private ScrollPane customCalendarsScroll;
     @FXML private VBox customCalendarsContainer;
     @FXML private Button addCalendarButton;
+    @FXML private Button btnMisClases;
+    @FXML private Button btnTareas;
+    @FXML private Button btnPersonal;
+    @FXML private Button btnExamenes;
+
 
     // ========== VARIABLES DE ESTADO ==========
     private int currentYear;
@@ -91,6 +106,21 @@ public class CalendarYearController implements Initializable {
 
         eventService = EventService.getInstance();
         authService = AuthService.getInstance();
+
+        // Inicializar calendarios predeterminados
+        String userId = authService.getCurrentUser() != null ?
+                authService.getCurrentUser().getUserId() : "default";
+
+        calMisClases = new Calendar("CAL0000001", "Mis Clases", COLOR_CLASSES, userId);
+        calTareas = new Calendar("CAL0000002", "Tareas y Proyectos", COLOR_TASKS, userId);
+        calPersonal = new Calendar("CAL0000003", "Personal", COLOR_PERSONAL, userId);
+        calExamenes = new Calendar("CAL0000004", "Exámenes", COLOR_EXAMS, userId);
+
+        // Configurar el mapa de botones-calendarios
+        if (btnMisClases != null) buttonCalendarMap.put(String.valueOf(btnMisClases), calMisClases);
+        if (btnTareas != null) buttonCalendarMap.put(String.valueOf(btnTareas), calTareas);
+        if (btnPersonal != null) buttonCalendarMap.put(String.valueOf(btnPersonal), calPersonal);
+        if (btnExamenes != null) buttonCalendarMap.put(String.valueOf(btnExamenes), calExamenes);
 
         if (authService.getCurrentUser() != null) {
             User currentUser = authService.getCurrentUser();
@@ -338,17 +368,26 @@ public class CalendarYearController implements Initializable {
             for (Calendar cal : customCalendarsCache) {
                 // Crear contenedor horizontal para checkbox y botón eliminar
                 HBox calendarRow = new HBox();
+                calendarRow.getStyleClass().addAll("calendar-item-modern", "calendar-item-custom");
                 calendarRow.setSpacing(5);
                 calendarRow.setAlignment(Pos.CENTER_LEFT);
 
                 // Crear checkbox para el calendario
-                CheckBox checkBox = new CheckBox(cal.getName());
-                checkBox.setSelected(true); // Por defecto activado
+                CheckBox checkBox = new CheckBox();
+                checkBox.setSelected(true);
+                customCalendarCheckboxes.put(cal.getCalendarId(), checkBox);
+                checkBox.setOnAction(e -> refreshCalendarDisplayAsync());
 
                 // Aplicar estilo de color al checkbox
                 String colorHex = cal.getColor();
                 String colorStyle = String.format("-fx-text-fill: %s;", colorHex);
                 checkBox.setStyle(colorStyle);
+
+                // Botón para el nombre (idéntico a predeterminados)
+                Button nameButton = new Button(cal.getName());
+                nameButton.getStyleClass().add("calendar-name-button");
+                nameButton.setStyle("-fx-text-fill: " + cal.getColor() + ";");
+                nameButton.setOnAction(e -> handleCalendarSelection(cal));
 
                 // Guardar referencia al checkbox con su ID de calendario
                 customCalendarCheckboxes.put(cal.getCalendarId(), checkBox);
@@ -361,6 +400,7 @@ public class CalendarYearController implements Initializable {
                 deleteButton.getStyleClass().add("delete-calendar-button");
                 deleteButton.setStyle("-fx-background-color: #ff4444; -fx-text-fill: white; -fx-font-size: 10px; -fx-padding: 2 6 2 6;");
                 deleteButton.setTooltip(new Tooltip("Eliminar calendario"));
+                customCalendarDeleteButtons.put(cal.getCalendarId(), deleteButton);
 
                 // Guardar referencia al botón
                 customCalendarDeleteButtons.put(cal.getCalendarId(), deleteButton);
@@ -385,7 +425,12 @@ public class CalendarYearController implements Initializable {
                 deleteButton.setMinWidth(32);
                 deleteButton.setMaxWidth(32);
 
-                calendarRow.getChildren().addAll(checkBox, spacer, deleteButton);
+                calendarRow.getChildren().addAll(
+                        checkBox,
+                        nameButton,
+                        spacer,
+                        deleteButton
+                );
 
                 // Agregar al contenedor principal
                 customCalendarsContainer.getChildren().add(calendarRow);
@@ -876,6 +921,56 @@ public class CalendarYearController implements Initializable {
         // Ya estamos en vista anual
         updateYearView();
     }
+
+    // 1. Manejador para calendarios predeterminados
+    @FXML
+    public void handleCalendarNameClick(ActionEvent event) {
+        if (!(event.getSource() instanceof Button clickedButton)) return;
+
+        Calendar calendar = findCalendarByName(clickedButton.getText());
+
+        if (calendar != null) {
+            handleCalendarSelection(calendar);
+        } else {
+            System.err.println("Calendario no encontrado: " + clickedButton.getText());
+            // Mostrar mensaje de error al usuario si es necesario
+        }
+    }
+
+    // 2. Método común para ambos
+    private void handleCalendarSelection(Calendar calendar) {
+        if (calendar == null) {
+            System.err.println("Intento de editar calendario nulo");
+            return;
+        }
+
+        System.out.println("Editando calendario: " + calendar.getName());
+        // openCalendarEditDialog(calendar);
+    }
+
+    private Calendar findCalendarByName(String name) {
+
+        if (allCalendarsCache == null) return null;
+
+        String searchName = name.toLowerCase().trim();
+
+        for (Calendar cal : allCalendarsCache) {
+
+            String calendarName = cal.getName().toLowerCase();
+
+            // Coincidencia flexible
+            if (calendarName.contains(searchName) || searchName.contains(calendarName)) {
+
+                return cal;
+
+            }
+
+        }
+
+        return null;
+
+    }
+
 
     private void navigateToView(String view) {
         try {
