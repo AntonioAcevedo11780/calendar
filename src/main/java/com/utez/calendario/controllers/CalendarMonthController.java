@@ -820,7 +820,7 @@ public class CalendarMonthController implements Initializable {
 
 
         dialogStage.setWidth(600);        // TAMAÑO INICIAL DE ANCHO
-        dialogStage.setHeight(700);       // TAMAÑO INICIAL DE ALTO
+        dialogStage.setHeight(690);       // TAMAÑO INICIAL DE ALTO
 
         // Límites mínimos y máximos
         dialogStage.setMinWidth(600);
@@ -1053,7 +1053,7 @@ public class CalendarMonthController implements Initializable {
             }
 
             // ===== SOLUCIÓN NUCLEAR: Scene con dimensiones fijas en constructor =====
-            Scene dialogScene = new Scene(dialogRoot, 600, 700); // FORZAR dimensiones desde constructor
+            Scene dialogScene = new Scene(dialogRoot, 600, 690); // FORZAR dimensiones desde constructor
 
             // Cargar CSS
             try {
@@ -1076,7 +1076,7 @@ public class CalendarMonthController implements Initializable {
             if (createButton != null && createButton.getScene() != null && createButton.getScene().getWindow() != null) {
                 Stage parentStage = (Stage) createButton.getScene().getWindow();
                 dialogStage.setX(parentStage.getX() + (parentStage.getWidth() - 600) / 2);
-                dialogStage.setY(parentStage.getY() + (parentStage.getHeight() - 750) / 2);
+                dialogStage.setY(parentStage.getY() + (parentStage.getHeight() - 690) / 2);
             }
 
             // Hacer la ventana arrastrable
