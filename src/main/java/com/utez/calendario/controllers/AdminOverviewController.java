@@ -13,10 +13,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.stage.Modality;
-import javafx.stage.Screen;
-import javafx.stage.Stage;
-import javafx.stage.Window;
+import javafx.stage.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.Region;
@@ -44,6 +41,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 
+import java.io.IOException;
 import java.net.URL;
 import java.time.LocalTime;
 import java.time.LocalDate;
@@ -58,6 +56,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 public class AdminOverviewController implements Initializable {
@@ -66,6 +66,9 @@ public class AdminOverviewController implements Initializable {
     @FXML private Label statusLabel;
     @FXML private Label clockLabel;
     @FXML private SplitPane splitPane;
+    private Map<String, User> userMap;
+
+    private AuthService authService;
 
     private Timeline clockTimeline;
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -86,6 +89,9 @@ public class AdminOverviewController implements Initializable {
                         splitPane.setDividerPositions(0.22);
                     });
                 }
+                List<User> list= User.getUsers(0,1000, false);
+                userMap = list.stream().collect(Collectors.toMap(User::getUserId, Function.identity()));
+
                 handleGeneralView();
             });
         } catch (Exception e) {
@@ -96,6 +102,10 @@ public class AdminOverviewController implements Initializable {
         Timeline refreshTimeline = new Timeline(new KeyFrame(Duration.minutes(10), e -> refreshDashboard()));
         refreshTimeline.setCycleCount(Timeline.INDEFINITE);
         refreshTimeline.play();
+    }
+
+    private User findUserById(String userId) {
+        return userMap.getOrDefault(userId, null);
     }
 
     // ✅ MÉTODOS UTILITARIOS OPTIMIZADOS
@@ -406,7 +416,10 @@ public class AdminOverviewController implements Initializable {
         });
 
         updatePageData.run();
-        pageInfoLabel.setText("Página 1 de " + ((masterData.size() - 1) / itemsPerPage + 1));
+        int pageIndex = currentPageIndex.get();
+        navButtons[0].setDisable(pageIndex == 0);
+        navButtons[1].setDisable((pageIndex + 1) * itemsPerPage >= masterData.size());
+        pageInfoLabel.setText("Página " + (pageIndex + 1) + " de " + ((masterData.size() - 1) / itemsPerPage + 1));
 
         HBox paginationBar = new HBox(10, navButtons[0], pageInfoLabel, navButtons[1]);
         paginationBar.setAlignment(Pos.CENTER);
@@ -434,10 +447,14 @@ public class AdminOverviewController implements Initializable {
         calendarContent.setAlignment(Pos.CENTER);
 
         TableView<Calendar> calendarTable = createOptimizedCalendarTable();
-        HBox paginationBar = createCalendarPagination(calendarTable);
-        loadCalendarDataAsync(calendarTable);
 
-        calendarContent.getChildren().addAll(calendarTable, paginationBar);
+        // Cargar datos asíncronamente
+        loadCalendarDataAsync().thenAccept(calendars -> {
+            Platform.runLater(() -> {
+                HBox paginationBar = createCalendarPagination(calendarTable, calendars);
+                calendarContent.getChildren().addAll(calendarTable, paginationBar);
+            });
+        });
 
         calendarSection.getChildren().addAll(createSectionHeader("Administración de Calendarios"), calendarContent);
         return calendarSection;
@@ -450,14 +467,33 @@ public class AdminOverviewController implements Initializable {
         table.setFixedCellSize(40);
         table.setPrefHeight(440);
 
-        // ✅ Columna ID centrada
-        TableColumn<Calendar, String> idColumn = new TableColumn<>("Calendar ID");
-        idColumn.setCellValueFactory(new PropertyValueFactory<>("calendarId"));
-        idColumn.setPrefWidth(150);
-        idColumn.setCellFactory(col -> createCenteredTextCell());
+        // ✅ Columna Matrícula centrada
+        TableColumn<Calendar, String> matriculaColumn = new TableColumn<>("Matrícula del Propietaro");
+        matriculaColumn.setCellValueFactory(cellData -> {
+            Calendar calendar = cellData.getValue();
+            User user =findUserById(calendar.getOwnerId());
+            if (user == null) {
+                System.out.println("No se encontró usuario con ID: " + calendar.getOwnerId());
+            }
+            String matricula = user != null ? user.getMatricula() : "N/A";
+            return new SimpleStringProperty(matricula);
+        });
+        matriculaColumn.setPrefWidth(150);
+        matriculaColumn.setCellFactory(col -> createCenteredTextCell());
+
+        /*TableColumn<Calendar, String> nameOwnerColumn = new TableColumn<>("Nombre del Propietario");
+        nameOwnerColumn.setCellValueFactory(cellData ->{
+            Calendar calendar = cellData.getValue();
+            User user =findUserById(calendar.getOwnerId());
+            String nameOwner = user != null ? user.getFullName() :  "N/A";
+            return new SimpleStringProperty(nameOwner);
+        });
+        nameOwnerColumn.setPrefWidth(150);
+        nameOwnerColumn.setCellFactory(col -> createCenteredTextCell());*/
+
 
         // ✅ Columna Nombre centrada
-        TableColumn<Calendar, String> nameColumn = new TableColumn<>("Nombre");
+        TableColumn<Calendar, String> nameColumn = new TableColumn<>("Nombre Del Calendario");
         nameColumn.setCellValueFactory(cellData -> {
             Calendar calendar = cellData.getValue();
             String displayName = calendar.getName() != null && !calendar.getName().isEmpty()
@@ -489,7 +525,7 @@ public class AdminOverviewController implements Initializable {
         viewColumn.setPrefWidth(150);
         viewColumn.setCellFactory(col -> createCenteredButtonCell());
 
-        table.getColumns().addAll(idColumn, nameColumn, modifiedColumn, viewColumn);
+        table.getColumns().addAll(matriculaColumn/*, nameOwnerColumn*/, nameColumn, modifiedColumn, viewColumn);
         return table;
     }
 
@@ -525,17 +561,18 @@ public class AdminOverviewController implements Initializable {
         };
     }
 
-    private void loadCalendarDataAsync(TableView<Calendar> calendarTable) {
+    private CompletableFuture<List<Calendar>> loadCalendarDataAsync() {
         setStatus("Cargando calendarios...");
 
-        CompletableFuture.supplyAsync(Calendar::getAllActiveCalendars)
-                .thenAcceptAsync(calendars -> Platform.runLater(() -> {
-                    calendarTable.getItems().setAll(calendars);
-                    setStatus("Calendarios cargados: " + calendars.size());
-                }))
-                .exceptionally(throwable -> {
-                    Platform.runLater(() -> setStatus("Error al cargar calendarios"));
-                    return null;
+        return CompletableFuture.supplyAsync(Calendar::getAllActiveCalendars)
+                .whenComplete((calendars, throwable) -> {
+                    Platform.runLater(() -> {
+                        if (throwable != null) {
+                            setStatus("Error al cargar calendarios");
+                        } else {
+                            setStatus("Calendarios cargados: " + calendars.size());
+                        }
+                    });
                 });
     }
 
@@ -550,7 +587,7 @@ public class AdminOverviewController implements Initializable {
             Scene calendarScene = new Scene(calendarView, 800, 600); // ✅ Más pequeño
 
             try {
-                String cssPath = getClass().getResource("/css/admin-overview.css").toExternalForm();
+                String cssPath = getClass().getResource("/css/calendar-month.css").toExternalForm();
                 calendarScene.getStylesheets().add(cssPath);
                 System.out.println("✅ CSS cargado correctamente");
             } catch (Exception cssError) {
@@ -808,8 +845,14 @@ public class AdminOverviewController implements Initializable {
             // ✅ Aplicar clases CSS correctas
             eventLabel.getStyleClass().addAll("event-item", colorClasses[i % colorClasses.length]);
 
+            // Hacer que cada evento sea clickeable individualmente
+            eventLabel.setOnMouseClicked(e -> {
+                e.consume(); // Evitar que se propague al evento de la celda
+                openSpecificEvent(event);
+            });
+
             // ✅ Hacer que sea de solo lectura
-            eventLabel.setMouseTransparent(true);
+            //eventLabel.setMouseTransparent(true);
 
             cell.getChildren().add(eventLabel);
         }
@@ -1045,10 +1088,10 @@ public class AdminOverviewController implements Initializable {
     }
 
     //DIVISION DE LA TABLA DE CALENDARIOS
-    private HBox createCalendarPagination(TableView<Calendar> calendarTable) {
+    private HBox createCalendarPagination(TableView<Calendar> calendarTable, List<Calendar> calendars) {
         final int itemsPerPage = 10;
         final IntegerProperty currentPageIndex = new SimpleIntegerProperty(0);
-        final List<Calendar> masterData = Calendar.getAllActiveCalendars();
+        final List<Calendar> masterData = calendars;
 
         Runnable updatePageData = () -> {
             int startIndex = currentPageIndex.get() * itemsPerPage;
@@ -1079,13 +1122,85 @@ public class AdminOverviewController implements Initializable {
             pageInfoLabel.setText("Página " + (pageIndex + 1) + " de " + ((masterData.size() - 1) / itemsPerPage + 1));
         });
 
+        calendarTable.getItems().clear();
         updatePageData.run();
-        pageInfoLabel.setText("Página 1 de " + ((masterData.size() - 1) / itemsPerPage + 1));
+        int pageIndex = currentPageIndex.get();
+        navButtons[0].setDisable(pageIndex == 0);
+        navButtons[1].setDisable((pageIndex + 1) * itemsPerPage >= masterData.size());
+        pageInfoLabel.setText("Página " + (pageIndex + 1) + " de " + ((masterData.size() - 1) / itemsPerPage + 1));
 
         HBox paginationBar = new HBox(10, navButtons[0], pageInfoLabel, navButtons[1]);
         paginationBar.setAlignment(Pos.CENTER);
         paginationBar.getStyleClass().add("pagination-bar");
 
         return paginationBar;
+    }
+
+    @FXML
+    private void handleCloseButton() {
+        Platform.exit();
+        System.exit(0);
+    }
+
+    @FXML private Button createButton;
+    /**
+     * Abre el diálogo para visualizar un evento específico
+     */
+    public void openSpecificEvent(Event event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/event-dialog.fxml"));
+            Parent dialogRoot = loader.load();
+            EventDialogController dialogController = loader.getController();
+
+            Runnable onEventChanged = () -> {
+                System.out.println("✓ Recargando eventos tras cambio");
+            };
+
+            dialogController.initializeForView(event, onEventChanged);
+
+            Stage dialogStage = new Stage();
+
+            // Configurar el diálogo sin barra de título pero funcional
+            dialogStage.initStyle(StageStyle.UNDECORATED);
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+
+            // Obtener la ventana padre de forma más robusta
+            Stage parentStage = null;
+            try {
+                if (createButton != null && createButton.getScene() != null && createButton.getScene().getWindow() != null) {
+                    parentStage = (Stage) createButton.getScene().getWindow();
+                    dialogStage.initOwner(parentStage);
+                }
+            } catch (Exception e) {
+                System.out.println("No se pudo establecer ventana padre: " + e.getMessage());
+            }
+
+            Scene dialogScene = new Scene(dialogRoot);
+
+            try {
+                dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
+            } catch (Exception ignored) {
+                System.out.println("No se pudo cargar CSS para el diálogo");
+            }
+
+            dialogStage.setScene(dialogScene);
+
+            // Establecer tamaño fijo para evitar problemas de visibilidad
+            dialogStage.setWidth(600);
+            dialogStage.setHeight(500);
+
+            // Centrar el diálogo manualmente
+            if (parentStage != null) {
+                dialogStage.setX(parentStage.getX() + (parentStage.getWidth() - 600) / 2);
+                dialogStage.setY(parentStage.getY() + (parentStage.getHeight() - 500) / 2);
+            }
+
+            dialogStage.showAndWait();
+
+        } catch (IOException e) {
+            System.err.println("Error abriendo evento específico: " + e.getMessage());
+            e.printStackTrace();
+            showAlert("Error", "No se pudo abrir el evento:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
     }
 }
