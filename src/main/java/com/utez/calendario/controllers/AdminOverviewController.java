@@ -1156,7 +1156,7 @@ public class AdminOverviewController implements Initializable {
                 System.out.println("✓ Recargando eventos tras cambio");
             };
 
-            dialogController.initializeForView(event, onEventChanged);
+            dialogController.initializeForViewEvent(event, onEventChanged);
 
             Stage dialogStage = new Stage();
 

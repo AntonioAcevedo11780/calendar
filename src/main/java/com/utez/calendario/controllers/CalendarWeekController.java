@@ -100,9 +100,14 @@ public class CalendarWeekController implements Initializable {
 
     private void initializeCalendar() {
         selectedDate = LocalDate.now();
-        startOfWeek = selectedDate.with(DayOfWeek.SUNDAY);
+        startOfWeek = getStartOfWeek(selectedDate);
         events = new HashMap<>();
         updateCalendarView();
+    }
+    private LocalDate getStartOfWeek(LocalDate date) {
+        int dayOfWeek = date.getDayOfWeek().getValue(); // 1=Monday, 7=Sunday
+        int daysToSubtract = dayOfWeek % 7; // Si es domingo será 0
+        return date.minusDays(daysToSubtract);
     }
 
     private void setupCalendarCheckboxes() {
@@ -912,8 +917,9 @@ public class CalendarWeekController implements Initializable {
 
     @FXML
     private void handleTodayClick() {
-        selectedDate = LocalDate.now();
-        startOfWeek = selectedDate.with(DayOfWeek.SUNDAY);
+        LocalDate today = LocalDate.now();
+        selectedDate = today;
+        startOfWeek = getStartOfWeek(today);
         updateCalendarView();
         loadEventsFromDatabaseAsync();
     }
