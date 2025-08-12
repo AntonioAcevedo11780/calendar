@@ -658,3 +658,50 @@
     -fx-padding: 2 5;
     -fx-font-size: 12px;
 }
+
+/* ==========================================================================
+   CALENDAR-NAME BUTTONS - Botones de nombre de calendario
+   ========================================================================== */
+/* Estilo base para los botones de nombre de calendario */
+.calendar-name-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+    -fx-text-fill: inherit;
+    -fx-alignment: center-left;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-content-display: left;
+}
+
+/* Efecto hover para los botones de nombre */
+.calendar-name-button:hover {
+    -fx-text-fill: derive(-fx-text-fill, -20%);
+    -fx-underline: true;
+}
+
+/* Mantener los colores originales específicos para cada calendario */
+.calendar-name-button.calendar-name-books {
+    -fx-text-fill: #1E76E8;
+}
+
+.calendar-name-button.calendar-name-tasks {
+    -fx-text-fill: #2c2c2c;
+}
+
+.calendar-name-button.calendar-name-personal {
+    -fx-text-fill: #53C925;
+}
+
+.calendar-name-button.calendar-name-exams {
+    -fx-text-fill: #f2c51f;
+}
+
+/* Indicador para calendarios compartidos en la sidebar */
+.calendar-item-shared {
+    -fx-border-color: #2196F3;
+    -fx-border-width: 1px;
+    -fx-border-style: dashed;
+}

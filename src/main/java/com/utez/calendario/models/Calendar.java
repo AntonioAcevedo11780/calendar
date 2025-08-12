@@ -1,5 +1,8 @@
 package com.utez.calendario.models;
 
+import com.utez.calendario.config.DatabaseConfig;
+import com.utez.calendario.services.CalendarSharingService;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
@@ -23,6 +26,7 @@ public class Calendar {
     private LocalDateTime createdDate;
     private LocalDateTime modifiedDate;
     private boolean isDefault; // Añadido para marcar si es calendario predeterminado
+    private boolean isShared;
 
     private static Connection getConnection() throws SQLException {
         return com.utez.calendario.config.DatabaseConfig.getConnection();
@@ -39,6 +43,7 @@ public class Calendar {
         this.color = color;
         this.active = 'Y';
         this.createdDate = LocalDateTime.now();
+        this.isDefault = false;
     }
 
     // Constructor adicional para el controlador
@@ -139,6 +144,40 @@ public class Calendar {
         }
 
         return calendars;
+    }
+
+    public static List<Calendar> findByOwnerId(String ownerId) throws SQLException {
+        List<Calendar> calendars = new ArrayList<>();
+        String sql = "SELECT * FROM CALENDARS WHERE OWNER_ID = ? AND ACTIVE = 'Y'";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, ownerId);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Calendar calendar = new Calendar(
+                        rs.getString("CALENDAR_ID"),
+                        rs.getString("OWNER_ID"),
+                        rs.getString("NAME"),
+                        rs.getString("DESCRIPTION"),
+                        rs.getString("COLOR")
+                );
+                calendar.setActive(rs.getString("ACTIVE").charAt(0));
+                calendar.setCreatedDate(rs.getTimestamp("CREATED_DATE").toLocalDateTime());
+                calendar.setModifiedDate(rs.getTimestamp("MODIFIED_DATE") != null ?
+                        rs.getTimestamp("MODIFIED_DATE").toLocalDateTime() : null);
+                calendar.setDefault(rs.getBoolean("IS_DEFAULT"));
+
+                calendars.add(calendar);
+            }
+        }
+        return calendars;
+    }
+
+    public static List<Calendar> getSharedCalendars(String userId) throws SQLException {
+        return CalendarSharingService.getInstance().getSharedCalendarsForUser(userId);
     }
 
     /**
@@ -353,6 +392,9 @@ public class Calendar {
         this.isDefault = isDefault;
     }
 
+    public boolean isShared() { return isShared; }
+
+    public void setShared(boolean isShared) { this.isShared = isShared; }
     /**
      * Obtiene el número de calendarios personalizados (no predeterminados) de un usuario
      */

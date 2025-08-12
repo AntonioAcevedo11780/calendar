@@ -468,7 +468,7 @@ public class AdminOverviewController implements Initializable {
         table.setPrefHeight(440);
 
         // ✅ Columna Matrícula centrada
-        TableColumn<Calendar, String> matriculaColumn = new TableColumn<>("Matrícula del Propietaro");
+        TableColumn<Calendar, String> matriculaColumn = new TableColumn<>("Matrícula del Propietario");
         matriculaColumn.setCellValueFactory(cellData -> {
             Calendar calendar = cellData.getValue();
             User user =findUserById(calendar.getOwnerId());

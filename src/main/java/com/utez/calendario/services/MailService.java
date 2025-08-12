@@ -215,6 +215,64 @@ public class MailService {
         }
     }
 
+    public void sendCalendarInvitation(String recipient, String calendarName)
+            throws MessagingException {
+
+        if (recipient == null || recipient.isBlank()) {
+            throw new IllegalArgumentException("El destinatario no puede estar vacío");
+        }
+
+        if (!EMAIL_PATTERN.matcher(recipient).matches()) {
+            throw new IllegalArgumentException("Formato de email inválido: " + recipient);
+        }
+
+        Session session = Session.getInstance(props, new Authenticator() {
+            @Override
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(username, password);
+            }
+        });
+
+        try {
+            Message message = new MimeMessage(session);
+            message.setFrom(new InternetAddress(username, senderName));
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
+            message.setSubject("Invitación al calendario: " + calendarName);
+
+            String htmlContent = "<!DOCTYPE html>"
+                    + "<html>"
+                    + "<head><meta charset='UTF-8'><title>Invitación a Calendario</title></head>"
+                    + "<body style='margin:0; padding:0; font-family: Arial, sans-serif; background-color: #f5f7fa;'>"
+                    + "  <div style='max-width: 600px; margin: 20px auto; background: white; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.1); overflow: hidden;'>"
+                    + "    <div style='background: linear-gradient(135deg, #2c4a6b, #3a6ea5); padding: 30px; text-align: center;'>"
+                    + "      <h1 style='color: white; margin:0; font-size: 28px;'>Ithera Calendar</h1>"
+                    + "    </div>"
+                    + "    <div style='padding: 30px;'>"
+                    + "      <h2 style='color: #2c4a6b; margin-top: 0;'>Invitación a calendario</h2>"
+                    + "      <p style='color: #555; line-height: 1.6;'>Has sido invitado a unirte al calendario:</p>"
+                    + "      <div style='background: #f0f7ff; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0; font-size: 24px; font-weight: bold; color: #2c4a6b; border: 1px dashed #3a6ea5;'>"
+                    +          calendarName
+                    + "    </div>"
+                    + "    <div style='background: #f5f7fa; padding: 20px; text-align: center; color: #777; font-size: 12px; border-top: 1px solid #eaeaea;'>"
+                    + "      <p>© " + java.time.Year.now().getValue() + " Ithera Calendar. Todos los derechos reservados.</p>"
+                    + "      <p style='margin-top: 5px; font-size: 11px; color: #999;'>Este es un correo automático, por favor no respondas a este mensaje.</p>"
+                    + "    </div>"
+                    + "  </div>"
+                    + "</body>"
+                    + "</html>";
+
+            message.setContent(htmlContent, "text/html; charset=utf-8");
+            Transport.send(message);
+            System.out.println("✓ Invitación enviada a " + recipient + " para calendario: " + calendarName);
+
+        } catch (UnsupportedEncodingException e) {
+            throw new MessagingException("Error en codificación del nombre del remitente", e);
+        } catch (MessagingException e) {
+            System.err.println("Error enviando invitación a " + recipient + ": " + e.getMessage());
+            throw new MessagingException("No se pudo enviar la invitación", e);
+        }
+    }
+
     // Metodo para apagar el scheduler al cerrar la aplicación
     public static void shutdown() {
         cooldownScheduler.shutdown();

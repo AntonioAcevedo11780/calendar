@@ -131,7 +131,7 @@
                                 <Image url="@/images/books.png" />
                             </image>
                         </ImageView>
-                        <Label text="Mis Clases" styleClass="calendar-name-books" maxWidth="Infinity" />
+                        <Button text="Mis Clases" fx:id="btnMisClases" styleClass="calendar-name-button, calendar-name-books" onAction="#handleCalendarNameClick" maxWidth="Infinity" />
                         <!-- Reducir el espacio reservado para el botón -->
                         <Region minWidth="20" maxWidth="20" />
                     </HBox>
@@ -144,7 +144,7 @@
                                 <Image url="@/images/school.png" />
                             </image>
                         </ImageView>
-                        <Label text="Tareas" styleClass="calendar-name-tasks" maxWidth="Infinity" />
+                        <Button text="Tareas" fx:id="btnTareas" styleClass="calendar-name-button, calendar-name-tasks" onAction="#handleCalendarNameClick" maxWidth="Infinity" />
                         <Region minWidth="20" maxWidth="20" />
                     </HBox>
 
@@ -156,7 +156,7 @@
                                 <Image url="@/images/person.png" />
                             </image>
                         </ImageView>
-                        <Label text="Personal" styleClass="calendar-name-personal" maxWidth="Infinity" />
+                        <Button text="Personal" fx:id="btnPersonal" styleClass="calendar-name-button, calendar-name-personal" onAction="#handleCalendarNameClick" maxWidth="Infinity" />
                         <Region minWidth="20" maxWidth="20" />
                     </HBox>
 
@@ -168,7 +168,7 @@
                                 <Image url="@/images/exam.png" />
                             </image>
                         </ImageView>
-                        <Label text="Exámenes" styleClass="calendar-name-exams" maxWidth="Infinity" />
+                        <Button text="Exámenes" fx:id="btnExamenes" styleClass="calendar-name-button, calendar-name-exams" onAction="#handleCalendarNameClick" maxWidth="Infinity" />
                         <Region minWidth="20" maxWidth="20" />
                     </HBox>
 

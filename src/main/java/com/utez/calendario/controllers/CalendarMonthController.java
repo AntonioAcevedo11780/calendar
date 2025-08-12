@@ -1,14 +1,17 @@
 package com.utez.calendario.controllers;
 
+import com.utez.calendario.MainApp;
 import com.utez.calendario.models.Calendar;
 import com.utez.calendario.models.Event;
 import com.utez.calendario.models.User;
 import com.utez.calendario.services.AuthService;
 import com.utez.calendario.services.EventService;
+import com.utez.calendario.services.MailService;
 import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -16,12 +19,10 @@ import javafx.geometry.HPos;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.geometry.VPos;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -30,6 +31,7 @@ import javafx.util.Duration;
 
 import java.io.IOException;
 import java.net.URL;
+import java.sql.SQLException;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
@@ -37,6 +39,15 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class CalendarMonthController implements Initializable {
+
+    //========= CALENDARIOS PREDETERMINADOS ==========
+    private Calendar calMisClases;
+    private Calendar calTareas;
+    private Calendar calPersonal;
+    private Calendar calExamenes;
+
+    // ========== CONSTANTES ==========
+    private final Map<String, Calendar> buttonCalendarMap  = new HashMap<>();
 
     // Colores para calendarios predeterminados
     private static final String COLOR_CLASSES = "#1E76E8";  // Color para Mis Clases
@@ -60,6 +71,10 @@ public class CalendarMonthController implements Initializable {
     @FXML private ScrollPane customCalendarsScroll;
     @FXML private VBox customCalendarsContainer;
     @FXML private Button addCalendarButton;
+    @FXML private Button btnMisClases;
+    @FXML private Button btnTareas;
+    @FXML private Button btnPersonal;
+    @FXML private Button btnExamenes;
 
     @FXML private StackPane contentArea;
     private javafx.animation.Timeline clockTimeline;
@@ -78,6 +93,7 @@ public class CalendarMonthController implements Initializable {
     // Cache para calendarios personalizados
     private List<Calendar> customCalendarsCache = new ArrayList<>();
     private List<Calendar> allCalendarsCache = new ArrayList<>(); // Cache para TODOS los calendarios
+    private List<Calendar> sharedCalendarsCache = new ArrayList<>();
     private volatile boolean isLoadingEvents = false;
 
     @Override
@@ -87,6 +103,21 @@ public class CalendarMonthController implements Initializable {
 
         eventService = EventService.getInstance();
         authService = AuthService.getInstance();
+
+        // Inicializar calendarios predeterminados
+        String userId = authService.getCurrentUser() != null ?
+                authService.getCurrentUser().getUserId() : "default";
+
+        calMisClases = new Calendar("CAL0000001", "Mis Clases", COLOR_CLASSES, userId);
+        calTareas = new Calendar("CAL0000002", "Tareas y Proyectos", COLOR_TASKS, userId);
+        calPersonal = new Calendar("CAL0000003", "Personal", COLOR_PERSONAL, userId);
+        calExamenes = new Calendar("CAL0000004", "Exámenes", COLOR_EXAMS, userId);
+
+        // Configurar el mapa de botones-calendarios
+        if (btnMisClases != null) buttonCalendarMap.put(btnMisClases.getText().toLowerCase(), calMisClases);
+        if (btnTareas != null) buttonCalendarMap.put(btnTareas.getText().toLowerCase(), calTareas);
+        if (btnPersonal != null) buttonCalendarMap.put(btnPersonal.getText().toLowerCase(), calPersonal);
+        if (btnExamenes != null) buttonCalendarMap.put(btnExamenes.getText().toLowerCase(), calExamenes);
 
         if (authService.getCurrentUser() != null) {
             System.out.println("Usuario Sistema: " + authService.getCurrentUser().getUserId());
@@ -170,27 +201,62 @@ public class CalendarMonthController implements Initializable {
     private boolean shouldShowEvent(Event event) {
         String calendarId = event.getCalendarId();
 
-        // Buscar el calendario en cache para obtener su nombre
+        System.out.println("🔍 Verificando visibilidad para evento: " + event.getTitle());
+        System.out.println("   📋 Calendario ID: " + calendarId);
+
+        // Buscar el calendario en todos los caches
         String calendarName = "";
-        for (Calendar cal : allCalendarsCache) {
-            if (cal.getCalendarId().equals(calendarId)) {
-                calendarName = cal.getName().toLowerCase();
-                break;
+        boolean isSharedCalendar = false;
+
+        // Buscar en calendarios propios
+        if (allCalendarsCache != null) {
+            for (Calendar cal : allCalendarsCache) {
+                if (cal.getCalendarId().equals(calendarId)) {
+                    calendarName = cal.getName().toLowerCase();
+                    System.out.println("   ✅ Encontrado en cache propio: " + cal.getName());
+                    break;
+                }
             }
         }
 
-        // Si no se encuentra en cache, intentar obtenerlo de la BD
+        // Si no se encuentra, buscar en calendarios compartidos
+        if (calendarName.isEmpty() && sharedCalendarsCache != null) {
+            for (Calendar cal : sharedCalendarsCache) {
+                if (cal.getCalendarId().equals(calendarId)) {
+                    calendarName = cal.getName().toLowerCase();
+                    isSharedCalendar = true;
+                    System.out.println("   ✅ Encontrado en cache compartido: " + cal.getName());
+                    break;
+                }
+            }
+        }
+
         if (calendarName.isEmpty()) {
+            System.out.println("   ❌ Calendario no encontrado en caches para ID: " + calendarId);
+            // Intentar obtener de BD como última opción
             try {
                 Calendar cal = Calendar.getCalendarById(calendarId);
                 if (cal != null) {
                     calendarName = cal.getName().toLowerCase();
+                    System.out.println("   ✅ Obtenido de BD: " + cal.getName());
                 }
             } catch (Exception e) {
-                System.err.println("Error obteniendo calendario: " + e.getMessage());
+                System.err.println("   ❌ Error obteniendo calendario de BD: " + e.getMessage());
             }
         }
 
+        boolean shouldShow = shouldShowCalendarByName(calendarName, calendarId);
+
+        System.out.println("   📊 Resultado:");
+        System.out.println("      - Nombre calendario: " + calendarName);
+        System.out.println("      - Es compartido: " + isSharedCalendar);
+        System.out.println("      - Mostrar evento: " + shouldShow);
+
+        return shouldShow;
+    }
+
+    // Método auxiliar para centralizar la lógica de visibilidad
+    private boolean shouldShowCalendarByName(String calendarName, String calendarId) {
         // Mapear por nombre del calendario a checkbox
         if (calendarName.contains("clase") || calendarName.contains("class")) {
             return userCalendarCheck != null && userCalendarCheck.isSelected();
@@ -206,46 +272,47 @@ public class CalendarMonthController implements Initializable {
             return utezCalendarCheck != null && utezCalendarCheck.isSelected();
         }
 
-        // Fallback: verificar IDs fijos (por compatibilidad)
-        switch (calendarId) {
-            case "CAL0000001": // Mis Clases
-                return userCalendarCheck != null && userCalendarCheck.isSelected();
-            case "CAL0000002": // Tareas y Proyectos
-                return tasksCalendarCheck != null && tasksCalendarCheck.isSelected();
-            case "CAL0000003": // Personal
-                return personalCalendarCheck != null && personalCalendarCheck.isSelected();
-            case "CAL0000004": // Exámenes
-                return examsCalendarCheck != null && examsCalendarCheck.isSelected();
-            case "CAL0000005": // Días Festivos
-                return holidaysCalendarCheck != null && holidaysCalendarCheck.isSelected();
-            case "CAL0000006": // UTEZ
-                return utezCalendarCheck != null && utezCalendarCheck.isSelected();
-            default:
-                // Verificar si es un calendario personalizado
-                if (customCalendarCheckboxes != null && customCalendarCheckboxes.containsKey(calendarId)) {
-                    CheckBox checkBox = customCalendarCheckboxes.get(calendarId);
-                    return checkBox != null && checkBox.isSelected();
-                }
+        // Verificar calendarios personalizados/compartidos por ID
+        if (customCalendarCheckboxes != null && customCalendarCheckboxes.containsKey(calendarId)) {
+            CheckBox checkBox = customCalendarCheckboxes.get(calendarId);
+            return checkBox != null && checkBox.isSelected();
+        }
 
-                // Mostrar por defecto si no se puede determinar
-                System.out.println(" No se pudo determinar visibilidad para calendario: " + calendarName + " (ID: " + calendarId + ")");
-                return true;
+        // Fallback: verificar IDs fijos
+        switch (calendarId) {
+            case "CAL0000001": return userCalendarCheck != null && userCalendarCheck.isSelected();
+            case "CAL0000002": return tasksCalendarCheck != null && tasksCalendarCheck.isSelected();
+            case "CAL0000003": return personalCalendarCheck != null && personalCalendarCheck.isSelected();
+            case "CAL0000004": return examsCalendarCheck != null && examsCalendarCheck.isSelected();
+            case "CAL0000005": return holidaysCalendarCheck != null && holidaysCalendarCheck.isSelected();
+            case "CAL0000006": return utezCalendarCheck != null && utezCalendarCheck.isSelected();
+            default:
+                System.out.println("🔍 No se pudo determinar visibilidad para: " + calendarName + " (ID: " + calendarId + ")");
+                return true; // Mostrar por defecto
         }
     }
 
     // Método asíncrono para cargar calendarios personalizados
     private void loadCustomCalendarsAsync() {
         CompletableFuture.supplyAsync(() -> {
-            if (authService.getCurrentUser() != null) {
-                String userId = authService.getCurrentUser().getUserId();
-                // Cargar TODOS los calendarios del usuario (predeterminados + personalizados)
-                List<Calendar> allCalendars = Calendar.getAllUserCalendars(userId); // Necesitas este método en tu modelo
-                List<Calendar> customCalendars = Calendar.getUserCustomCalendars(userId);
+            try {
+                if (authService.getCurrentUser() != null) {
+                    String userId = authService.getCurrentUser().getUserId();
 
-                Map<String, Object> result = new HashMap<>();
-                result.put("all", allCalendars);
-                result.put("custom", customCalendars);
-                return result;
+                    // Cargar TODOS los calendarios del usuario (predeterminados + personalizados)
+                    List<Calendar> allCalendars = Calendar.getAllUserCalendars(userId);
+                    List<Calendar> customCalendars = Calendar.getUserCustomCalendars(userId);
+                    List<Calendar> sharedCalendars = Calendar.getSharedCalendars(userId);
+
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("all", allCalendars);
+                    result.put("custom", customCalendars);
+                    result.put("shared", sharedCalendars);
+                    return result;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                Platform.runLater(() -> showAlert("Error", "No se pudieron cargar los calendarios: " + e.getMessage(), Alert.AlertType.ERROR));
             }
             return new HashMap<String, Object>();
         }).thenAccept(result -> {
@@ -254,6 +321,8 @@ public class CalendarMonthController implements Initializable {
                 List<Calendar> allCalendars = (List<Calendar>) result.get("all");
                 @SuppressWarnings("unchecked")
                 List<Calendar> customCalendars = (List<Calendar>) result.get("custom");
+                @SuppressWarnings("unchecked")
+                List<Calendar> sharedCalendars = (List<Calendar>) result.get("shared");
 
                 if (allCalendars != null) {
                     allCalendarsCache = allCalendars;
@@ -265,6 +334,11 @@ public class CalendarMonthController implements Initializable {
 
                 if (customCalendars != null) {
                     customCalendarsCache = customCalendars;
+                }
+
+                if (sharedCalendars != null) {
+                    sharedCalendarsCache = sharedCalendars;
+                    System.out.println("Calendarios compartidos cargados: " + sharedCalendars.size());
                 }
 
                 loadCustomCalendarsUI();
@@ -310,88 +384,124 @@ public class CalendarMonthController implements Initializable {
         loadCustomCalendarsUI();
     }
 
-    // Método para actualizar la UI con los calendarios personalizados
     private void loadCustomCalendarsUI() {
-        // Limpiar los checkboxes existentes
-        if (customCalendarCheckboxes != null) {
-            customCalendarCheckboxes.clear();
-        } else {
+        // Limpiar estructuras existentes
+        if (customCalendarCheckboxes == null) {
             customCalendarCheckboxes = new HashMap<>();
-        }
-
-        if (customCalendarDeleteButtons != null) {
-            customCalendarDeleteButtons.clear();
         } else {
-            customCalendarDeleteButtons = new HashMap<>();
+            customCalendarCheckboxes.clear();
         }
 
-        // Obtener el contenedor donde se agregarán los checkboxes
+        if (customCalendarDeleteButtons == null) {
+            customCalendarDeleteButtons = new HashMap<>();
+        } else {
+            customCalendarDeleteButtons.clear();
+        }
+
+        // Limpiar contenedor principal
         if (customCalendarsContainer != null) {
-            // Limpiar el contenedor
             customCalendarsContainer.getChildren().clear();
 
-            System.out.println("Cargando " + customCalendarsCache.size() + " calendarios personalizados");
+            System.out.println("Cargando calendarios:");
+            System.out.println(" - Personalizados: " + (customCalendarsCache != null ? customCalendarsCache.size() : 0));
+            System.out.println(" - Compartidos: " + (sharedCalendarsCache != null ? sharedCalendarsCache.size() : 0));
 
-            for (Calendar cal : customCalendarsCache) {
-                // Crear contenedor horizontal para checkbox y botón eliminar
-                HBox calendarRow = new HBox();
-                calendarRow.setSpacing(5);
-                calendarRow.setAlignment(Pos.CENTER_LEFT);
+            // Cargar calendarios personalizados primero
+            if (customCalendarsCache != null) {
+                for (Calendar cal : customCalendarsCache) {
+                    addCalendarToUI(cal, false); // false = no es compartido
+                }
+            }
 
-                // Crear checkbox para el calendario
-                CheckBox checkBox = new CheckBox(cal.getName());
-                checkBox.setSelected(true); // Por defecto activado
-
-                // Aplicar estilo de color al checkbox
-                String colorHex = cal.getColor();
-                String colorStyle = String.format("-fx-text-fill: %s;", colorHex);
-                checkBox.setStyle(colorStyle);
-
-                // Guardar referencia al checkbox con su ID de calendario
-                customCalendarCheckboxes.put(cal.getCalendarId(), checkBox);
-
-                // Añadir listener para actualizar la vista al cambiar la selección
-                checkBox.setOnAction(e -> refreshCalendarDisplayAsync());
-
-                // Crear botón para eliminar calendario
-                Button deleteButton = new Button("🗑");
-                deleteButton.getStyleClass().add("delete-calendar-button");
-                deleteButton.setStyle("-fx-background-color: #ff4444; -fx-text-fill: white; -fx-font-size: 10px; -fx-padding: 2 6 2 6;");
-                deleteButton.setTooltip(new Tooltip("Eliminar calendario"));
-
-                // Guardar referencia al botón
-                customCalendarDeleteButtons.put(cal.getCalendarId(), deleteButton);
-
-                // Añadir acción para eliminar calendario
-                deleteButton.setOnAction(e -> {
-                    Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-                    confirmAlert.setTitle("Eliminar Calendario");
-                    confirmAlert.setHeaderText("¿Estás seguro?");
-                    confirmAlert.setContentText("¿Deseas eliminar el calendario '" + cal.getName() + "'?\nEsta acción no se puede deshacer.");
-
-                    Optional<ButtonType> result = confirmAlert.showAndWait();
-                    if (result.isPresent() && result.get() == ButtonType.OK) {
-                        deleteCustomCalendarAsync(cal.getCalendarId());
-                    }
-                });
-
-                // Región que crece para empujar el botón hacia la derecha
-                Region spacer = new Region();
-                HBox.setHgrow(spacer, Priority.ALWAYS);
-
-                deleteButton.setMinWidth(32);
-                deleteButton.setMaxWidth(32);
-
-                calendarRow.getChildren().addAll(checkBox, spacer, deleteButton);
-
-                // Agregar al contenedor principal
-                customCalendarsContainer.getChildren().add(calendarRow);
-
-                System.out.println("Añadido calendario: " + cal.getName() + " con color: " + colorHex);
+            // Cargar calendarios compartidos después
+            if (sharedCalendarsCache != null) {
+                for (Calendar cal : sharedCalendarsCache) {
+                    addCalendarToUI(cal, true); // true = es compartido
+                }
             }
         } else {
             System.err.println("Error: customCalendarsContainer es null");
         }
+    }
+
+    // Método auxiliar simplificado para agregar calendarios a la UI
+    private void addCalendarToUI(Calendar cal, boolean isShared) {
+        // Crear contenedor horizontal
+        HBox calendarRow = new HBox();
+        calendarRow.getStyleClass().addAll("calendar-item-modern", "calendar-item-custom");
+        calendarRow.setSpacing(5);
+        calendarRow.setAlignment(Pos.CENTER_LEFT);
+
+        // Crear checkbox
+        CheckBox checkBox = new CheckBox();
+        checkBox.setSelected(true);
+        customCalendarCheckboxes.put(cal.getCalendarId(), checkBox);
+        checkBox.setOnAction(e -> refreshCalendarDisplayAsync());
+
+        // Aplicar estilo de color
+        String colorHex = cal.getColor();
+        String colorStyle = String.format("-fx-text-fill: %s;", colorHex);
+        checkBox.setStyle(colorStyle);
+
+        // Ícono distintivo para calendarios compartidos
+        if (isShared) {
+            Label sharedIcon = new Label("👥");
+            sharedIcon.setTooltip(new Tooltip("Compartido contigo"));
+            sharedIcon.setStyle("-fx-font-size: 12px; -fx-padding: 0 3 0 0;");
+            calendarRow.getChildren().add(sharedIcon);
+        }
+
+        // Botón para el nombre (ahora abre diálogo de compartir)
+        Button nameButton = new Button(cal.getName());
+        nameButton.getStyleClass().add("calendar-name-button");
+        nameButton.setStyle("-fx-text-fill: " + cal.getColor() + ";");
+        nameButton.setOnAction(e -> handleCalendarSelection(cal)); // Usa tu método existente
+
+        // Agregar checkbox y nombre
+        calendarRow.getChildren().addAll(checkBox, nameButton);
+
+        // Región que crece para empujar elementos hacia la derecha
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        calendarRow.getChildren().add(spacer);
+
+        // Solo agregar botón de eliminar para calendarios personales
+        if (!isShared) {
+            Button deleteButton = new Button("🗑");
+            deleteButton.getStyleClass().add("delete-calendar-button");
+            deleteButton.setStyle("-fx-background-color: #ff4444; -fx-text-fill: white; -fx-font-size: 10px; -fx-padding: 2 6 2 6;");
+            deleteButton.setTooltip(new Tooltip("Eliminar calendario"));
+            customCalendarDeleteButtons.put(cal.getCalendarId(), deleteButton);
+
+            deleteButton.setOnAction(e -> {
+                Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+                confirmAlert.setTitle("Eliminar Calendario");
+                confirmAlert.setHeaderText("¿Estás seguro?");
+                confirmAlert.setContentText("¿Deseas eliminar el calendario '" + cal.getName() + "'?\nEsta acción no se puede deshacer.");
+
+                Optional<ButtonType> result = confirmAlert.showAndWait();
+                if (result.isPresent() && result.get() == ButtonType.OK) {
+                    deleteCustomCalendarAsync(cal.getCalendarId());
+                }
+            });
+
+            deleteButton.setMinWidth(32);
+            deleteButton.setMaxWidth(32);
+            calendarRow.getChildren().add(deleteButton);
+
+        } else {
+            // Para calendarios compartidos, agregar indicador de solo lectura
+            Label readOnlyLabel = new Label("Solo lectura");
+            readOnlyLabel.setStyle("-fx-font-size: 9px; -fx-text-fill: #666; -fx-padding: 2 6 2 6;");
+            readOnlyLabel.setTooltip(new Tooltip("No puedes eliminar calendarios compartidos"));
+            calendarRow.getChildren().add(readOnlyLabel);
+        }
+
+        // Agregar al contenedor principal
+        customCalendarsContainer.getChildren().add(calendarRow);
+
+        System.out.println("Añadido calendario " + (isShared ? "compartido" : "personal") +
+                ": " + cal.getName() + " con color: " + colorHex);
     }
 
     /**
@@ -438,7 +548,7 @@ public class CalendarMonthController implements Initializable {
         String userId = authService.getCurrentUser().getUserId();
 
         System.out.println("\n[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
-                "Cargando eventos desde BD de forma asíncrona...");
+                "Cargando eventos mensuales (incluyendo compartidos) de forma asíncrona...");
         System.out.println("Usuario ID: " + userId);
         System.out.println("Mes actual: " + currentYearMonth.getMonth() + " " + currentYearMonth.getYear());
 
@@ -446,7 +556,19 @@ public class CalendarMonthController implements Initializable {
         Task<List<Event>> loadEventsTask = new Task<List<Event>>() {
             @Override
             protected List<Event> call() throws Exception {
-                return eventService.getEventsForMonth(userId, currentYearMonth.atDay(1));
+                System.out.println("📋 [Background Thread] Iniciando carga de eventos mensuales...");
+
+                // Calcular rango del mes actual
+                LocalDate startOfMonth = currentYearMonth.atDay(1);
+                LocalDate endOfMonth = currentYearMonth.atEndOfMonth();
+
+                System.out.println("📅 [Background Thread] Rango mensual: " + startOfMonth + " a " + endOfMonth);
+
+                // ¡CAMBIO IMPORTANTE! Usar el método que incluye eventos compartidos
+                List<Event> monthEvents = eventService.getEventsForDateRangeIncludingShared(userId, startOfMonth, endOfMonth);
+
+                System.out.println("✅ [Background Thread] Eventos mensuales cargados: " + monthEvents.size());
+                return monthEvents;
             }
         };
 
@@ -455,19 +577,30 @@ public class CalendarMonthController implements Initializable {
 
             Platform.runLater(() -> {
                 try {
+                    System.out.println("🔄 [UI Thread] Procesando eventos mensuales cargados...");
+
                     eventCache.clear();
 
                     // Filtrar eventos según la configuración de visibilidad de calendarios
+                    int shownEvents = 0;
+                    int hiddenEvents = 0;
+
                     for (Event event : monthEvents) {
                         if (shouldShowEvent(event)) {
                             LocalDate eventDate = event.getStartDate().toLocalDate();
                             eventCache.computeIfAbsent(eventDate, k -> new ArrayList<>()).add(event);
+                            shownEvents++;
+                        } else {
+                            hiddenEvents++;
                         }
                     }
 
+                    System.out.println("📊 [UI Thread] Eventos mostrados: " + shownEvents + ", ocultos: " + hiddenEvents);
+
                     updateCalendarView();
+
                     System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
-                            "Eventos cargados correctamente desde BD (Asíncrono)");
+                            "✅ Eventos mensuales cargados correctamente (Asíncrono) - Total: " + monthEvents.size());
 
                 } finally {
                     isLoadingEvents = false;
@@ -480,11 +613,13 @@ public class CalendarMonthController implements Initializable {
                 try {
                     Throwable exception = loadEventsTask.getException();
                     System.err.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
-                            "Error cargando eventos (Asíncrono): " + exception.getMessage());
+                            "❌ Error cargando eventos mensuales (Asíncrono): " + exception.getMessage());
                     exception.printStackTrace();
+
                     showAlert("Error de Conexión",
                             "No se pueden cargar los eventos desde la base de datos.\nVerifica tu conexión y configuración.",
                             Alert.AlertType.WARNING);
+
                 } finally {
                     isLoadingEvents = false;
                 }
@@ -1273,6 +1408,52 @@ public class CalendarMonthController implements Initializable {
         openEventDialog("READ", date);
     }
 
+    //wbd pa compartir calendario XDD y si ven esto cópienlo en los demás controllers que tengan una vista XD
+    private void handleShareCalendar(Calendar selectedCalendar) {
+
+        try {
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/share-calendar-dialog.fxml"));
+            Parent dialogRoot = loader.load();
+            ShareCalendarDialogController dialogController = loader.getController();
+
+            Stage dialogStage = new Stage();
+
+            dialogStage.initStyle(StageStyle.UNDECORATED);
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(calendarGrid.getScene().getWindow());
+
+            MailService mailService = MainApp.getEmailService();
+
+            dialogController.setMailService(mailService);
+            dialogController.setDialogStage(dialogStage);
+            dialogController.setCalendar(selectedCalendar);
+
+            Scene dialogScene = new Scene(dialogRoot);
+
+            try {
+                dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
+            } catch (Exception ignored) {
+                System.out.println("No se pudo cargar CSS para el diálogo");
+            }
+
+            dialogStage.setScene(dialogScene);
+            dialogStage.setResizable(false);
+
+            // Hacer la ventana arrastrable
+            makeDialogDraggable(dialogRoot, dialogStage);
+
+            dialogStage.showAndWait();
+
+        } catch (IOException e) {
+            System.err.println("Error abriendo diálogo: " + e.getMessage());
+            e.printStackTrace();
+            showAlert("Error", "No se pudo abrir el diálogo para compartir calendario", Alert.AlertType.ERROR);
+        }
+
+    }
+
+
     private void openEventDialog(String mode, LocalDate date) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/event-dialog.fxml"));
@@ -1654,6 +1835,77 @@ public class CalendarMonthController implements Initializable {
             showAlert("Error", "No se pudo abrir el diálogo de eventos:\n" + e.getMessage(),
                     Alert.AlertType.ERROR);
         }
+    }
+
+    // Esto es lo q si alguno de usteddes lo ve, lo copie en los demás controllers q tengan una vista Xd
+    // 1. Manejador para calendarios predeterminados
+    @FXML
+    public void handleCalendarNameClick(ActionEvent event) {
+        if (!(event.getSource() instanceof Button clickedButton)) return;
+
+        Calendar calendar = findCalendarByName(clickedButton.getText());
+
+        if (calendar != null) {
+            handleCalendarSelection(calendar);
+        } else {
+            System.err.println("Calendario no encontrado: " + clickedButton.getText());
+            // Mostrar mensaje de error al usuario si es necesario
+        }
+    }
+
+    // 2. Método común para ambos
+    private void handleCalendarSelection(Calendar calendar) {
+        if (calendar == null) {
+            System.err.println("Intento de editar calendario nulo");
+            return;
+        }
+
+        System.out.println("Editando calendario: " + calendar.getName());
+
+        handleShareCalendar(calendar);
+    }
+
+    //Hasta acá XD
+    private Calendar findCalendarByName(String buttonText) {
+        if (buttonText == null || buttonText.trim().isEmpty()) {
+            return null;
+        }
+
+        String searchName = buttonText.toLowerCase().trim();
+
+        // Primero buscar en el mapa de botones (si está bien inicializado)
+        if (buttonCalendarMap.containsKey(searchName)) {
+            return buttonCalendarMap.get(searchName);
+        }
+
+        // Mapeo directo como fallback
+        switch (searchName) {
+            case "mis clases":
+                return calMisClases;
+            case "tareas y proyectos":
+            case "tareas":
+                return calTareas;
+            case "personal":
+                return calPersonal;
+            case "exámenes":
+            case "examenes":
+                return calExamenes;
+        }
+
+        // Buscar en cache de calendarios
+        if (allCalendarsCache != null) {
+            for (Calendar cal : allCalendarsCache) {
+                String calendarName = cal.getName().toLowerCase().trim();
+                if (calendarName.equals(searchName) ||
+                        calendarName.contains(searchName) ||
+                        searchName.contains(calendarName)) {
+                    return cal;
+                }
+            }
+        }
+
+        System.err.println("Calendario no encontrado para: '" + buttonText + "'");
+        return null;
     }
 
     /**
