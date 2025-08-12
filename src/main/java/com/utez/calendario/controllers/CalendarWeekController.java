@@ -945,21 +945,27 @@ public class CalendarWeekController implements Initializable {
             Runnable onEventChanged = this::loadEventsFromDatabaseAsync;
             dialogController.initializeForCreate(date, onEventChanged);
 
+            // Obtener información del usuario actual para identificar si es docente
+            User currentUser = authService.getCurrentUser();
+            boolean isTeacher = currentUser != null && currentUser.isTeacher();
+
+            // Configurar opciones de docente si corresponde
+            dialogController.setIsTeacher(isTeacher);
+
             Stage dialogStage = new Stage();
-
-            // Remover decoraciones de la ventana
             dialogStage.initStyle(StageStyle.UNDECORATED);
-
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(createButton.getScene().getWindow());
-            Scene dialogScene = new Scene(dialogRoot);
 
+            Scene dialogScene = new Scene(dialogRoot);
             try {
                 dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
             } catch (Exception ignored) {}
 
             dialogStage.setScene(dialogScene);
-            dialogStage.setResizable(false);
+            dialogStage.setResizable(true); // Permitir redimensionar
+            dialogStage.setMinWidth(600);
+            dialogStage.setMinHeight(550);
 
             // Hacer la ventana arrastrable
             makeDialogDraggable(dialogRoot, dialogStage);
@@ -982,21 +988,27 @@ public class CalendarWeekController implements Initializable {
             Runnable onEventChanged = this::loadEventsFromDatabaseAsync;
             dialogController.initializeForCreateWithTime(date, startTime, endTime, onEventChanged);
 
+            // Obtener información del usuario actual para identificar si es docente
+            User currentUser = authService.getCurrentUser();
+            boolean isTeacher = currentUser != null && currentUser.isTeacher();
+
+            // Configurar opciones de docente si corresponde
+            dialogController.setIsTeacher(isTeacher);
+
             Stage dialogStage = new Stage();
-
-            // Remover decoraciones de la ventana
             dialogStage.initStyle(StageStyle.UNDECORATED);
-
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(createButton.getScene().getWindow());
-            Scene dialogScene = new Scene(dialogRoot);
 
+            Scene dialogScene = new Scene(dialogRoot);
             try {
                 dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
             } catch (Exception ignored) {}
 
             dialogStage.setScene(dialogScene);
-            dialogStage.setResizable(false);
+            dialogStage.setResizable(true);
+            dialogStage.setMinWidth(600);
+            dialogStage.setMinHeight(550);
 
             // Hacer la ventana arrastrable
             makeDialogDraggable(dialogRoot, dialogStage);
@@ -1020,20 +1032,19 @@ public class CalendarWeekController implements Initializable {
             dialogController.initializeForViewEvent(event, onEventChanged);
 
             Stage dialogStage = new Stage();
-
-            // Remover decoraciones de la ventana
             dialogStage.initStyle(StageStyle.UNDECORATED);
-
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(createButton.getScene().getWindow());
-            Scene dialogScene = new Scene(dialogRoot);
 
+            Scene dialogScene = new Scene(dialogRoot);
             try {
                 dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
             } catch (Exception ignored) {}
 
             dialogStage.setScene(dialogScene);
-            dialogStage.setResizable(false);
+            dialogStage.setResizable(true);
+            dialogStage.setMinWidth(600);
+            dialogStage.setMinHeight(550);
 
             // Hacer la ventana arrastrable
             makeDialogDraggable(dialogRoot, dialogStage);
@@ -1057,20 +1068,19 @@ public class CalendarWeekController implements Initializable {
             dialogController.initializeForRead(date, onEventChanged);
 
             Stage dialogStage = new Stage();
-
-            // Remover decoraciones de la ventana
             dialogStage.initStyle(StageStyle.UNDECORATED);
-
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(createButton.getScene().getWindow());
-            Scene dialogScene = new Scene(dialogRoot);
 
+            Scene dialogScene = new Scene(dialogRoot);
             try {
                 dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
             } catch (Exception ignored) {}
 
             dialogStage.setScene(dialogScene);
-            dialogStage.setResizable(false);
+            dialogStage.setResizable(true);
+            dialogStage.setMinWidth(600);
+            dialogStage.setMinHeight(550);
 
             // Hacer la ventana arrastrable
             makeDialogDraggable(dialogRoot, dialogStage);

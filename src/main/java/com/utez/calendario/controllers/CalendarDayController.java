@@ -945,23 +945,28 @@ public class CalendarDayController implements Initializable {
             EventDialogController dialogController = loader.getController();
 
             Runnable onEventChanged = this::loadEventsFromDatabaseAsync;
+
+            // Obtener información del usuario actual para identificar si es docente
+            User currentUser = authService.getCurrentUser();
+            boolean isTeacher = currentUser != null && currentUser.isTeacher();
+
             dialogController.initializeForCreateWithTime(date, startTime, endTime, onEventChanged);
 
+            // Configurar opciones específicas para docente
+            dialogController.setIsTeacher(isTeacher);
+
             Stage dialogStage = new Stage();
-
-            // Remover decoraciones de la ventana
             dialogStage.initStyle(StageStyle.UNDECORATED);
-
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(createButton.getScene().getWindow());
-            Scene dialogScene = new Scene(dialogRoot);
 
-            try {
-                dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
-            } catch (Exception ignored) {}
+            Scene dialogScene = new Scene(dialogRoot);
+            dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
 
             dialogStage.setScene(dialogScene);
-            dialogStage.setResizable(false);
+            dialogStage.setResizable(true); // Permitir redimensionar
+            dialogStage.setMinWidth(600);
+            dialogStage.setMinHeight(550);
 
             // Hacer la ventana arrastrable
             makeDialogDraggable(dialogRoot, dialogStage);
@@ -985,20 +990,17 @@ public class CalendarDayController implements Initializable {
             dialogController.initializeForViewEvent(event, onEventChanged);
 
             Stage dialogStage = new Stage();
-
-            // Remover decoraciones de la ventana
             dialogStage.initStyle(StageStyle.UNDECORATED);
-
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(createButton.getScene().getWindow());
-            Scene dialogScene = new Scene(dialogRoot);
 
-            try {
-                dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
-            } catch (Exception ignored) {}
+            Scene dialogScene = new Scene(dialogRoot);
+            dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
 
             dialogStage.setScene(dialogScene);
-            dialogStage.setResizable(false);
+            dialogStage.setResizable(true); // Permitir redimensionar
+            dialogStage.setMinWidth(600);
+            dialogStage.setMinHeight(550);
 
             // Hacer la ventana arrastrable
             makeDialogDraggable(dialogRoot, dialogStage);

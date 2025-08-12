@@ -838,9 +838,15 @@ public class CalendarYearController implements Initializable {
                 loadEventsFromDatabase();
             };
 
+            // Obtener información del usuario actual para identificar si es docente
+            User currentUser = authService.getCurrentUser();
+            boolean isTeacher = currentUser != null && currentUser.isTeacher();
+
             // Configurar el controlador según el modo
             if ("CREATE".equals(mode)) {
                 dialogController.initializeForCreate(date, onEventChanged);
+                // Configurar opciones de docente si corresponde
+                dialogController.setIsTeacher(isTeacher);
             }
 
             Stage dialogStage = new Stage();
@@ -859,7 +865,9 @@ public class CalendarYearController implements Initializable {
             }
 
             dialogStage.setScene(dialogScene);
-            dialogStage.setResizable(false);
+            dialogStage.setResizable(true);
+            dialogStage.setMinWidth(600);
+            dialogStage.setMinHeight(550);
 
             // Hacer la ventana arrastrable
             makeDialogDraggable(dialogRoot, dialogStage);

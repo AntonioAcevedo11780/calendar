@@ -84,12 +84,12 @@ public class CalendarMonthController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         System.out.println("\n=== INICIANDO CALENDARIO UTEZ ===");
         System.out.println("Fecha/Hora UTC: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-        System.out.println("Usuario Sistema: " + AuthService.getInstance().getCurrentUser().getUserId());
 
         eventService = EventService.getInstance();
         authService = AuthService.getInstance();
 
         if (authService.getCurrentUser() != null) {
+            System.out.println("Usuario Sistema: " + authService.getCurrentUser().getUserId());
             User currentUser = authService.getCurrentUser();
             System.out.println("Usuario logueado: " + currentUser.getDisplayInfo());
         } else {
@@ -711,7 +711,6 @@ public class CalendarMonthController implements Initializable {
      * Abre un diálogo que muestra todos los eventos de un día específico
      */
     private void openDayEventsDialog(LocalDate date, List<Event> dayEvents) {
-        // Crear un diálogo personalizado usando JavaFX nativo
         createCustomDayEventsDialog(date, dayEvents);
     }
 
@@ -978,7 +977,6 @@ public class CalendarMonthController implements Initializable {
                 loadEventsFromDatabaseAsync();
             };
 
-            // USAR EL MÉTODO CORRECTO para modo solo lectura
             dialogController.initializeForViewEvent(event, onEventChanged);
 
             Stage dialogStage = new Stage();
@@ -1002,16 +1000,12 @@ public class CalendarMonthController implements Initializable {
 
             dialogStage.setScene(dialogScene);
 
-            // Configurar tamaño fijo para evitar ventanas vacías
-            dialogStage.setWidth(600);
-            dialogStage.setHeight(690);
+            // Configurar tamaño
             dialogStage.setResizable(true);
-
-            // Centrar el diálogo
-            Stage parentStage = (Stage) createButton.getScene().getWindow();
-            dialogStage.setX(parentStage.getX() + (parentStage.getWidth() - 600) / 2);
-            dialogStage.setY(parentStage.getY() + (parentStage.getHeight() - 690) / 2);
-
+            dialogStage.setMinWidth(600);
+            dialogStage.setMinHeight(550);
+            dialogStage.setMaxWidth(900);
+            dialogStage.setMaxHeight(800);
             // Hacer la ventana arrastrable
             makeDialogDraggable(dialogRoot, dialogStage);
 
@@ -1039,8 +1033,15 @@ public class CalendarMonthController implements Initializable {
                 loadEventsFromDatabaseAsync();
             };
 
+            // Obtener información del usuario actual para identificar si es docente
+            User currentUser = authService.getCurrentUser();
+            boolean isTeacher = currentUser != null && currentUser.isTeacher();
+
             // USAR EL MÉTODO CORRECTO para modo edición
             dialogController.initializeForEdit(event, onEventChanged);
+
+            // Configurar opciones de docente si corresponde
+            dialogController.setIsTeacher(isTeacher);
 
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Editar Evento - " + event.getTitle());
@@ -1052,8 +1053,7 @@ public class CalendarMonthController implements Initializable {
                 dialogStage.initOwner((Stage) createButton.getScene().getWindow());
             }
 
-            // ===== SOLUCIÓN NUCLEAR: Scene con dimensiones fijas en constructor =====
-            Scene dialogScene = new Scene(dialogRoot, 600, 690); // FORZAR dimensiones desde constructor
+            Scene dialogScene = new Scene(dialogRoot);
 
             // Cargar CSS
             try {
@@ -1064,20 +1064,12 @@ public class CalendarMonthController implements Initializable {
 
             dialogStage.setScene(dialogScene);
 
-
-            // Configurar límites
+            // Configurar tamaño
             dialogStage.setResizable(true);
             dialogStage.setMinWidth(600);
-            dialogStage.setMinHeight(700);
+            dialogStage.setMinHeight(550);
             dialogStage.setMaxWidth(900);
             dialogStage.setMaxHeight(800);
-
-            // Centrar el diálogo
-            if (createButton != null && createButton.getScene() != null && createButton.getScene().getWindow() != null) {
-                Stage parentStage = (Stage) createButton.getScene().getWindow();
-                dialogStage.setX(parentStage.getX() + (parentStage.getWidth() - 600) / 2);
-                dialogStage.setY(parentStage.getY() + (parentStage.getHeight() - 690) / 2);
-            }
 
             // Hacer la ventana arrastrable
             makeDialogDraggable(dialogRoot, dialogStage);
@@ -1288,27 +1280,32 @@ public class CalendarMonthController implements Initializable {
             EventDialogController dialogController = loader.getController();
 
             Runnable onEventChanged = () -> {
-                System.out.println("✓ Recargando eventos tras cambio");
+                System.out.println("✓ [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " +
+                        "Recargando eventos tras cambio");
                 loadEventsFromDatabaseAsync();
             };
+
+            // Obtener información del usuario actual para identificar si es docente
+            User currentUser = authService.getCurrentUser();
+            boolean isTeacher = currentUser != null && currentUser.isTeacher();
 
             // Configurar el controlador según el modo
             if ("CREATE".equals(mode)) {
                 dialogController.initializeForCreate(date, onEventChanged);
+                // Configurar opciones de docente si corresponde
+                dialogController.setIsTeacher(isTeacher);
             } else if ("READ".equals(mode)) {
                 dialogController.initializeForRead(date, onEventChanged);
             }
 
             Stage dialogStage = new Stage();
-
+            //Remover decoraciones de la ventana
             dialogStage.initStyle(StageStyle.UNDECORATED);
 
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(createButton.getScene().getWindow());
 
             Scene dialogScene = new Scene(dialogRoot);
-
-            // Cargar estilos CSS
             try {
                 dialogScene.getStylesheets().add(getClass().getResource("/css/dialog-styles.css").toExternalForm());
             } catch (Exception ignored) {
@@ -1316,9 +1313,11 @@ public class CalendarMonthController implements Initializable {
             }
 
             dialogStage.setScene(dialogScene);
-            dialogStage.setResizable(false); // Desactivar redimensionado para mejor apariencia
+            dialogStage.setResizable(true);
+            dialogStage.setMinWidth(600);
+            dialogStage.setMinHeight(550);
 
-            //  Hacer la ventana arrastrable
+            // Hacer la ventana arrastrable
             makeDialogDraggable(dialogRoot, dialogStage);
 
             dialogStage.showAndWait();
@@ -1613,13 +1612,22 @@ public class CalendarMonthController implements Initializable {
                 loadEventsFromDatabaseAsync();
             };
 
+            // Obtener información del usuario actual para identificar si es docente
+            User currentUser = authService.getCurrentUser();
+            boolean isTeacher = currentUser != null && currentUser.isTeacher();
+
             // Usar el método específico para crear con tiempo
             dialogController.initializeForCreateWithTime(date, startTime, endTime, onEventChanged);
 
+            // Configurar opciones de docente si corresponde
+            dialogController.setIsTeacher(isTeacher);
+
             Stage dialogStage = new Stage();
             dialogStage.setTitle("UTEZ Calendar - Nuevo Evento");
+            dialogStage.initStyle(StageStyle.UNDECORATED);
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(createButton.getScene().getWindow());
+
             Scene dialogScene = new Scene(dialogRoot);
 
             try {
@@ -1631,7 +1639,13 @@ public class CalendarMonthController implements Initializable {
             dialogStage.setScene(dialogScene);
             dialogStage.setResizable(true);
             dialogStage.setMinWidth(600);
-            dialogStage.setMinHeight(500);
+            dialogStage.setMinHeight(550);
+            dialogStage.setMaxWidth(900);
+            dialogStage.setMaxHeight(800);
+
+            // Hacer la ventana arrastrable
+            makeDialogDraggable(dialogRoot, dialogStage);
+
             dialogStage.showAndWait();
 
         } catch (IOException e) {

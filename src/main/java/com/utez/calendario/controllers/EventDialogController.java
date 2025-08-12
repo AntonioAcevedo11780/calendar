@@ -2,6 +2,7 @@ package com.utez.calendario.controllers;
 
 import com.utez.calendario.models.Calendar;
 import com.utez.calendario.models.Event;
+import com.utez.calendario.models.User;
 import com.utez.calendario.services.AuthService;
 import com.utez.calendario.services.EventService;
 import javafx.application.Platform;
@@ -60,6 +61,16 @@ public class EventDialogController implements Initializable {
     @FXML private Button saveButton;
     @FXML private Button updateButton;
     @FXML private Button deleteFormButton;
+    @FXML private HBox recurrenceOptionsBox;
+    @FXML private CheckBox cuatrimestreCheckBox;
+    @FXML private HBox weekdaysBox;
+    @FXML private CheckBox mondayCheckBox;
+    @FXML private CheckBox tuesdayCheckBox;
+    @FXML private CheckBox wednesdayCheckBox;
+    @FXML private CheckBox thursdayCheckBox;
+    @FXML private CheckBox fridayCheckBox;
+    @FXML private CheckBox saturdayCheckBox;
+    @FXML private HBox recurrenceSection;
 
     // Elementos para vista de lista de eventos (múltiples eventos en un día)
     @FXML private ScrollPane eventListScrollPane;
@@ -77,6 +88,7 @@ public class EventDialogController implements Initializable {
     private LocalTime selectedEndTime;
     private Runnable onEventChanged;
     private boolean calendarInitialized = false;
+    private boolean isTeacher = false;
 
     // Cache para calendarios
     private List<Calendar> allCalendarsCache = new ArrayList<>();
@@ -160,6 +172,67 @@ public class EventDialogController implements Initializable {
 
         return fallbackCalendars;
     }
+    /**
+     * Establece si el usuario es docente y muestra/oculta las opciones correspondientes
+     */
+    public void setIsTeacher(boolean isTeacher) {
+        this.isTeacher = isTeacher;
+
+        // Mostrar u ocultar opciones específicas para docentes
+        Platform.runLater(() -> {
+            // Mostrar u ocultar sección completa de recurrencia
+            if (recurrenceSection != null) {
+                recurrenceSection.setVisible(isTeacher);
+                recurrenceSection.setManaged(isTeacher);
+            }
+
+            // Inicialmente ocultar la selección de días
+            if (weekdaysBox != null) {
+                weekdaysBox.setVisible(false);
+                weekdaysBox.setManaged(false);
+            }
+
+            // Si es docente, mostrar opción de invitar alumnos
+            if (addGuestsFormButton != null) {
+                // Cambiar el texto para docentes
+                if (isTeacher) {
+                    addGuestsFormButton.setText("Añadir estudiantes");
+                    addGuestsFormButton.setTooltip(new Tooltip("Agregar estudiantes a este evento"));
+                } else {
+                    addGuestsFormButton.setVisible(false);
+                    addGuestsFormButton.setManaged(false);
+                }
+            }
+        });
+    }
+
+    /**
+     * Configura las opciones de recurrencia y sus comportamientos.
+     * Llamar a este método desde initialize()
+     */
+    private void setupRecurrenceOptions() {
+        if (cuatrimestreCheckBox != null) {
+            cuatrimestreCheckBox.setOnAction(e -> {
+                boolean isSelected = cuatrimestreCheckBox.isSelected();
+
+                // Mostrar u ocultar selección de días de la semana
+                if (weekdaysBox != null) {
+                    weekdaysBox.setVisible(isSelected);
+                    weekdaysBox.setManaged(isSelected);
+                }
+
+                // Si se deselecciona, limpiar las selecciones de días
+                if (!isSelected) {
+                    if (mondayCheckBox != null) mondayCheckBox.setSelected(false);
+                    if (tuesdayCheckBox != null) tuesdayCheckBox.setSelected(false);
+                    if (wednesdayCheckBox != null) wednesdayCheckBox.setSelected(false);
+                    if (thursdayCheckBox != null) thursdayCheckBox.setSelected(false);
+                    if (fridayCheckBox != null) fridayCheckBox.setSelected(false);
+                    if (saturdayCheckBox != null) saturdayCheckBox.setSelected(false);
+                }
+            });
+        }
+    }
 
     /**
      * Inicializa el diálogo para crear un nuevo evento
@@ -170,7 +243,9 @@ public class EventDialogController implements Initializable {
         this.onEventChanged = onEventChanged;
 
         Platform.runLater(() -> {
-            dialogTitle.setText("Nuevo evento");
+            if (dialogTitle != null) {
+                dialogTitle.setText("Nuevo evento");
+            }
             showFormView();
 
             // Configurar fecha seleccionada
@@ -180,6 +255,23 @@ public class EventDialogController implements Initializable {
 
             // Configurar horarios por defecto
             setDefaultTimes();
+
+            // Configurar opciones de recurrencia si es docente
+            setupRecurrenceOptions();
+
+            // Asegurarse que los botones correctos están visibles
+            if (saveButton != null) {
+                saveButton.setVisible(true);
+                saveButton.setManaged(true);
+            }
+            if (updateButton != null) {
+                updateButton.setVisible(false);
+                updateButton.setManaged(false);
+            }
+            if (deleteFormButton != null) {
+                deleteFormButton.setVisible(false);
+                deleteFormButton.setManaged(false);
+            }
         });
     }
 
@@ -225,9 +317,28 @@ public class EventDialogController implements Initializable {
         this.onEventChanged = onEventChanged;
 
         Platform.runLater(() -> {
-            dialogTitle.setText(event.getTitle());
+            if (dialogTitle != null) {
+                dialogTitle.setText(event.getTitle());
+            }
             showEventView();
             loadEventToView(event);
+
+            // Determinar si el usuario actual es el creador del evento
+            boolean isCreator = false;
+            if (authService.getCurrentUser() != null && event.getCreatorId() != null) {
+                isCreator = authService.getCurrentUser().getUserId().equals(event.getCreatorId());
+            }
+
+            // Solo mostrar opciones de edición/eliminación si es el creador o administrador
+            boolean canEdit = isCreator || (authService.getCurrentUser() != null && authService.getCurrentUser().isAdmin());
+            if (editButton != null) {
+                editButton.setVisible(canEdit);
+                editButton.setManaged(canEdit);
+            }
+            if (deleteViewButton != null) {
+                deleteViewButton.setVisible(canEdit);
+                deleteViewButton.setManaged(canEdit);
+            }
         });
     }
 
@@ -241,11 +352,45 @@ public class EventDialogController implements Initializable {
         this.onEventChanged = onEventChanged;
 
         Platform.runLater(() -> {
-            dialogTitle.setText("Editar evento");
+            if (dialogTitle != null) {
+                dialogTitle.setText("Editar evento");
+            }
+
             showFormView();
 
             // Esperar a que los calendarios estén cargados
             waitForCalendarsAndLoadEvent(event);
+
+            // Configurar opciones de recurrencia si es docente
+            setupRecurrenceOptions();
+
+            // Determinar si el usuario actual es el creador del evento
+            boolean isCreator = false;
+            if (authService.getCurrentUser() != null && event.getCreatorId() != null) {
+                isCreator = authService.getCurrentUser().getUserId().equals(event.getCreatorId());
+            }
+
+            // Solo mostrar opciones de edición/eliminación si es el creador o administrador
+            boolean canEdit = isCreator || (authService.getCurrentUser() != null && authService.getCurrentUser().isAdmin());
+            if (!canEdit) {
+                // Si no puede editar, mostrar en modo lectura
+                switchToViewMode();
+                return;
+            }
+
+            // Configurar botones de edición
+            if (saveButton != null) {
+                saveButton.setVisible(false);
+                saveButton.setManaged(false);
+            }
+            if (updateButton != null) {
+                updateButton.setVisible(true);
+                updateButton.setManaged(true);
+            }
+            if (deleteFormButton != null) {
+                deleteFormButton.setVisible(true);
+                deleteFormButton.setManaged(true);
+            }
         });
     }
 
@@ -569,6 +714,55 @@ public class EventDialogController implements Initializable {
     }
 
     /**
+     * Método para crear un evento desde el formulario considerando recurrencia
+     */
+    private List<Event> createRecurringEventsFromForm() {
+        List<Event> events = new ArrayList<>();
+
+        // Si no es evento recurrente o no es docente, crear un solo evento
+        if (!isTeacher || cuatrimestreCheckBox == null || !cuatrimestreCheckBox.isSelected()) {
+            events.add(createEventFromForm());
+            return events;
+        }
+
+        // Obtener días seleccionados para recurrencia
+        List<Integer> selectedDays = new ArrayList<>();
+        if (mondayCheckBox != null && mondayCheckBox.isSelected()) selectedDays.add(DayOfWeek.MONDAY.getValue());
+        if (tuesdayCheckBox != null && tuesdayCheckBox.isSelected()) selectedDays.add(DayOfWeek.TUESDAY.getValue());
+        if (wednesdayCheckBox != null && wednesdayCheckBox.isSelected()) selectedDays.add(DayOfWeek.WEDNESDAY.getValue());
+        if (thursdayCheckBox != null && thursdayCheckBox.isSelected()) selectedDays.add(DayOfWeek.THURSDAY.getValue());
+        if (fridayCheckBox != null && fridayCheckBox.isSelected()) selectedDays.add(DayOfWeek.FRIDAY.getValue());
+        if (saturdayCheckBox != null && saturdayCheckBox.isSelected()) selectedDays.add(DayOfWeek.SATURDAY.getValue());
+
+        // Si no hay días seleccionados, crear un solo evento en la fecha elegida
+        if (selectedDays.isEmpty()) {
+            events.add(createEventFromForm());
+            return events;
+        }
+
+        // Crear eventos para cada día seleccionado en un periodo de 4 meses (16 semanas)
+        LocalDate baseDate = datePicker.getValue();
+        LocalTime startTime = parseTime(startTimeComboBox.getValue());
+        LocalTime endTime = parseTime(endTimeComboBox.getValue());
+
+        for (int week = 0; week < 16; week++) {
+            for (Integer dayValue : selectedDays) {
+                LocalDate targetDate = baseDate.with(java.time.temporal.TemporalAdjusters.nextOrSame(DayOfWeek.of(dayValue)));
+                targetDate = targetDate.plusWeeks(week);
+
+                Event event = createBaseEventFromForm();
+                event.setEventId(generateEventId() + "-" + week + "-" + dayValue);
+                event.setStartDate(LocalDateTime.of(targetDate, startTime));
+                event.setEndDate(LocalDateTime.of(targetDate, endTime));
+
+                events.add(event);
+            }
+        }
+
+        return events;
+    }
+
+    /**
      * Carga los eventos para una fecha específica de forma asíncrona
      */
     private void loadEventsForDateAsync(LocalDate date) {
@@ -725,8 +919,41 @@ public class EventDialogController implements Initializable {
         }
 
         // Información del creador
-        if (createdByLabel != null && authService.getCurrentUser() != null) {
-            String creatorName = authService.getCurrentUser().getDisplayInfo();
+        if (createdByLabel != null) {
+            String creatorName = "Sistema";
+
+            // Obtener el usuario creador de una forma segura
+            try {
+                if (event.getCreatorId() != null && !event.getCreatorId().isEmpty()) {
+                    // Intentar usar el authService primero
+                    if (authService.getCurrentUser() != null &&
+                            authService.getCurrentUser().getUserId().equals(event.getCreatorId())) {
+                        creatorName = authService.getCurrentUser().getDisplayInfo();
+                    } else {
+                        // Comprobar si el método estático existe
+                        try {
+                            // Usar reflexión para verificar si el método existe
+                            java.lang.reflect.Method getUserByIdMethod =
+                                    User.class.getMethod("getUserById", String.class);
+
+                            // Si llegamos aquí, el método existe
+                            User creator = (User) getUserByIdMethod.invoke(null, event.getCreatorId());
+                            if (creator != null) {
+                                creatorName = creator.getDisplayInfo();
+                            }
+                        } catch (NoSuchMethodException e) {
+                            // El método no existe, usar el ID directamente
+                            creatorName = "Usuario " + event.getCreatorId();
+                        } catch (Exception e) {
+                            // Cualquier otra excepción
+                            System.err.println("Error obteniendo creador del evento: " + e.getMessage());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Error al obtener información del creador: " + e.getMessage());
+            }
+
             createdByLabel.setText("Creado por: " + creatorName);
         }
     }
@@ -858,39 +1085,58 @@ public class EventDialogController implements Initializable {
         if (!validateForm()) return;
 
         try {
-            Event newEvent = createEventFromForm();
+            // Obtener eventos (uno o varios si es recurrente)
+            List<Event> newEvents = createRecurringEventsFromForm();
 
-            if (!isTimeSlotAvailable(newEvent)) {
+            // Verificar si hay conflictos para cada evento
+            boolean hasConflicts = false;
+            for (Event event : newEvents) {
+                if (!isTimeSlotAvailable(event)) {
+                    hasConflicts = true;
+                    break;
+                }
+            }
+
+            if (hasConflicts) {
                 showAlert("Conflicto de horario",
-                        "Ya hay un evento en ese horario para este día.",
+                        "Ya hay un evento en alguno de los horarios seleccionados.",
                         Alert.AlertType.WARNING);
                 return;
             }
 
-            // Crear evento de forma asíncrona
+            // Crear eventos de forma asíncrona
             CompletableFuture.supplyAsync(() -> {
-                return eventService.createEvent(newEvent);
+                boolean allSuccess = true;
+                for (Event event : newEvents) {
+                    if (!eventService.createEvent(event)) {
+                        allSuccess = false;
+                    }
+                }
+                return allSuccess;
             }).thenAccept(success -> {
                 Platform.runLater(() -> {
                     if (success) {
-                        showAlert("Éxito", "Evento creado exitosamente", Alert.AlertType.INFORMATION);
+                        int count = newEvents.size();
+                        String message = count > 1 ?
+                                count + " eventos creados exitosamente" :
+                                "Evento creado exitosamente";
+                        showAlert("Éxito", message, Alert.AlertType.INFORMATION);
                         if (onEventChanged != null) onEventChanged.run();
                         closeDialog();
                     } else {
-                        showAlert("Error", "No se pudo crear el evento", Alert.AlertType.ERROR);
+                        showAlert("Error", "No se pudieron crear todos los eventos", Alert.AlertType.ERROR);
                     }
                 });
             }).exceptionally(throwable -> {
                 Platform.runLater(() -> {
-                    System.err.println("Error creando evento: " + throwable.getMessage());
-                    showAlert("Error", "Error al crear evento: " + throwable.getMessage(), Alert.AlertType.ERROR);
+                    System.err.println("Error creando eventos: " + throwable.getMessage());
+                    showAlert("Error", "Error al crear eventos: " + throwable.getMessage(), Alert.AlertType.ERROR);
                 });
                 return null;
             });
-
         } catch (Exception e) {
-            System.err.println("Error creando evento: " + e.getMessage());
-            showAlert("Error", "Error al crear evento: " + e.getMessage(), Alert.AlertType.ERROR);
+            System.err.println("Error creando eventos: " + e.getMessage());
+            showAlert("Error", "Error al crear eventos: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
@@ -1019,6 +1265,41 @@ public class EventDialogController implements Initializable {
 
         // Configurar fecha y hora
         setupEventDateTime(event);
+
+        return event;
+    }
+
+    /**
+     * Método auxiliar para crear un evento base del formulario (sin fechas)
+     */
+    private Event createBaseEventFromForm() {
+        Event event = new Event();
+
+        if (titleField != null) {
+            event.setTitle(titleField.getText().trim());
+        }
+
+        if (descriptionArea != null) {
+            event.setDescription(descriptionArea.getText().trim());
+        }
+
+        if (locationField != null) {
+            event.setLocation(locationField.getText().trim());
+        }
+
+        // Configurar calendario
+        if (authService.getCurrentUser() != null && calendarComboBox != null) {
+            String userId = authService.getCurrentUser().getUserId();
+            String calendarName = calendarComboBox.getValue();
+            String calendarId = getCalendarIdByName(calendarName);
+            event.setCalendarId(calendarId);
+            event.setCreatorId(userId);
+        }
+
+        // Configurar todo el día
+        if (allDayCheckBox != null) {
+            event.setAllDay(allDayCheckBox.isSelected() ? 'Y' : 'N');
+        }
 
         return event;
     }
