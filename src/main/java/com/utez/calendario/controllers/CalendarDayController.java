@@ -4,6 +4,7 @@ import com.utez.calendario.models.Calendar;
 import com.utez.calendario.models.Event;
 import com.utez.calendario.models.User;
 import com.utez.calendario.services.AuthService;
+import com.utez.calendario.services.CalendarSharingService;
 import com.utez.calendario.services.EventService;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -33,6 +34,14 @@ import java.util.concurrent.CompletableFuture;
 
 public class CalendarDayController implements Initializable {
 
+    //========= CALENDARIOS PREDETERMINADOS ==========
+    private Calendar calMisClases;
+    private Calendar calTareas;
+    private Calendar calPersonal;
+    private Calendar calExamenes;
+
+    // ========== CONSTANTES ==========
+    private final Map<String, Calendar> buttonCalendarMap  = new HashMap<>();
     // Colores para calendarios predeterminados
     private static final String COLOR_CLASSES = "#1E76E8";  // Color para Mis Clases
     private static final String COLOR_TASKS = "#2c2c2c";    // Color para Tareas y Proyectos
@@ -63,8 +72,11 @@ public class CalendarDayController implements Initializable {
     private Timeline clockTimeline;
     private LocalDate currentDate;
     private List<Event> events;
+
     private EventService eventService;
     private AuthService authService;
+    private CalendarSharingService sharingService;
+
     private final int START_HOUR = 0;
     private final int TOTAL_HOURS = 24;
 
@@ -74,6 +86,8 @@ public class CalendarDayController implements Initializable {
     private List<Calendar> customCalendarsCache = new ArrayList<>();
     private List<Calendar> allCalendarsCache = new ArrayList<>();
     private volatile boolean isLoadingEvents = false;
+
+    private List<Calendar> sharedCalendarsCache = new ArrayList<>();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -148,27 +162,60 @@ public class CalendarDayController implements Initializable {
     private boolean shouldShowEvent(Event event) {
         String calendarId = event.getCalendarId();
 
-        // Buscar el calendario en cache para obtener su nombre
+        System.out.println("🔍 Verificando visibilidad para evento: " + event.getTitle());
+        System.out.println("   📋 Calendario ID: " + calendarId);
+
+        // Buscar el calendario en todos los caches
         String calendarName = "";
-        for (Calendar cal : allCalendarsCache) {
-            if (cal.getCalendarId().equals(calendarId)) {
-                calendarName = cal.getName().toLowerCase();
-                break;
+        boolean isSharedCalendar = false;
+
+        // Buscar en calendarios propios
+        if (allCalendarsCache != null) {
+            for (Calendar cal : allCalendarsCache) {
+                if (cal.getCalendarId().equals(calendarId)) {
+                    calendarName = cal.getName().toLowerCase();
+                    System.out.println("   ✅ Encontrado en cache propio: " + cal.getName());
+                    break;
+                }
             }
         }
 
-        // Si no se encuentra en cache, intentar obtenerlo de la BD
+        // Si no se encuentra, buscar en calendarios compartidos
+        if (calendarName.isEmpty() && sharedCalendarsCache != null) {
+            for (Calendar cal : sharedCalendarsCache) {
+                if (cal.getCalendarId().equals(calendarId)) {
+                    calendarName = cal.getName().toLowerCase();
+                    isSharedCalendar = true;
+                    System.out.println("   ✅ Encontrado en cache compartido: " + cal.getName());
+                    break;
+                }
+            }
+        }
+
         if (calendarName.isEmpty()) {
+            System.out.println("   ❌ Calendario no encontrado en caches para ID: " + calendarId);
+            // Intentar obtener de BD como última opción
             try {
                 Calendar cal = Calendar.getCalendarById(calendarId);
                 if (cal != null) {
                     calendarName = cal.getName().toLowerCase();
+                    System.out.println("   ✅ Obtenido de BD: " + cal.getName());
                 }
             } catch (Exception e) {
-                System.err.println("Error obteniendo calendario: " + e.getMessage());
+                System.err.println("   ❌ Error obteniendo calendario de BD: " + e.getMessage());
             }
         }
 
+        boolean shouldShow = shouldShowCalendarByName(calendarName, calendarId);
+
+        System.out.println("   📊 Resultado:");
+        System.out.println("      - Nombre calendario: " + calendarName);
+        System.out.println("      - Es compartido: " + isSharedCalendar);
+        System.out.println("      - Mostrar evento: " + shouldShow);
+
+        return shouldShow;
+    }
+    private boolean shouldShowCalendarByName(String calendarName, String calendarId) {
         // Mapear por nombre del calendario a checkbox
         if (calendarName.contains("clase") || calendarName.contains("class")) {
             return userCalendarCheck != null && userCalendarCheck.isSelected();
@@ -184,32 +231,26 @@ public class CalendarDayController implements Initializable {
             return utezCalendarCheck != null && utezCalendarCheck.isSelected();
         }
 
-        // Fallback: verificar IDs fijos (por compatibilidad)
-        switch (calendarId) {
-            case "CAL0000001": // Mis Clases
-                return userCalendarCheck != null && userCalendarCheck.isSelected();
-            case "CAL0000002": // Tareas y Proyectos
-                return tasksCalendarCheck != null && tasksCalendarCheck.isSelected();
-            case "CAL0000003": // Personal
-                return personalCalendarCheck != null && personalCalendarCheck.isSelected();
-            case "CAL0000004": // Exámenes
-                return examsCalendarCheck != null && examsCalendarCheck.isSelected();
-            case "CAL0000005": // Días Festivos
-                return holidaysCalendarCheck != null && holidaysCalendarCheck.isSelected();
-            case "CAL0000006": // UTEZ
-                return utezCalendarCheck != null && utezCalendarCheck.isSelected();
-            default:
-                // Verificar si es un calendario personalizado
-                if (customCalendarCheckboxes != null && customCalendarCheckboxes.containsKey(calendarId)) {
-                    CheckBox checkBox = customCalendarCheckboxes.get(calendarId);
-                    return checkBox != null && checkBox.isSelected();
-                }
+        // Verificar calendarios personalizados/compartidos por ID
+        if (customCalendarCheckboxes != null && customCalendarCheckboxes.containsKey(calendarId)) {
+            CheckBox checkBox = customCalendarCheckboxes.get(calendarId);
+            return checkBox != null && checkBox.isSelected();
+        }
 
-                // Mostrar por defecto si no se puede determinar
-                System.out.println("No se pudo determinar visibilidad para calendario: " + calendarName + " (ID: " + calendarId + ")");
-                return true;
+        // Fallback: verificar IDs fijos
+        switch (calendarId) {
+            case "CAL0000001": return userCalendarCheck != null && userCalendarCheck.isSelected();
+            case "CAL0000002": return tasksCalendarCheck != null && tasksCalendarCheck.isSelected();
+            case "CAL0000003": return personalCalendarCheck != null && personalCalendarCheck.isSelected();
+            case "CAL0000004": return examsCalendarCheck != null && examsCalendarCheck.isSelected();
+            case "CAL0000005": return holidaysCalendarCheck != null && holidaysCalendarCheck.isSelected();
+            case "CAL0000006": return utezCalendarCheck != null && utezCalendarCheck.isSelected();
+            default:
+                System.out.println("🔍 No se pudo determinar visibilidad para: " + calendarName + " (ID: " + calendarId + ")");
+                return true; // Mostrar por defecto
         }
     }
+
 
     // Método asíncrono para cargar calendarios personalizados (igual que en semana)
     private void loadCustomCalendarsAsync() {

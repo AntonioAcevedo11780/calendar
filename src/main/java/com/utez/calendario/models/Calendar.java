@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Modelo que representa un calendario en el sistema
@@ -177,7 +178,13 @@ public class Calendar {
     }
 
     public static List<Calendar> getSharedCalendars(String userId) throws SQLException {
-        return CalendarSharingService.getInstance().getSharedCalendarsForUser(userId);
+        CalendarSharingService service = new CalendarSharingService();
+        return service.getSharedCalendarsForUser(userId);
+    }
+
+    public static void shareCalendar(String calendarId, String recipientEmail) throws SQLException {
+        CalendarSharingService service = new CalendarSharingService();
+        service.shareCalendar(calendarId, recipientEmail);
     }
 
     /**

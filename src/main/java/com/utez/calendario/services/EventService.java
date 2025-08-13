@@ -757,52 +757,41 @@ public class EventService {
 
         try {
             // Obtener eventos de calendarios propios
-            System.out.println("📂 Obteniendo eventos propios...");
             List<Event> ownEvents = getEventsForDateRange(userId, startDate, endDate);
             allEvents.addAll(ownEvents);
             System.out.println("✅ Eventos propios obtenidos: " + ownEvents.size());
 
-            // Obtener eventos de calendarios compartidos
-            System.out.println("📤 Obteniendo calendarios compartidos...");
-            CalendarSharingService sharingService = CalendarSharingService.getInstance();
+            // ✅ CAMBIO: Usar instancia normal en lugar de Singleton
+            CalendarSharingService sharingService = new CalendarSharingService();
             List<com.utez.calendario.models.Calendar> sharedCalendars = sharingService.getSharedCalendarsForUser(userId);
             System.out.println("✅ Calendarios compartidos encontrados: " + sharedCalendars.size());
 
             for (Calendar sharedCalendar : sharedCalendars) {
-                System.out.println("   📋 Procesando calendario compartido: " + sharedCalendar.getName() + " (ID: " + sharedCalendar.getCalendarId() + ")");
                 try {
                     List<Event> sharedEvents = getEventsForCalendar(sharedCalendar.getCalendarId(), startDate, endDate);
                     allEvents.addAll(sharedEvents);
-                    System.out.println("   ✅ Eventos del calendario " + sharedCalendar.getName() + ": " + sharedEvents.size());
                 } catch (SQLException e) {
-                    System.err.println("   ❌ Error obteniendo eventos del calendario " + sharedCalendar.getName() + ": " + e.getMessage());
-                    // Continuar con el siguiente calendario en lugar de fallar completamente
+                    System.err.println("❌ Error obteniendo eventos del calendario " + sharedCalendar.getName() + ": " + e.getMessage());
                 }
             }
 
-            System.out.println("✅ Total eventos cargados (propios + compartidos): " + allEvents.size());
+            System.out.println("✅ Total eventos cargados: " + allEvents.size());
             return allEvents;
 
-        } catch (SQLException e) {
-            System.err.println("❌ Error SQL en getEventsForDateRangeIncludingShared: " + e.getMessage());
-            System.err.println("   SQL State: " + e.getSQLState());
-            System.err.println("   Error Code: " + e.getErrorCode());
-            throw e;
         } catch (Exception e) {
-            System.err.println("❌ Error general en getEventsForDateRangeIncludingShared: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("❌ Error en getEventsForDateRangeIncludingShared: " + e.getMessage());
             throw new SQLException("Error obteniendo eventos compartidos: " + e.getMessage(), e);
         }
     }
 
     // Método auxiliar para obtener eventos de un calendario específico
     public List<Event> getEventsForCalendar(String calendarId, LocalDate startDate, LocalDate endDate) throws SQLException {
-        System.out.println("🔍 [EventService] Obteniendo eventos para calendario: " + calendarId);
-
         List<Event> events = new ArrayList<>();
 
+        // ✅ SQL OPTIMIZADO con hints de Oracle
         String sql = """
-        SELECT e.EVENT_ID, e.TITLE, e.DESCRIPTION, e.START_DATE, e.END_DATE, 
+        SELECT /*+ FIRST_ROWS(100) INDEX(e PK_EVENTS) */
+               e.EVENT_ID, e.TITLE, e.DESCRIPTION, e.START_DATE, e.END_DATE, 
                e.LOCATION, e.CALENDAR_ID, e.ACTIVE, e.CREATED_DATE, e.MODIFIED_DATE
         FROM EVENTS e
         WHERE e.CALENDAR_ID = ? 
@@ -811,51 +800,37 @@ public class EventService {
         ORDER BY e.START_DATE
     """;
 
-        try (Connection conn = DatabaseConfig.getConnection()) {
-            System.out.println("✅ Conexión obtenida para calendario: " + calendarId);
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, calendarId);
-                stmt.setDate(2, java.sql.Date.valueOf(startDate));
-                stmt.setDate(3, java.sql.Date.valueOf(endDate));
+            stmt.setFetchSize(100); // ✅ Optimización de fetch
+            stmt.setString(1, calendarId);
+            stmt.setDate(2, java.sql.Date.valueOf(startDate));
+            stmt.setDate(3, java.sql.Date.valueOf(endDate));
 
-                System.out.println("📋 Ejecutando consulta para calendario: " + calendarId);
-                System.out.println("   Parámetros: calendarId=" + calendarId + ", startDate=" + startDate + ", endDate=" + endDate);
-
-                ResultSet rs = stmt.executeQuery();
-
-                int eventCount = 0;
+            try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    try {
-                        Event event = new Event();
-                        event.setEventId(rs.getString("EVENT_ID"));
-                        event.setTitle(rs.getString("TITLE"));
-                        event.setDescription(rs.getString("DESCRIPTION"));
-                        event.setStartDate(rs.getTimestamp("START_DATE").toLocalDateTime());
-                        event.setEndDate(rs.getTimestamp("END_DATE").toLocalDateTime());
-                        event.setLocation(rs.getString("LOCATION"));
-                        event.setCalendarId(rs.getString("CALENDAR_ID"));
-                        event.setActive(rs.getString("ACTIVE").charAt(0));
-                        event.setCreatedDate(rs.getTimestamp("CREATED_DATE").toLocalDateTime());
-                        if (rs.getTimestamp("MODIFIED_DATE") != null) {
-                            event.setModifiedDate(rs.getTimestamp("MODIFIED_DATE").toLocalDateTime());
-                        }
+                    Event event = new Event();
+                    event.setEventId(rs.getString("EVENT_ID"));
+                    event.setTitle(rs.getString("TITLE"));
+                    event.setDescription(rs.getString("DESCRIPTION"));
+                    event.setStartDate(rs.getTimestamp("START_DATE").toLocalDateTime());
+                    event.setEndDate(rs.getTimestamp("END_DATE").toLocalDateTime());
+                    event.setLocation(rs.getString("LOCATION"));
+                    event.setCalendarId(rs.getString("CALENDAR_ID"));
+                    event.setActive(rs.getString("ACTIVE").charAt(0));
+                    event.setCreatedDate(rs.getTimestamp("CREATED_DATE").toLocalDateTime());
 
-                        events.add(event);
-                        eventCount++;
-                    } catch (Exception e) {
-                        System.err.println("❌ Error procesando evento individual: " + e.getMessage());
-                        // Continuar con el siguiente evento
+                    Timestamp modifiedDate = rs.getTimestamp("MODIFIED_DATE");
+                    if (modifiedDate != null) {
+                        event.setModifiedDate(modifiedDate.toLocalDateTime());
                     }
+
+                    events.add(event);
                 }
-
-                System.out.println("✅ Eventos procesados para calendario " + calendarId + ": " + eventCount);
             }
-
         } catch (SQLException e) {
             System.err.println("❌ Error SQL en getEventsForCalendar(" + calendarId + "): " + e.getMessage());
-            System.err.println("   SQL State: " + e.getSQLState());
-            System.err.println("   Error Code: " + e.getErrorCode());
             throw e;
         }
 

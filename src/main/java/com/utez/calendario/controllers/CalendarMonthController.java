@@ -5,6 +5,7 @@ import com.utez.calendario.models.Calendar;
 import com.utez.calendario.models.Event;
 import com.utez.calendario.models.User;
 import com.utez.calendario.services.AuthService;
+import com.utez.calendario.services.CalendarSharingService;
 import com.utez.calendario.services.EventService;
 import com.utez.calendario.services.MailService;
 import javafx.animation.FadeTransition;
@@ -89,6 +90,7 @@ public class CalendarMonthController implements Initializable {
 
     private EventService eventService;
     private AuthService authService;
+    private CalendarSharingService sharingService;
 
     // Cache para calendarios personalizados
     private List<Calendar> customCalendarsCache = new ArrayList<>();
@@ -103,6 +105,7 @@ public class CalendarMonthController implements Initializable {
 
         eventService = EventService.getInstance();
         authService = AuthService.getInstance();
+        sharingService = new CalendarSharingService();
 
         // Inicializar calendarios predeterminados
         String userId = authService.getCurrentUser() != null ?
@@ -295,59 +298,47 @@ public class CalendarMonthController implements Initializable {
     // Método asíncrono para cargar calendarios personalizados
     private void loadCustomCalendarsAsync() {
         CompletableFuture.supplyAsync(() -> {
-            try {
-                if (authService.getCurrentUser() != null) {
-                    String userId = authService.getCurrentUser().getUserId();
+            if (authService.getCurrentUser() != null) {
+                String userId = authService.getCurrentUser().getUserId();
+                Map<String, Object> result = new HashMap<>();
 
-                    // Cargar TODOS los calendarios del usuario (predeterminados + personalizados)
-                    List<Calendar> allCalendars = Calendar.getAllUserCalendars(userId);
-                    List<Calendar> customCalendars = Calendar.getUserCustomCalendars(userId);
-                    List<Calendar> sharedCalendars = Calendar.getSharedCalendars(userId);
+                // Calendarios personalizados
+                List<Calendar> customCalendars = Calendar.getUserCustomCalendars(userId);
+                result.put("custom", customCalendars != null ? customCalendars : new ArrayList<>());
 
-                    Map<String, Object> result = new HashMap<>();
-                    result.put("all", allCalendars);
-                    result.put("custom", customCalendars);
-                    result.put("shared", sharedCalendars);
-                    return result;
+                // Calendarios compartidos usando el nuevo servicio
+                try {
+                    List<Calendar> sharedCalendars = sharingService.getSharedCalendarsForUser(userId);
+                    result.put("shared", sharedCalendars != null ? sharedCalendars : new ArrayList<>());
+                } catch (Exception e) {
+                    result.put("shared", new ArrayList<Calendar>());
                 }
-            } catch (SQLException e) {
-                e.printStackTrace();
-                Platform.runLater(() -> showAlert("Error", "No se pudieron cargar los calendarios: " + e.getMessage(), Alert.AlertType.ERROR));
+
+                // Lista combinada manual
+                List<Calendar> allCalendars = new ArrayList<>();
+                allCalendars.add(new Calendar("CAL0000001", "Mis Clases", COLOR_CLASSES, userId));
+                allCalendars.add(new Calendar("CAL0000002", "Tareas y Proyectos", COLOR_TASKS, userId));
+                allCalendars.add(new Calendar("CAL0000003", "Personal", COLOR_PERSONAL, userId));
+                allCalendars.add(new Calendar("CAL0000004", "Exámenes", COLOR_EXAMS, userId));
+                allCalendars.add(new Calendar("CAL0000005", "Días Festivos", COLOR_HOLIDAYS, userId));
+                allCalendars.add(new Calendar("CAL0000006", "UTEZ", COLOR_UTEZ, userId));
+                allCalendars.addAll((List<Calendar>) result.get("custom"));
+
+                result.put("all", allCalendars);
+                return result;
             }
             return new HashMap<String, Object>();
         }).thenAccept(result -> {
             Platform.runLater(() -> {
-                @SuppressWarnings("unchecked")
-                List<Calendar> allCalendars = (List<Calendar>) result.get("all");
-                @SuppressWarnings("unchecked")
-                List<Calendar> customCalendars = (List<Calendar>) result.get("custom");
-                @SuppressWarnings("unchecked")
-                List<Calendar> sharedCalendars = (List<Calendar>) result.get("shared");
-
-                if (allCalendars != null) {
-                    allCalendarsCache = allCalendars;
-                    System.out.println("Calendarios cargados:");
-                    for (Calendar cal : allCalendars) {
-                        System.out.println("  - " + cal.getName() + " (ID: " + cal.getCalendarId() + ", Color: " + cal.getColor() + ")");
-                    }
-                }
-
-                if (customCalendars != null) {
-                    customCalendarsCache = customCalendars;
-                }
-
-                if (sharedCalendars != null) {
-                    sharedCalendarsCache = sharedCalendars;
-                    System.out.println("Calendarios compartidos cargados: " + sharedCalendars.size());
-                }
+                allCalendarsCache = (List<Calendar>) result.get("all");
+                customCalendarsCache = (List<Calendar>) result.get("custom");
+                sharedCalendarsCache = (List<Calendar>) result.get("shared");
 
                 loadCustomCalendarsUI();
                 loadEventsFromDatabaseAsync();
             });
         }).exceptionally(throwable -> {
-            System.err.println("Error cargando calendarios: " + throwable.getMessage());
             Platform.runLater(() -> {
-                // Fallback: crear mapeo manual si no existe el método getAllUserCalendars
                 createManualCalendarMapping();
                 loadEventsFromDatabaseAsync();
             });
@@ -360,27 +351,32 @@ public class CalendarMonthController implements Initializable {
      * Úsalo si no tienes el método getAllUserCalendars en tu modelo Calendar
      */
     private void createManualCalendarMapping() {
-        System.out.println("Creando mapeo manual de calendarios...");
-
-        // Obtener los calendarios personalizados que sí funcionan
         if (authService.getCurrentUser() != null) {
             String userId = authService.getCurrentUser().getUserId();
-            customCalendarsCache = Calendar.getUserCustomCalendars(userId);
 
-            // Crear calendarios predeterminados ficticios para el mapeo
-            allCalendarsCache = new ArrayList<>(customCalendarsCache);
+            try {
+                customCalendarsCache = Calendar.getUserCustomCalendars(userId);
+            } catch (Exception e) {
+                customCalendarsCache = new ArrayList<>();
+            }
 
-            // Agregar calendarios predeterminados al cache
+            try {
+                sharedCalendarsCache = sharingService.getSharedCalendarsForUser(userId);
+            } catch (Exception e) {
+                sharedCalendarsCache = new ArrayList<>();
+            }
+
+            allCalendarsCache = new ArrayList<>();
+            if (customCalendarsCache != null) allCalendarsCache.addAll(customCalendarsCache);
+            if (sharedCalendarsCache != null) allCalendarsCache.addAll(sharedCalendarsCache);
+
             allCalendarsCache.add(new Calendar("CAL0000001", "Mis Clases", COLOR_CLASSES, userId));
             allCalendarsCache.add(new Calendar("CAL0000002", "Tareas y Proyectos", COLOR_TASKS, userId));
             allCalendarsCache.add(new Calendar("CAL0000003", "Personal", COLOR_PERSONAL, userId));
             allCalendarsCache.add(new Calendar("CAL0000004", "Exámenes", COLOR_EXAMS, userId));
             allCalendarsCache.add(new Calendar("CAL0000005", "Días Festivos", COLOR_HOLIDAYS, userId));
             allCalendarsCache.add(new Calendar("CAL0000006", "UTEZ", COLOR_UTEZ, userId));
-
-            System.out.println(" Mapeo manual creado con " + allCalendarsCache.size() + " calendarios");
         }
-
         loadCustomCalendarsUI();
     }
 
